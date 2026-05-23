@@ -1,0 +1,19 @@
+# dependencies
+node_modules/
+
+# tooling / skills — NOT part of this project (and contain infra/personal info)
+.claude/
+ClaudeKit/
+.agents/
+skills/
+skills-export/
+subdomain-deploy/
+
+# local diagnostics, screenshots, pasted images
+audit-out/
+verify-out/
+picture/
+
+# logs & OS junk
+*.log
+.DS_Store
