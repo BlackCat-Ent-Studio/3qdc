@@ -7,6 +7,10 @@ import { readFile, stat } from 'node:fs/promises';
 import { join, extname, normalize } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { SHIM_HTML } from './scripts/lib/ua-spoof-shim.mjs';
+import { I18N_HTML } from './scripts/lib/i18n-overlay.mjs';
+import { HIDE_HTML } from './scripts/lib/hide-overlay.mjs';
+import { NEUTER_HTML } from './scripts/lib/neuter-links.mjs';
+import { NAVFX_HTML } from './scripts/lib/nav-hover-fx.mjs';
 
 const ROOT = join(process.cwd(), 'mirror');
 const INDEX = join(ROOT, 'index.html');
@@ -14,13 +18,14 @@ const AGES_SNAPSHOT = join(ROOT, 'game-ages-fx.lingxigames.com', 'api', 'ages', 
 
 // Dual-view shell: one URL, swaps PC/mobile internal entry by viewport width.
 const BREAKPOINT = 768;
-const SHELL_HTML = `<!DOCTYPE html><html lang="zh-CN"><head>
+const SHELL_HTML = `<!DOCTYPE html><html lang="vi"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>三国志幻想大陆</title>
+<title>3Q Đại Chiến - Huyền Thoại Tam Quốc</title>
+<link rel="shortcut icon" href="/cdn.aligames.com/wukong5b86229e386e6418539bfbad/star/220426/logo.png">
 <style>html,body{margin:0;height:100%;width:100%;overflow:hidden;background:#000}
 #frame{position:fixed;inset:0;width:100%;height:100%;border:0;display:block}</style>
 </head><body>
-<iframe id="frame" title="sgzhx"></iframe>
+<iframe id="frame" title="3Q Đại Chiến"></iframe>
 <script>
   var BP=${BREAKPOINT};
   var frame=document.getElementById('frame'),cur=null;
@@ -45,9 +50,10 @@ const TRACKER_PATHS = ['/r.png', '/beacon'];
 
 async function send(res, file, type) {
   const body = await readFile(file);
-  // Hashed asset filenames make long caching safe; index.html stays revalidated.
-  const cache = file.endsWith('index.html') ? 'no-cache' : 'public, max-age=86400';
-  res.writeHead(200, { 'Content-Type': type, 'Access-Control-Allow-Origin': '*', 'Cache-Control': cache });
+  // Localization phase: assets are being re-translated frequently, so disable
+  // caching site-wide — a normal reload (F5) always fetches the latest image.
+  // (Revisit to `public, max-age=86400` once the VN artwork is finalized.)
+  res.writeHead(200, { 'Content-Type': type, 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-store' });
   res.end(body);
 }
 
@@ -56,11 +62,13 @@ function sendHtml(res, html) {
   res.end(html);
 }
 
-// Mobile internal entry = index.html + UA-spoof shim as the FIRST <head> child
-// (runs before the rem script + umi.js, forcing the app onto #/m/fab).
-async function mobileEntryHtml() {
-  const html = await readFile(INDEX, 'utf8'); // utf-8 string ops — CJK safe, no BOM
-  return html.replace('<head>', '<head>' + SHIM_HTML);
+// Internal entry HTML = index.html + injected shims as the FIRST <head> children
+// (run before the rem script + umi.js). Mobile gets the UA-spoof shim to force
+// #/m/fab; BOTH get the zh→vi i18n overlay. utf-8 string ops — CJK/VN safe, no BOM.
+async function entryHtml(withUaSpoof) {
+  const html = await readFile(INDEX, 'utf8');
+  const inject = (withUaSpoof ? SHIM_HTML : '') + I18N_HTML + HIDE_HTML + NEUTER_HTML + NAVFX_HTML;
+  return html.replace('<head>', '<head>' + inject);
 }
 
 export function startServer(port = 8080) {
@@ -81,8 +89,8 @@ export function startServer(port = 8080) {
 
       // Dual-view shell + internal entries
       if (pathname === '/' || pathname === '') return sendHtml(res, SHELL_HTML);
-      if (pathname === '/__internal/pc' || pathname === '/__internal/pc/') return await send(res, INDEX, MIME['.html']);
-      if (pathname === '/__internal/m' || pathname === '/__internal/m/') return sendHtml(res, await mobileEntryHtml());
+      if (pathname === '/__internal/pc' || pathname === '/__internal/pc/') return sendHtml(res, await entryHtml(false));
+      if (pathname === '/__internal/m' || pathname === '/__internal/m/') return sendHtml(res, await entryHtml(true));
       // prevent path traversal
       const safe = normalize(pathname).replace(/^(\.\.[/\\])+/, '');
       const file = join(ROOT, safe);

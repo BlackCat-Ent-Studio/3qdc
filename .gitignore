@@ -17,3 +17,11 @@ picture/
 # logs & OS junk
 *.log
 .DS_Store
+
+# site-images: duplicated image binaries (already in mirror/) — keep only the index
+site-images/*
+!site-images/IMAGES-INDEX.md
+
+# original-image backups (recoverable from git history)
+image-backup/
+
