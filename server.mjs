@@ -32,10 +32,14 @@ import { HIDE_HTML as HOME_HIDE } from './scripts/lib/home/hide-overlay.mjs';
 import { I18N_HTML as MAIN_I18N } from './scripts/lib/main/i18n-overlay.mjs';
 import { BBS_SHIM_HTML } from './scripts/lib/main/bbs-shim.mjs';
 import { NEUTER_HTML as MAIN_NEUTER } from './scripts/lib/main/neuter-links.mjs';
+// wiki (build C umi.cd0e3129, served at /wiki/) overlays
+import { I18N_HTML as WIKI_I18N } from './scripts/lib/wiki/i18n-overlay.mjs';
+import { NEUTER_HTML as WIKI_NEUTER } from './scripts/lib/wiki/neuter-links.mjs';
 
 const ROOT = join(process.cwd(), 'mirror');
-const ENTRY_B = join(ROOT, 'index.html');         // build B entry (umi.62525e29)
-const ENTRY_FAB = join(ROOT, '_fab-index.html');  // build A entry (umi.ca75703e)
+const ENTRY_B = join(ROOT, 'index.html');          // build B entry (umi.62525e29)
+const ENTRY_FAB = join(ROOT, '_fab-index.html');   // build A entry (umi.ca75703e)
+const ENTRY_WIKI = join(ROOT, '_wiki-index.html'); // build C entry (umi.cd0e3129, /wukongbuild/ss/)
 
 const BREAKPOINT = 768;
 // fab dual-view shell: one URL, swaps PC/mobile internal entry by viewport width.
@@ -112,6 +116,12 @@ async function buildBEntry(route) {
   const inject = RF(route) + BBS_SHIM_HTML + HOME_I18N + MAIN_I18N + HOME_HIDE + MAIN_NEUTER;
   return html.replace('<head>', '<head>' + inject);
 }
+async function wikiEntry() {
+  // build C (2.0.4) — its own umi under /wukongbuild/ss/; assets resolve from shared root.
+  const html = await readFile(ENTRY_WIKI, 'utf8');
+  const inject = RF('#/main') + WIKI_I18N + WIKI_NEUTER;
+  return html.replace('<head>', '<head>' + inject);
+}
 
 function qSuffix(search) {
   return search ? '__' + search.slice(1).replace(/[^a-z0-9=&._-]/gi, '_') : '';
@@ -161,6 +171,7 @@ export function startServer(port = 8080) {
       if (pathname === '/__internal/m' || pathname === '/__internal/m/') return sendHtml(res, await fabEntry(true));
       if (pathname === '/home' || pathname === '/home/') return sendHtml(res, await buildBEntry('#/index'));
       if (pathname === '/main' || pathname === '/main/') return sendHtml(res, await buildBEntry('#/main'));
+      if (pathname === '/wiki' || pathname === '/wiki/') return sendHtml(res, await wikiEntry());
 
       // --- static asset from merged mirror/ ---
       const safe = normalize(pathname).replace(/^(\.\.[/\\])+/, '');
