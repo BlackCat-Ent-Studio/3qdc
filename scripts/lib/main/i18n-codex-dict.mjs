@@ -247,6 +247,7 @@ export const CODEX_DICT = {
   '结束': 'kết thúc', '如果': 'nếu', '由': 'do', '浮动': 'dao động', '且': 'và', '会': 'sẽ', '奋': 'phấn', '必定': 'nhất định',
   '人': 'người', '提高': 'nâng cao', '提': 'tăng', '一列': '1 cột', '列': 'cột', '强袭箭': 'Cường Tập Tiễn', '散': 'tán',
   // pass-8 final single-char tail
+  '【': '[', '】': ']',
   '回血': 'hồi máu', '视为': 'xem là', '视': 'xem', '减伤': 'giảm sát thương', '重新': 'lại', '战斗': 'trận',
   '损失': 'mất', '自己': 'bản thân', '最大': 'tối đa', '获取': 'nhận', '增强': 'tăng cường', '延长': 'kéo dài',
   '闪怒': 'Thiểm Nộ', '一': 'một', '到': 'đến', '下': 'hạ', '力': 'lực', '魔': 'ma', '等': 'bằng', '身': 'thân',
