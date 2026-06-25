@@ -86,5 +86,11 @@ Bug "thanh tướng không chuyển được": bấm đổi tướng → app fet
 - **Fix news:** `scripts/recap-news.mjs` (direct-API, không cần browser): lấy id mọi bài (4 tab × phân trang) → fetch `getInfoDetail` từng bài → lưu body-keyed. Đã chụp 132 bài (+174 snapshot, 559→733). Re-run khi có tin mới. Sau fix: tất cả section 0 fallback.
 - Tool dò lại: `zgshx/scripts/audit-detail2.mjs` (đếm fallback-miss mỗi section).
 
+## 7d. Việt hoá mục Tướng — Phase 1 (2026-06-25)
+Audit person: ~635 run chữ Hán còn sót (chủ yếu là prose kỹ năng/tiểu sử). Làm theo PHASE:
+- **Phase 1 (XONG):** thêm ~200 token NGẮN vào `scripts/lib/main/i18n-codex-dict.mjs` (skill type 普攻/怒攻/被动/觉醒, phân loại, tên tướng+CV còn thiếu, **tên kỹ năng + tên duyên Hán-Việt**, tiêu đề guide). Dịch qua **DOM overlay** (KHÔNG sửa data nguồn — vì `priKey` là khoá tra cứu, sửa sẽ vỡ app). Verify: 10/10 token mẫu hết Hán.
+- **Phase 2 (CHƯA):** mô tả kỹ năng + tiểu sử (prose dài, ~366 chuỗi). Overlay substring đang cắt prose thành mảnh ("暴击s") → phải dịch **data nguồn** (snapshot JSON, chỉ `priVal` không đụng `priKey`) như wiki đã làm. Tool trích: `zgshx/scripts/extract-hero-cjk.mjs` (xuất `verify-out/hero-cjk-strings.json`).
+- Tool quét residual: `zgshx/scripts/scan-person-cjk.mjs`.
+
 ## 8. Phong cách user
 Thay/sửa → verify (screenshot/headless) → DỪNG chờ lệnh; brutal honest; nhắc Ctrl+Shift+R.
