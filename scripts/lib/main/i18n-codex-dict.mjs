@@ -239,6 +239,56 @@ export const CODEX_DICT = {
   '第': 'thứ', '拥': 'sở hữu', '上': 'trên', '门': 'môn', '黑': 'hắc', '爪': 'vuốt', '怒': 'nộ',
   // pass-10 CV names
   '王宇航': 'Vương Vũ Hàng', '沈磊': 'Thẩm Lỗi', '醋醋': 'Thố Thố', '刘嘉': 'Lưu Gia', '刘': 'Lưu', '嘉': 'Gia',
+  // pass-11 skill verbs + status effects (scan blind-spots; user-reported)
+  '天雷激轰': 'Thiên Lôi Kích Oanh', '感电': 'Cảm Điện', '给': 'cho', '让': 'khiến cho',
+  '雷击': 'Lôi Kích', '雷霆': 'Lôi Đình', '雷': 'Lôi', '电': 'Điện',
+  '冰冻': 'đóng băng', '冻结': 'đóng băng', '寒冰': 'băng giá', '流血': 'chảy máu', '出血': 'chảy máu',
+  '减速': 'giảm tốc', '加速': 'tăng tốc', '沉睡': 'ngủ say', '石化': 'hóa đá', '缴械': 'tước vũ khí',
+  '禁锢': 'giam cầm', '封印': 'phong ấn', '驱散': 'xua tan', '净化': 'thanh tẩy', '嘲讽': 'khiêu khích',
+  '反伤': 'phản sát thương', '标记': 'đánh dấu', '印记': 'ấn ký', '灼伤': 'thiêu đốt', '烧伤': 'bỏng',
+  '虚弱': 'suy yếu', '破甲': 'phá giáp', '护体': 'hộ thể', '回春': 'hồi xuân', '续航': 'duy trì',
+  // pass-12 DEFINITIVE (source-data dict check): all remaining skill/bond/term/title tokens
+  '司马懿': 'Tư Mã Ý', '夏侯悙': 'Hạ Hầu Đôn',
+  // multi-char skill / title / bond names
+  '吞食天地': 'Thôn Thực Thiên Địa', '老谋深算': 'Lão Mưu Thâm Toán', '暗武轮回': 'Ám Võ Luân Hồi', '猎鹰震空破': 'Liệp Ưng Chấn Không Phá',
+  '洛水秋波': 'Lạc Thủy Thu Ba', '坚石壁垒': 'Kiên Thạch Bích Lũy', '影逍遥刺': 'Ảnh Tiêu Dao Thích', '冥影破凰': 'Minh Ảnh Phá Hoàng', '破凰': 'Phá Hoàng',
+  '玄女孤影': 'Huyền Nữ Cô Ảnh', '怜护流离': 'Liên Hộ Lưu Ly', '光突刺': 'Quang Đột Thích', '神火延绵': 'Thần Hỏa Diên Miên', '烈焰焚天': 'Liệt Diễm Phần Thiên',
+  '鹰波突袭': 'Ưng Ba Đột Tập', '暗武隐匿': 'Ám Võ Ẩn Nấp', '千里奔袭': 'Thiên Lý Bôn Tập', '赤壁灾': 'Xích Bích Tai', '连锁爆裂': 'Liên Tỏa Bạo Liệt',
+  '强化陷阱': 'Cạm bẫy cường hóa', '爆炸陷阱': 'Cạm bẫy nổ', '随机引爆': 'ngẫu nhiên kích nổ', '禁军统领': 'Thống lĩnh cấm quân', '万夫莫开': 'Vạn Phu Mạc Khai',
+  '万钧': 'Vạn Quân', '神兵技': 'kỹ năng Thần Binh', '神兵': 'Thần Binh', '合击技': 'kỹ năng hợp kích', '暗冕': 'Ám Miện', '速射': 'Tốc Xạ',
+  '鬼斩': 'Quỷ Trảm', '飞锤': 'Phi Chùy', '纵劈': 'Túng Phách', '天机': 'Thiên Cơ', '巨擘': 'Cự Phách', '刺击': 'Thích Kích', '音焰': 'Âm Diễm',
+  '横刀': 'Hoành Đao', '锤旋': 'Chùy Toàn', '开刃': 'Khai Nhận', '猛袭': 'Mãnh Tập', '刚烈无匹': 'Cương Liệt Vô Thất', '恶来': 'Ác Lai',
+  '吞食': 'thôn thực', '守望': 'Thủ Vọng', '怜护': 'Liên Hộ', '集智': 'Tập Trí', '狼顾': 'Lang Cố', '锦囊': 'Cẩm Nang', '麒麟': 'Kỳ Lân', '饕餮': 'Thao Thiết',
+  // bond / title names
+  '桃园英杰': 'Đào Viên Anh Kiệt', '天妒英才': 'Thiên Đố Anh Tài', '肌骨虬扎': 'Cơ Cốt Cầu Trát', '命途多舛': 'Mệnh Đồ Đa Suyễn', '河北豪杰': 'Hà Bắc Hào Kiệt',
+  '伐董联盟': 'Liên minh phạt Đổng', '汉末诸侯': 'Chư hầu cuối Hán', '伴月双星': 'Bạn Nguyệt Song Tinh', '危险萝莉': 'Loli nguy hiểm', '虎女': 'Hổ Nữ',
+  '才华横溢': 'Tài Hoa Hoành Dật', '巾帼女杰': 'Cân Quắc Nữ Kiệt', '白衣渡江': 'Bạch Y Độ Giang', '乱世操戈': 'Loạn Thế Thao Qua', '江表虎臣': 'Giang Biểu Hổ Thần',
+  '天籁凌音': 'Thiên Lại Lăng Âm', '柔情似水': 'Nhu Tình Tự Thủy', '平分秋色': 'Bình Phân Thu Sắc', '开山裂石': 'Khai Sơn Liệt Thạch', '无所畏惧': 'Vô Sở Úy Cụ',
+  '豪勇奇袭': 'Hào Dũng Kỳ Tập', '洛神': 'Lạc Thần', '南蛮': 'Nam Man', '洛阳': 'Lạc Dương', '帝王': 'đế vương', '逐鹿': 'trục lộc', '无忌': 'Vô Kỵ', '陷阵': 'Hãm Trận',
+  // guide titles
+  '硬核萌新向': 'Hướng tân thủ chuyên sâu', '萌新干货': 'Cẩm nang tân thủ', '局中三大板块': 'Ba mảng lớn trong ván', '新手元宝': 'Nguyên bảo tân thủ',
+  '代币花费指南': 'Chỉ nam tiêu xu', '属性理解': 'Hiểu thuộc tính', '硬件打磨': 'Mài giũa phần cứng', '避开文案陷阱': 'Tránh bẫy văn bản', '霸占先手权': 'Chiếm quyền tiên thủ',
+  '插队机制': 'Cơ chế chen lượt', '插队': 'chen lượt', '全养成': 'nuôi toàn diện', '养成法': 'cách nuôi', '养成': 'nuôi dưỡng', '出手顺': 'thứ tự ra đòn', '密度': 'mật độ',
+  '神兵篇': 'Chương Thần Binh', '灵宠篇': 'Chương Linh Sủng', '风物篇': 'Chương Phong Vật', '将魂篇': 'Chương Tướng Hồn', '阵法篇': 'Chương Trận Pháp',
+  '战魂篇': 'Chương Chiến Hồn', '善灵篇': 'Chương Thiện Linh', '战灵篇': 'Chương Chiến Linh', '版本解读': 'Giải đọc phiên bản', '解读': 'giải đọc',
+  // terms
+  '随机': 'ngẫu nhiên', '追击': 'truy kích', '行动': 'hành động', '陷阱': 'cạm bẫy', '隐匿': 'ẩn nấp', '爆炸': 'nổ', '引爆': 'kích nổ', '炸弹': 'bom',
+  '分担': 'gánh chịu', '幻象': 'ảo ảnh', '剩余': 'còn lại', '直伤': 'sát thương trực tiếp', '真伤': 'sát thương thực', '真实': 'thật', '争夺战': 'trận tranh đoạt',
+  '职业': 'nghề', '突击': 'đột kích', '步步': 'từng bước', '代替': 'thay thế', '承受': 'chịu đựng', '蔓延': 'lan rộng', '成功': 'thành công', '速度': 'tốc độ',
+  '移动': 'di chuyển', '奇袭': 'kỳ tập', '复仇': 'báo thù', '败退': 'bại lui', '初始': 'ban đầu', '野心': 'dã tâm', '领域': 'lĩnh vực', '期间': 'trong thời gian',
+  '部分': 'một phần', '友军': 'quân bạn', '保护': 'bảo vệ', '任意': 'tùy ý', '任何': 'bất kỳ', '随意': 'tùy ý', '各自': 'mỗi bên', '分别': 'riêng', '回合制游戏': 'game đánh theo lượt',
+  '三国': 'Tam Quốc', '幻想大陆': 'Huyễn Tưởng Đại Lục', '江东': 'Giang Đông', '乱世': 'Loạn Thế', '宿命': 'túc mệnh', '千古': 'thiên cổ', '角色': 'nhân vật',
+  // single-char fillers
+  '武': 'Võ', '位': 'vị', '少': 'thiếu', '战': 'trận', '争': 'tranh', '女': 'nữ', '法': 'pháp', '魂': 'hồn', '回': 'lần', '间': 'gian', '种': 'loại',
+  '系': 'hệ', '良': 'Lương', '妻': 'vợ', '古': 'cổ', '士': 'sĩ', '威': 'uy', '锋': 'phong', '凛': 'Lẫm', '怜': 'liên', '柔': 'nhu', '刚': 'cương',
+  '济': 'tế', '巧': 'xảo', '息': 'tức', '收': 'thu', '殒': 'tử', '转': 'chuyển', '拿': 'lấy', '爆': 'nổ', '袭': 'tập', '应': 'ứng', '总': 'tổng',
+  '活': 'sống', '作': 'làm', '但': 'nhưng', '另': 'khác', '几': 'mấy', '性': 'tính', '所': 'nơi', '邻': 'kề', '版': 'bản', '页': 'trang', '营': 'doanh',
+  '魏': 'Ngụy', '吴': 'Ngô', '蜀': 'Thục', '群': 'Quần', '两': 'hai', '十四': 'mười bốn', '斗': 'đấu', '闻': 'nghe', '清': 'thanh',
+  // pass-13 final tail
+  '立绘': 'tranh', '新官网': 'trang chính mới', '极致': 'cực hạn', '板块': 'mảng', '局中': 'trong ván', '煞强攻': 'Sát Cường Công', '煞': 'sát',
+  '闪耀': 'Lấp Lánh', '国家': 'quốc gia', '敌我双方': 'cả hai bên', '双方': 'hai bên', '花开': 'hoa nở', '月阵': 'Nguyệt Trận',
+  '生生': 'sinh sôi', '灵机': 'linh cơ', '楚楚': 'Sở Sở', '神附体': 'thần nhập thể', '精深': 'tinh thâm', '生子如': 'sinh con như',
+  '蒂': 'đế', '猛': 'mãnh', '克': 'khắc', '乱': 'loạn', '英': 'anh', '道': 'đạo', '因': 'vì', '三大': 'ba', '主': 'chủ',
   // pass-6 remaining skill names + terms
   '万兽奔腾': 'Vạn Thú Bôn Đằng', '万毒破阵': 'Vạn Độc Phá Trận', '书剑破阵袭': 'Thư Kiếm Phá Trận Tập',
   '仙露剑舞': 'Tiên Lộ Kiếm Vũ', '克己复礼': 'Khắc Kỷ Phục Lễ', '冰凤飞瀑': 'Băng Phụng Phi Bộc', '冲锋': 'Xung Phong',
