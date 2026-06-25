@@ -1,0 +1,16 @@
+{
+  "name": "zgshx-fab-mirror",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "1:1 PC clone (static asset-mirror) of sgzhx /#/fab",
+  "scripts": {
+    "capture": "node scripts/capture.mjs",
+    "rewrite": "node scripts/rewrite-urls.mjs",
+    "serve": "node server.mjs",
+    "verify": "node scripts/verify.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.49.0"
+  }
+}
