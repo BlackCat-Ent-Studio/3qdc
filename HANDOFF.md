@@ -82,7 +82,9 @@ Bug "thanh tướng không chuyển được": bấm đổi tướng → app fet
 - Fix: `scripts/recap-person.mjs` — crawl LIVE `sgzhx.lingxigames.com/#/main/person`, **force-click từng avatar** (4 phe × ~13 tướng) để mỗi `getQueryDataInfoByPriId` (main `tbId…4595` ~8KB + skill `tbId…4147`) snapshot body-keyed vào `mirror/galaxias-api.lingxigames.com/ds/ajax/`. Whitelist host (galaxias-api + cloud) → KHÔNG đè asset đã VN hoá. Chờ 1500ms/tướng cho cascade skill.
 - Kết quả: snapshot 403→559; coverage test 0 fallback; verify đổi sang "Tôn Thượng Hương" OK.
 - **Re-run khi TQ thêm tướng mới** (vd dịp 6 năm): `cd 3qdc-unified` (cần playwright) hoặc chạy từ zgshx (có node_modules) với MIRROR trỏ unified → `node scripts/recap-person.mjs`. Mirror gitignore → data nằm trên đĩa, server đọc trực tiếp (không cần restart).
-- ⚠️ Cùng pattern: các trang **chi tiết động khác** (bài tin, item kho báu) có thể cũng thiếu snapshot nếu lúc crawl chưa mở hết — cần capture tương tự nếu khách báo.
+- **Audit toàn bộ section (2026-06-25):** dò response trùng chữ ký fallback (`endpoint.json` sha1 `16b7eb1a`). Kết quả: wiki/kho-báu/kế-hoạch/đặc-sắc = 0 thiếu; **Tin tức thiếu chi tiết bài** (`getInfoDetail`).
+- **Fix news:** `scripts/recap-news.mjs` (direct-API, không cần browser): lấy id mọi bài (4 tab × phân trang) → fetch `getInfoDetail` từng bài → lưu body-keyed. Đã chụp 132 bài (+174 snapshot, 559→733). Re-run khi có tin mới. Sau fix: tất cả section 0 fallback.
+- Tool dò lại: `zgshx/scripts/audit-detail2.mjs` (đếm fallback-miss mỗi section).
 
 ## 8. Phong cách user
 Thay/sửa → verify (screenshot/headless) → DỪNG chờ lệnh; brutal honest; nhắc Ctrl+Shift+R.
