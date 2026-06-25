@@ -102,5 +102,11 @@ Audit person: ~635 run chữ Hán còn sót (chủ yếu là prose kỹ năng/ti
 - Tool bios: `extract-hero-buckets.mjs` + `dump-bios.mjs` + `diff-bios.mjs` (lọc bios mới) + `gen-bios.mjs`/`gen-bios2.mjs` (sinh dict).
 - ⚠️ Glossary là DOM-overlay (KHÔNG đụng `priKey` data) → an toàn. Nếu user vẫn thấy chữ Hán dù check=0 → gần như là **chữ trong ẢNH** (icon/banner base64), phải localize ảnh riêng.
 
+## 7e. Việt hoá mục Cộng đồng (同人社区 /cong-dong) — 2026-06-26
+Làm qua agent. Tab Tranh/Cosplay/Sự kiện = sạch; **Phim&nhạc** đã dịch (22 tiêu đề video + handle tác giả Hán-Việt vào codex). Còn lại KHÔNG dịch bằng overlay được:
+- **Thân bài "Truyện đồng nhân"** (~6675 đoạn) = fan-fiction người dùng tự viết (field `content` BBS, vô hạn) → để nguyên (web gốc cũng vậy). Muốn gọn thì hide tab.
+- **Banner "同人/同人影音"** = chữ trong ẢNH → cần localize ảnh (workflow site-image), không phải overlay.
+- Data nguồn fans = host `p10488-bbs.ejoy.com` (qua `bbs-shim.mjs`); field hiển thị = `title`/`user_nick_name` (đã phủ), `content`=thân bài (bỏ qua).
+
 ## 8. Phong cách user
 Thay/sửa → verify (screenshot/headless) → DỪNG chờ lệnh; brutal honest; nhắc Ctrl+Shift+R.
