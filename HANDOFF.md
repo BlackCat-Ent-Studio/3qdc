@@ -77,5 +77,12 @@ Khách muốn "mỗi path 1 trang" (kiểu sitemap). Đã thêm path sạch cho 
 - **Bỏ iframe ở `/`**: serve fab trực tiếp theo **UA** (`isMobileUA`) → desktop `#/fab`, mobile `#/m/fab` (+spoof). Thanh địa chỉ hiện route, hết "dậm chân". SHELL_HTML + `/__internal/*` giữ làm fallback.
 - Caveat: trang **chi tiết động** (1 bài/1 tướng) vẫn `#/...` (client hash-router, không source không bẻ).
 
+## 7c. Re-capture chi tiết tướng (2026-06-25)
+Bug "thanh tướng không chuyển được": bấm đổi tướng → app fetch chi tiết tướng đó, nhưng mirror chỉ chụp 1 phần → tướng chưa chụp trả **fallback rỗng** (`endpoint.json` ~790-808B) → màn hình giữ tướng cũ. (Avatar là `<img>`, nav-sync vô can.)
+- Fix: `scripts/recap-person.mjs` — crawl LIVE `sgzhx.lingxigames.com/#/main/person`, **force-click từng avatar** (4 phe × ~13 tướng) để mỗi `getQueryDataInfoByPriId` (main `tbId…4595` ~8KB + skill `tbId…4147`) snapshot body-keyed vào `mirror/galaxias-api.lingxigames.com/ds/ajax/`. Whitelist host (galaxias-api + cloud) → KHÔNG đè asset đã VN hoá. Chờ 1500ms/tướng cho cascade skill.
+- Kết quả: snapshot 403→559; coverage test 0 fallback; verify đổi sang "Tôn Thượng Hương" OK.
+- **Re-run khi TQ thêm tướng mới** (vd dịp 6 năm): `cd 3qdc-unified` (cần playwright) hoặc chạy từ zgshx (có node_modules) với MIRROR trỏ unified → `node scripts/recap-person.mjs`. Mirror gitignore → data nằm trên đĩa, server đọc trực tiếp (không cần restart).
+- ⚠️ Cùng pattern: các trang **chi tiết động khác** (bài tin, item kho báu) có thể cũng thiếu snapshot nếu lúc crawl chưa mở hết — cần capture tương tự nếu khách báo.
+
 ## 8. Phong cách user
 Thay/sửa → verify (screenshot/headless) → DỪNG chờ lệnh; brutal honest; nhắc Ctrl+Shift+R.
