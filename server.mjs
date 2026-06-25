@@ -65,6 +65,18 @@ const SHELL_HTML = `<!DOCTYPE html><html lang="vi"><head>
 // Force build-B app off its default (#/fab, unmirrored here) onto its real route.
 const RF = (route) => `<script>(function(){var h=location.hash;if(!h||h==='#'||h==='#/'||h.indexOf('#/fab')===0){location.hash='${route}';}})();</script>`;
 
+// Clean sitemap: each path → one section (build B), so /tuong → Tướng, /wiki → wiki, etc.
+const BUILDB_PATHS = {
+  '/home': '#/index',
+  '/main': '#/main',
+  '/tin-tuc': '#/main/news',
+  '/ke-hoach': '#/main/planning',
+  '/tuong': '#/main/person',
+  '/dac-sac': '#/main/feature',
+  '/kho-bau': '#/main/treasure',
+  '/cong-dong': '#/main/fans',
+};
+
 const MIME = {
   '.html': 'text/html; charset=utf-8', '.js': 'application/javascript; charset=utf-8',
   '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8',
@@ -169,9 +181,9 @@ export function startServer(port = 8080) {
       if (pathname === '/' || pathname === '') return sendHtml(res, SHELL_HTML);
       if (pathname === '/__internal/pc' || pathname === '/__internal/pc/') return sendHtml(res, await fabEntry(false));
       if (pathname === '/__internal/m' || pathname === '/__internal/m/') return sendHtml(res, await fabEntry(true));
-      if (pathname === '/home' || pathname === '/home/') return sendHtml(res, await buildBEntry('#/index'));
-      if (pathname === '/main' || pathname === '/main/') return sendHtml(res, await buildBEntry('#/main'));
-      if (pathname === '/wiki' || pathname === '/wiki/') return sendHtml(res, await wikiEntry());
+      const cleanPath = pathname.length > 1 ? pathname.replace(/\/$/, '') : pathname;
+      if (BUILDB_PATHS[cleanPath]) return sendHtml(res, await buildBEntry(BUILDB_PATHS[cleanPath]));
+      if (cleanPath === '/wiki') return sendHtml(res, await wikiEntry());
 
       // --- static asset from merged mirror/ ---
       const safe = normalize(pathname).replace(/^(\.\.[/\\])+/, '');
