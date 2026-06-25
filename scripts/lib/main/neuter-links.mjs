@@ -4,7 +4,7 @@
 //      was never mirrored (white/blank screen). Since those guides live in the wiki, send them there.
 // Only #/details (person advance) uses that route — news/feature/etc don't — so the rewrite is safe.
 // Re-applied on SPA re-render; click intercepted in capture phase (umi hash-routing safety).
-const WIKI = '/wiki/';   // unified: wiki links → /wiki section (same domain, same server)
+const WIKI = '/huong-dan';   // unified: wiki links → /huong-dan section (same domain, same server)
 
 const JS = `(function(){
   var WIKI=${JSON.stringify(WIKI)};

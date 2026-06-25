@@ -70,5 +70,12 @@ node C:\web\web1\zgshx\scripts\poc-unified-live.mjs   # verify live (render + 0 
 # rollback: Caddyfile block 3qdc → localhost:3300 → caddy reload
 ```
 
+## 7b. Sitemap path sạch + nav-sync (2026-06-25)
+Khách muốn "mỗi path 1 trang" (kiểu sitemap). Đã thêm path sạch cho từng mục (server `BUILDB_PATHS`):
+`/` (fab, landing) · `/home` · `/tin-tuc` · `/ke-hoach` · `/tuong` · `/dac-sac` · `/kho-bau` · `/cong-dong` · `/huong-dan` (wiki; alias `/wiki`).
+- **nav-sync overlay** (`scripts/lib/nav-sync.mjs`, inject mọi entry): (1) set **tab title theo route** (bỏ ép-title trong 4 i18n để hết đá nhau — bug /home ra "Main" đã fix); (2) **đi dây menu**: click link menu (`a[href="#/main/news"]`…) → `location.assign('/tin-tuc')` → URL path sạch. Chỉ match EXACT menu href (link chi tiết `?rowId=`/`#/details` để app tự lo).
+- **Bỏ iframe ở `/`**: serve fab trực tiếp theo **UA** (`isMobileUA`) → desktop `#/fab`, mobile `#/m/fab` (+spoof). Thanh địa chỉ hiện route, hết "dậm chân". SHELL_HTML + `/__internal/*` giữ làm fallback.
+- Caveat: trang **chi tiết động** (1 bài/1 tướng) vẫn `#/...` (client hash-router, không source không bẻ).
+
 ## 8. Phong cách user
 Thay/sửa → verify (screenshot/headless) → DỪNG chờ lệnh; brutal honest; nhắc Ctrl+Shift+R.

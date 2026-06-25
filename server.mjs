@@ -32,9 +32,11 @@ import { HIDE_HTML as HOME_HIDE } from './scripts/lib/home/hide-overlay.mjs';
 import { I18N_HTML as MAIN_I18N } from './scripts/lib/main/i18n-overlay.mjs';
 import { BBS_SHIM_HTML } from './scripts/lib/main/bbs-shim.mjs';
 import { NEUTER_HTML as MAIN_NEUTER } from './scripts/lib/main/neuter-links.mjs';
-// wiki (build C umi.cd0e3129, served at /wiki/) overlays
+// wiki (build C umi.cd0e3129, served at /huong-dan/) overlays
 import { I18N_HTML as WIKI_I18N } from './scripts/lib/wiki/i18n-overlay.mjs';
 import { NEUTER_HTML as WIKI_NEUTER } from './scripts/lib/wiki/neuter-links.mjs';
+// shared nav-sync (tab title per page + menu → clean path wiring)
+import { NAV_SYNC_HTML } from './scripts/lib/nav-sync.mjs';
 
 const ROOT = join(process.cwd(), 'mirror');
 const ENTRY_B = join(ROOT, 'index.html');          // build B entry (umi.62525e29)
@@ -65,7 +67,7 @@ const SHELL_HTML = `<!DOCTYPE html><html lang="vi"><head>
 // Force build-B app off its default (#/fab, unmirrored here) onto its real route.
 const RF = (route) => `<script>(function(){var h=location.hash;if(!h||h==='#'||h==='#/'||h.indexOf('#/fab')===0){location.hash='${route}';}})();</script>`;
 
-// Clean sitemap: each path → one section (build B), so /tuong → Tướng, /wiki → wiki, etc.
+// Clean sitemap: each path → one section (build B), so /tuong → Tướng, /huong-dan → wiki, etc.
 const BUILDB_PATHS = {
   '/home': '#/index',
   '/main': '#/main',
@@ -76,6 +78,19 @@ const BUILDB_PATHS = {
   '/kho-bau': '#/main/treasure',
   '/cong-dong': '#/main/fans',
 };
+// nav-sync maps (build B): hash → tab title, and menu hash → clean path.
+const BRAND = '3Q Đại Chiến';
+const BUILDB_TITLES = {
+  '#/index': 'Trang chủ', '#/main/news': 'Tin tức', '#/main/planning': 'Kế hoạch',
+  '#/main/person': 'Tướng', '#/main/feature': 'Đặc sắc', '#/main/treasure': 'Kho báu',
+  '#/main/fans': 'Cộng đồng', '#/main': 'Tin tức',
+};
+const BUILDB_LINKS = {
+  '#/index': '/home', '#/main/news': '/tin-tuc', '#/main/planning': '/ke-hoach',
+  '#/main/person': '/tuong', '#/main/feature': '/dac-sac', '#/main/treasure': '/kho-bau',
+  '#/main/fans': '/cong-dong',
+};
+const isMobileUA = (ua) => /iphone|android.+mobile|ipod|windows phone/i.test(ua || '');
 
 const MIME = {
   '.html': 'text/html; charset=utf-8', '.js': 'application/javascript; charset=utf-8',
@@ -115,23 +130,26 @@ function sendHtml(res, html) {
 }
 
 // --- entry builders (read source HTML + inject the right overlay stack) ---
+const FAB_NAV = NAV_SYNC_HTML({ brand: BRAND, def: 'Trang ngoài', titles: { '#/fab': 'Trang ngoài', '#/m/fab': 'Trang ngoài' }, paths: {} });
+const BUILDB_NAV = NAV_SYNC_HTML({ brand: BRAND, def: 'Trang chủ', titles: BUILDB_TITLES, paths: BUILDB_LINKS });
+const WIKI_NAV = NAV_SYNC_HTML({ brand: BRAND, def: 'Hướng dẫn', titles: {}, paths: {} });
+
 async function fabEntry(withUaSpoof) {
   const html = await readFile(ENTRY_FAB, 'utf8');
-  const inject = (withUaSpoof ? SHIM_HTML : '') + FAB_I18N + FAB_HIDE + FAB_NEUTER + NAVFX_HTML;
+  const inject = (withUaSpoof ? SHIM_HTML : '') + FAB_I18N + FAB_HIDE + FAB_NEUTER + NAVFX_HTML + FAB_NAV;
   return html.replace('<head>', '<head>' + inject);
 }
 async function buildBEntry(route) {
   const html = await readFile(ENTRY_B, 'utf8');
   // index + main share build B → native hash nav handles #/index ↔ #/main/* in-app.
-  // Inject union of both dicts; MAIN_NEUTER (wiki + un-mirrored #/details only) is
-  // unified-safe and used for both — it does NOT redirect #/main/* to a subdomain.
-  const inject = RF(route) + BBS_SHIM_HTML + HOME_I18N + MAIN_I18N + HOME_HIDE + MAIN_NEUTER;
+  // nav-sync wires the top menu to clean paths + sets the tab title per section.
+  const inject = RF(route) + BBS_SHIM_HTML + HOME_I18N + MAIN_I18N + HOME_HIDE + MAIN_NEUTER + BUILDB_NAV;
   return html.replace('<head>', '<head>' + inject);
 }
 async function wikiEntry() {
   // build C (2.0.4) — its own umi under /wukongbuild/ss/; assets resolve from shared root.
   const html = await readFile(ENTRY_WIKI, 'utf8');
-  const inject = RF('#/main') + WIKI_I18N + WIKI_NEUTER;
+  const inject = RF('#/main') + WIKI_I18N + WIKI_NEUTER + WIKI_NAV;
   return html.replace('<head>', '<head>' + inject);
 }
 
@@ -178,12 +196,14 @@ export function startServer(port = 8080) {
       }
 
       // --- section entries (real-path → native build entry) ---
-      if (pathname === '/' || pathname === '') return sendHtml(res, SHELL_HTML);
+      // Landing fab served directly (no iframe) → address bar shows the real route.
+      // PC vs mobile picked by request UA (real devices route natively, like the origin).
+      if (pathname === '/' || pathname === '') return sendHtml(res, await fabEntry(isMobileUA(req.headers['user-agent'])));
       if (pathname === '/__internal/pc' || pathname === '/__internal/pc/') return sendHtml(res, await fabEntry(false));
       if (pathname === '/__internal/m' || pathname === '/__internal/m/') return sendHtml(res, await fabEntry(true));
       const cleanPath = pathname.length > 1 ? pathname.replace(/\/$/, '') : pathname;
       if (BUILDB_PATHS[cleanPath]) return sendHtml(res, await buildBEntry(BUILDB_PATHS[cleanPath]));
-      if (cleanPath === '/wiki') return sendHtml(res, await wikiEntry());
+      if (cleanPath === '/huong-dan' || cleanPath === '/wiki') return sendHtml(res, await wikiEntry());
 
       // --- static asset from merged mirror/ ---
       const safe = normalize(pathname).replace(/^(\.\.[/\\])+/, '');

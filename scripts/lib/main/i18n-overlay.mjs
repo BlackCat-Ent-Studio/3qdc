@@ -117,7 +117,7 @@ const SHIM_JS = `(function(){
   function tr(s){ if(!s||!HAN.test(s))return s; var o=s; for(var i=0;i<K.length;i++){ if(o.indexOf(K[i])>-1)o=o.split(K[i]).join(D[K[i]]); } return o; }
   function fixNode(n){ if(n&&n.nodeValue&&HAN.test(n.nodeValue)){ var v=tr(n.nodeValue); if(v!==n.nodeValue)n.nodeValue=v; } }
   function walk(root){ try{ if(!root)return; if(root.nodeType===3){fixNode(root);return;} var w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,null),n,b=[]; while((n=w.nextNode()))b.push(n); for(var i=0;i<b.length;i++)fixNode(b[i]); }catch(e){} }
-  function run(){ walk(document.body); if(document.title!==TT)document.title=TT; }
+  function run(){ walk(document.body); }
   if(document.readyState!=='loading')run(); else document.addEventListener('DOMContentLoaded',run);
   var mo=new MutationObserver(function(ms){ for(var i=0;i<ms.length;i++){ var m=ms[i]; if(m.type==='characterData'){fixNode(m.target);} else if(m.addedNodes){ for(var j=0;j<m.addedNodes.length;j++)walk(m.addedNodes[j]); } } });
   (function start(){ if(document.body)mo.observe(document.body,{childList:true,subtree:true,characterData:true}); else setTimeout(start,50); })();
