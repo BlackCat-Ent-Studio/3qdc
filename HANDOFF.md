@@ -89,8 +89,12 @@ Bug "thanh tướng không chuyển được": bấm đổi tướng → app fet
 ## 7d. Việt hoá mục Tướng — Phase 1 (2026-06-25)
 Audit person: ~635 run chữ Hán còn sót (chủ yếu là prose kỹ năng/tiểu sử). Làm theo PHASE:
 - **Phase 1 (XONG):** thêm ~200 token NGẮN vào `scripts/lib/main/i18n-codex-dict.mjs` (skill type 普攻/怒攻/被动/觉醒, phân loại, tên tướng+CV còn thiếu, **tên kỹ năng + tên duyên Hán-Việt**, tiêu đề guide). Dịch qua **DOM overlay** (KHÔNG sửa data nguồn — vì `priKey` là khoá tra cứu, sửa sẽ vỡ app). Verify: 10/10 token mẫu hết Hán.
-- **Phase 2 (CHƯA):** mô tả kỹ năng + tiểu sử (prose dài, ~366 chuỗi). Overlay substring đang cắt prose thành mảnh ("暴击s") → phải dịch **data nguồn** (snapshot JSON, chỉ `priVal` không đụng `priKey`) như wiki đã làm. Tool trích: `zgshx/scripts/extract-hero-cjk.mjs` (xuất `verify-out/hero-cjk-strings.json`).
-- Tool quét residual: `zgshx/scripts/scan-person-cjk.mjs`.
+- **Phase 2 (XONG 2026-06-26):** mô tả kỹ năng + tiểu sử. Làm bằng **overlay** (không sửa data nguồn) gồm 2 phần:
+  - **Glossary thuật ngữ** (~250 mục, 8 pass) trong `i18n-codex-dict.mjs`: thuật ngữ kỹ năng/duyên + tên kỹ năng Hán-Việt + hư từ/liên từ + dấu câu TQ→spacing. Engine sort longest-first nên cụm dài thay trước, hư từ dọn mảnh sau.
+  - **Tiểu sử full** (`i18n-person-bios.mjs`, 36 bios) — dịch tay narrative, key = chuỗi Hán y nguyên; import + `Object.assign(DICT, BIOS_DICT)` trong `i18n-overlay.mjs`.
+  - **KẾT QUẢ: quét person = 0 chữ Hán** (mọi tướng/phe). Quy trình lặp: thêm glossary → restart → `scan-person-cjk.mjs` → thêm token sót → lặp tới 0.
+- Tool: `scan-person-cjk.mjs` (quét residual), `extract-hero-prose.mjs`/`extract-hero-buckets.mjs`/`gen-bios.mjs` (trích+sinh bios).
+- ⚠️ Glossary là DOM-overlay (không đụng `priKey` data) → an toàn. Tướng mới thêm sau: chạy lại scan, bổ sung token vào codex.
 
 ## 8. Phong cách user
 Thay/sửa → verify (screenshot/headless) → DỪNG chờ lệnh; brutal honest; nhắc Ctrl+Shift+R.

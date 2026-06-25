@@ -6,6 +6,7 @@
 // companion CSS clamps overflow with an ellipsis ("…"). Bundle is never edited.
 
 import { CODEX_DICT } from './i18n-codex-dict.mjs';
+import { BIOS_DICT } from './i18n-person-bios.mjs';
 
 const DICT = {
   // ---- left nav ----
@@ -106,6 +107,7 @@ const DICT = {
 
 // merge hero-codex content dictionary (kept in a separate file to keep this one lean)
 Object.assign(DICT, CODEX_DICT);
+Object.assign(DICT, BIOS_DICT);
 
 const TAB_TITLE = '3Q Đại Chiến - Main';
 

@@ -149,4 +149,105 @@ export const CODEX_DICT = {
   '善灵养成攻略': 'Hướng dẫn nuôi Thiện Linh', '茶馆活动攻略': 'Hướng dẫn sự kiện Quán Trà', '阵法培养指南': 'Chỉ nam bồi dưỡng Trận Pháp',
   '武将战魂推荐': 'Đề xuất Chiến Hồn tướng', '灵宠养成攻略': 'Hướng dẫn nuôi Linh Sủng', '将魂录养成攻略': 'Hướng dẫn nuôi Tướng Hồn Lục',
   '决战赤壁攻略': 'Hướng dẫn Quyết Chiến Xích Bích', '开荒综合攻略': 'Hướng dẫn khai hoang tổng hợp', '前期体力小提示': 'Mẹo thể lực giai đoạn đầu',
+
+  // ===== PHASE 2 (2026-06-25): skill/bond mechanics glossary (multi-char first; engine sorts longest-first) =====
+  // bond / passive openers
+  '拥有武将': 'Sở hữu tướng', '一起上阵': 'sát cánh ra trận', '进入战斗时': 'khi vào trận', '战斗开始时': 'đầu trận',
+  '每场战斗最多触发': 'mỗi trận tối đa kích hoạt', '每场战斗': 'mỗi trận', '每次战斗最多触发': 'mỗi trận tối đa kích hoạt', '每次战斗': 'mỗi trận',
+  // attack phrasing
+  '攻击敌方单体': 'tấn công đơn thể địch', '攻击敌方全体': 'tấn công toàn bộ địch', '攻击敌方1列': 'tấn công 1 cột địch',
+  '攻击敌方': 'tấn công địch', '普通攻击': 'đòn thường', '怒气攻击': 'đòn nộ khí', '释放怒气技能': 'thi triển kỹ năng nộ khí',
+  '释放怒气': 'thi triển nộ khí', '释放': 'thi triển', '追加一次普通攻击': 'thêm 1 đòn thường', '追加': 'thêm', '反击': 'phản kích',
+  // damage / heal
+  '物理伤害': 'sát thương vật lý', '法术伤害': 'sát thương phép', '最终增伤': 'tăng sát thương cuối', '最终减伤': 'giảm sát thương cuối',
+  '最终伤害': 'sát thương cuối', '造成': 'gây', '伤害': 'sát thương', '治疗量': 'lượng hồi máu', '治療量': 'lượng hồi máu',
+  '治愈率': 'tỉ lệ hồi máu', '治疗': 'hồi máu', '治療': 'hồi máu', '回复': 'hồi', '吸血': 'hút máu', '护盾': 'khiên chắn', '吸收': 'hấp thụ',
+  // stats
+  '最大生命值': 'sinh lực tối đa', '生命最大值': 'sinh lực tối đa', '生命值': 'điểm sinh lực', '生命': 'sinh lực',
+  '攻击力': 'lực công', '物防': 'thủ vật lý', '法防': 'thủ phép', '防御': 'phòng thủ', '攻击': 'công',
+  '怒气回复速度': 'tốc độ hồi nộ khí', '初始怒气': 'nộ khí ban đầu', '怒气值': 'điểm nộ khí', '怒气': 'nộ khí',
+  '最终暴击率': 'tỉ lệ bạo kích cuối', '暴击伤害': 'sát thương bạo kích', '暴击率': 'tỉ lệ bạo kích', '暴击': 'bạo kích',
+  '最终命中率': 'tỉ lệ chính xác cuối', '命中率': 'tỉ lệ chính xác', '命中': 'chính xác', '抗暴率': 'tỉ lệ kháng bạo', '抗性': 'kháng tính',
+  // modifiers
+  '持续到战斗结束': 'kéo dài đến hết trận', '战斗结束': 'hết trận', '每回合': 'mỗi lượt', '回合': 'lượt', '持续': 'kéo dài',
+  '提升': 'tăng', '增加': 'tăng', '上升': 'tăng', '下降': 'giảm', '减少': 'giảm', '降低': 'giảm', '概率': 'xác suất',
+  '异常状态': 'trạng thái dị thường', '状态': 'trạng thái', '效果': 'hiệu ứng', '施加': 'áp', '叠加': 'cộng dồn', '触发': 'kích hoạt',
+  '免疫': 'miễn', '控制': 'khống chế', '增益': 'hiệu ứng có lợi', '减益': 'hiệu ứng bất lợi', '无视防御': 'bỏ qua phòng thủ', '无视': 'bỏ qua', '免伤': 'miễn sát thương',
+  // status effects
+  '眩晕': 'choáng', '麻痹': 'tê liệt', '冰封': 'đóng băng', '霜火': 'sương hỏa', '沉默': 'câm lặng', '中毒': 'trúng độc',
+  '灼烧': 'thiêu đốt', '噩梦': 'ác mộng', '魅惑': 'mị hoặc',
+  // targets / scope
+  '敌方单位': 'đơn vị địch', '敌方单体': 'đơn thể địch', '敌方全体': 'toàn bộ địch', '我方全体': 'toàn phe ta',
+  '当前生命最低': 'sinh lực thấp nhất hiện tại', '攻击方': 'bên tấn công', '主目标': 'mục tiêu chính', '目标': 'mục tiêu',
+  '我方': 'phe ta', '敌方': 'địch', '自身': 'bản thân', '全体': 'toàn bộ', '单体': 'đơn thể',
+  // battle verbs / misc
+  '上阵': 'ra trận', '在场': 'có mặt', '击杀': 'tiêu diệt', '击退': 'đánh lùi', '复活': 'hồi sinh', '死亡': 'tử vong',
+  '第一次': 'lần đầu', '最多': 'tối đa', '低于': 'thấp hơn', '血量': 'lượng máu', '百分比': 'phần trăm',
+  '与': 'Cùng ', '若': 'nếu', '并': 'và', '点': ' điểm ', '层': ' tầng', '次': ' lần', '名': ' đơn vị',
+  // chinese punctuation → readable spacing (display only)
+  '，': ', ', '。': '. ', '：': ': ', '；': '; ', '、': ', ',
+
+  // ===== PHASE 2 pass-2 (2026-06-25): particles / connectives / verbs + more skill names =====
+  '攻击者': 'kẻ tấn công', '释放者': 'người thi triển', '同列友方': 'đồng minh cùng cột', '所在列': 'cột đang đứng',
+  '得力助手': 'trợ thủ đắc lực', '不超过': 'không vượt quá', '是一名': 'là một', '是个': 'là một',
+  '受到致命': 'nhận chí mạng', '受到': 'nhận', '获得': 'nhận được', '反弹率': 'tỉ lệ phản hồi', '反弹': 'phản hồi',
+  '越高': 'càng cao', '越低': 'càng thấp', '之一': ' một trong số', '之威': ' uy thế', '立即': 'ngay lập tức', '额外': 'thêm',
+  '上限': 'giới hạn', '本次': 'lần này', '其他': 'khác', '所有': 'tất cả', '变为': 'biến thành', '转变': 'chuyển thành',
+  '后排': 'hàng sau', '前排': 'hàng trước', '同列': 'cùng cột', '友方': 'đồng minh', '致命': 'chí mạng',
+  '部将': 'bộ tướng', '起先': 'ban đầu', '归顺': 'quy thuận', '掌管': 'cai quản', '超过': 'vượt quá',
+  '时': ' khi ', '后': ' sau ', '使': 'khiến ', '对': 'lên ', '每': 'mỗi ', '越': 'càng ', '当': 'khi ', '从': 'từ ',
+  '可': 'có thể ', '该': 'đó ', '其': 'của nó ', '变': 'biến ', '包括': 'gồm', '未': 'chưa ', '有': 'có ', '的': '',
+  '之': ' chi ', '名': ' đơn vị ', '凶': 'hung',
+  // more skill / passive names (Hán-Việt)
+  '安恤天地': 'An Tuất Thiên Địa', '红莲业火': 'Hồng Liên Nghiệp Hỏa', '士别三日': 'Sĩ Biệt Tam Nhật',
+  '乱世枭姬': 'Loạn Thế Kiêu Cơ', '母仪': 'Mẫu Nghi', '馨语抚恤': 'Hinh Ngữ Phủ Tuất', '端庄': 'Đoan Trang',
+  '旋冲': 'Toàn Xung', '烈焰标枪': 'Liệt Diễm Tiêu Thương', '火爆': 'Hỏa Bạo', '火神祝福': 'Hỏa Thần Chúc Phúc',
+  '炎之意志': 'Viêm Chi Ý Chí', '火神': 'Hỏa Thần', '东吴': 'Đông Ngô', '神弓': 'thần cung', '扬名天下': 'lừng danh thiên hạ', '天下': 'thiên hạ',
+  // pass-3 leftover terms
+  '战中': 'trong trận', '附加': 'cộng thêm', '敌人': 'kẻ địch', '最低': 'thấp nhất', '异常': 'dị thường',
+  '抵挡': 'chống đỡ', '主公': 'chủ công', '主角': 'nhân vật chính', '数': 'số lượng', '至': 'đến', '则': 'thì', '首': 'đầu',
+  // pass-4 leftover terms + skill names
+  '为了': 'để', '为': 'là', '此': 'này', '最终': 'cuối', '最高': 'cao nhất', '最少': 'ít nhất', '吸取': 'hút',
+  '不利': 'bất lợi', '不屈': 'bất khuất', '消耗': 'tiêu hao', '下一': 'tiếp theo', '无法': 'không thể', '或': 'hoặc',
+  '升级为': 'nâng cấp thành', '升级': 'nâng cấp', '升': 'tăng', '通过': 'thông qua', '会同': 'cùng', '外': 'ngoài',
+  '扩散': 'lan rộng', '溢出': 'tràn', '除': 'trừ', '己方': 'phe mình', '将': 'sẽ', '附近': 'lân cận', '原本': 'vốn',
+  '狂暴战鬼': 'Cuồng Bạo Chiến Quỷ', '医者仁心': 'Y Giả Nhân Tâm', '猛锐冠世': 'Mãnh Nhuệ Quán Thế',
+  // pass-5 leftover particles + skill names
+  '成功闪避': 'né thành công', '闪避率': 'tỉ lệ né', '闪避': 'né', '消失': 'biến mất', '恢复': 'hồi phục',
+  '无效': 'vô hiệu', '扣除': 'trừ', '扣': 'trừ', '小于': 'nhỏ hơn', '大于': 'lớn hơn', '等于': 'bằng',
+  '进入': 'tiến vào', '锁定': 'khóa', '专注': 'chuyên chú', '践踏': 'giẫm đạp', '清除': 'xóa', '改': 'đổi',
+  '没有': 'không có', '相': 'lẫn nhau', '被': 'bị', '于': 'ở', '以': 'bằng', '和': 'và', '或': 'hoặc',
+  '不': 'không', '没': 'không', '将': 'sẽ', '个': 'cái', '本': 'này', '谁': 'ai', '志': 'chí',
+  '凤舞九天': 'Phụng Vũ Cửu Thiên', '争锋': 'Tranh Phong',
+  // pass-6 remaining skill names + terms
+  '万兽奔腾': 'Vạn Thú Bôn Đằng', '万毒破阵': 'Vạn Độc Phá Trận', '书剑破阵袭': 'Thư Kiếm Phá Trận Tập',
+  '仙露剑舞': 'Tiên Lộ Kiếm Vũ', '克己复礼': 'Khắc Kỷ Phục Lễ', '冰凤飞瀑': 'Băng Phụng Phi Bộc', '冲锋': 'Xung Phong',
+  '凌云': 'Lăng Vân', '孤胆龙魂枪': 'Cô Đảm Long Hồn Thương', '巨棒': 'Cự Bổng', '巨镰': 'Cự Liêm', '黑镰乱舞': 'Hắc Liêm Loạn Vũ',
+  '年少而立': 'Niên Thiếu Nhi Lập', '幻灭阴阳破': 'Huyễn Diệt Âm Dương Phá', '奋迅': 'Phấn Tấn', '御剑': 'Ngự Kiếm',
+  '快斩': 'Khoái Trảm', '战意滔天': 'Chiến Ý Thao Thiên', '才捷刚猛': 'Tài Tiệp Cương Mãnh', '投桃': 'Đầu Đào',
+  '拔刀迅击': 'Bạt Đao Tấn Kích', '收割战场': 'Thu Cát Chiến Trường', '攻守兼备': 'Công Thủ Kiêm Bị', '斩击': 'Trảm Kích',
+  '无情': 'Vô Tình', '横行': 'Hoành Hành', '毒侵': 'Độc Xâm', '毒士': 'Độc Sĩ', '民心所向': 'Dân Tâm Sở Hướng',
+  '洞悉': 'Đỗng Tất', '流星': 'Lưu Tinh', '流毒无穷': 'Lưu Độc Vô Cùng', '火焰形态': 'Hình thái lửa', '火焰': 'ngọn lửa',
+  '灵桃神迹': 'Linh Đào Thần Tích', '灵犀辟邪击': 'Linh Tê Tích Tà Kích', '炎袭': 'Viêm Tập', '炎': 'Viêm', '燕云': 'Yến Vân',
+  '爆裂花火': 'Bạo Liệt Hoa Hỏa', '狂战士': 'Cuồng Chiến Sĩ', '狙击': 'Bắn Tỉa', '王者': 'Vương Giả', '破军': 'Phá Quân',
+  '神医在世': 'Thần Y Tại Thế', '神魔归元': 'Thần Ma Quy Nguyên', '紫凤排空': 'Tử Phụng Bài Không', '紫炎': 'Tử Viêm', '紫髯': 'Tử Nhiêm',
+  '红妆夺心箭': 'Hồng Trang Đoạt Tâm Tiễn', '虎胆破空': 'Hổ Đảm Phá Không', '蛮王威慑': 'Man Vương Uy Nhiếp', '裁决': 'Tài Quyết',
+  '裂天': 'Liệt Thiên', '西征': 'Tây Chinh', '阴阳': 'Âm Dương', '霸王': 'Bá Vương', '青龙偃月': 'Thanh Long Yển Nguyệt', '青龙': 'Thanh Long',
+  '顾身': 'Cố Thân', '飞剑': 'Phi Kiếm', '飞射': 'Phi Xạ', '饮士': 'Ẩm Sĩ', '骁雄霸王击': 'Kiêu Hùng Bá Vương Kích',
+  '英魂遗世': 'Anh Hồn Di Thế', '苏婉': 'Tô Uyển', '紫': 'Tử',
+  // pass-6 terms / particles
+  '下限提高': 'nâng giới hạn dưới', '下限': 'giới hạn dưới', '再发动': 'phát động lại', '发动': 'phát động', '生效': 'có hiệu lực',
+  '清空': 'làm trống', '值': 'giá trị', '所受': 'nhận vào', '打击': 'đánh', '条件': 'điều kiện', '战斗中': 'trong trận',
+  '减半': 'giảm nửa', '队友': 'đồng đội', '战场': 'chiến trường', '进行': 'tiến hành', '已损失': 'đã mất', '开始': 'bắt đầu',
+  '率': 'tỉ lệ', '能': 'có thể', '弱': 'yếu', '再': 'lại', '高': 'cao', '内': 'trong', '前': 'trước', '已': 'đã', '在': 'ở',
+  '死': 'chết', '单': 'đơn', '方': 'bên', '吉': 'Cát', '风': 'Phong', '武神': 'Võ Thần',
+  // pass-7 final tail
+  '累计': 'tích lũy', '累积': 'tích lũy', '附带': 'kèm theo', '才会': 'mới', '才': 'mới', '带来': 'mang lại', '带': 'mang',
+  '来源者': 'nguồn', '来源': 'nguồn', '者': 'người', '存在': 'tồn tại', '存': 'còn', '量': 'lượng', '迟缓': 'trì hoãn',
+  '结束': 'kết thúc', '如果': 'nếu', '由': 'do', '浮动': 'dao động', '且': 'và', '会': 'sẽ', '奋': 'phấn', '必定': 'nhất định',
+  '人': 'người', '提高': 'nâng cao', '提': 'tăng', '一列': '1 cột', '列': 'cột', '强袭箭': 'Cường Tập Tiễn', '散': 'tán',
+  // pass-8 final single-char tail
+  '回血': 'hồi máu', '视为': 'xem là', '视': 'xem', '减伤': 'giảm sát thương', '重新': 'lại', '战斗': 'trận',
+  '损失': 'mất', '自己': 'bản thân', '最大': 'tối đa', '获取': 'nhận', '增强': 'tăng cường', '延长': 'kéo dài',
+  '闪怒': 'Thiểm Nộ', '一': 'một', '到': 'đến', '下': 'hạ', '力': 'lực', '魔': 'ma', '等': 'bằng', '身': 'thân',
 };
