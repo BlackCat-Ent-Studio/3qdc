@@ -7,6 +7,7 @@
 
 import { CODEX_DICT } from './i18n-codex-dict.mjs';
 import { BIOS_DICT } from './i18n-person-bios.mjs';
+import { BIOS2_DICT } from './i18n-person-bios2.mjs';
 
 const DICT = {
   // ---- left nav ----
@@ -108,6 +109,7 @@ const DICT = {
 // merge hero-codex content dictionary (kept in a separate file to keep this one lean)
 Object.assign(DICT, CODEX_DICT);
 Object.assign(DICT, BIOS_DICT);
+Object.assign(DICT, BIOS2_DICT);
 
 const TAB_TITLE = '3Q Đại Chiến - Main';
 

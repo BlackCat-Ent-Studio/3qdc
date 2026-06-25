@@ -219,6 +219,26 @@ export const CODEX_DICT = {
   '没有': 'không có', '相': 'lẫn nhau', '被': 'bị', '于': 'ở', '以': 'bằng', '和': 'và', '或': 'hoặc',
   '不': 'không', '没': 'không', '将': 'sẽ', '个': 'cái', '本': 'này', '谁': 'ai', '志': 'chí',
   '凤舞九天': 'Phụng Vũ Cửu Thiên', '争锋': 'Tranh Phong',
+  '迷蝶': 'Mê Điệp', '闭月羞花舞': 'Bế Nguyệt Tu Hoa Vũ', '凤来仪': 'Phụng Lai Nghi', '心计': 'Tâm Kế',
+  '优先选择': 'ưu tiên chọn', '优先': 'ưu tiên', '选择': 'chọn', '男性': 'nam giới', '女性': 'nữ giới', '翻倍': 'nhân đôi', '足': 'đủ', '美': 'đẹp',
+  // pass-10 tail-hero skill names + terms (thorough scan)
+  '狂怒追击': 'Cuồng Nộ Truy Kích', '共鸣乐章': 'Cộng Minh Nhạc Chương', '虎跃': 'Hổ Dược', '猛虎出世': 'Mãnh Hổ Xuất Thế',
+  '冲击': 'Xung Kích', '天香': 'Thiên Hương', '花舞': 'Hoa Vũ', '落英缤纷': 'Lạc Anh Tân Phân', '飞弩': 'Phi Nỗ',
+  '花影缤纷箭': 'Hoa Ảnh Tân Phân Tiễn', '怒放': 'Nộ Phóng', '万花物语': 'Vạn Hoa Vật Ngữ', '顺劈': 'Thuận Phách',
+  '无畏连斩': 'Vô Úy Liên Trảm', '锦铃': 'Cẩm Linh', '浪子游世': 'Lãng Tử Du Thế', '连击': 'Liên Kích',
+  '双极乱舞': 'Song Cực Loạn Vũ', '狂骨': 'Cuồng Cốt', '丝语': 'Ti Ngữ', '断界': 'Đoạn Giới',
+  '召唤机械木牛流马': 'Triệu Hồi Cơ Giới Mộc Ngưu Lưu Mã', '木牛流马': 'Mộc Ngưu Lưu Mã', '挥砍': 'Huy Khảm',
+  '星耀护元盾': 'Tinh Diệu Hộ Nguyên Thuẫn', '盾击': 'Thuẫn Kích', '锤击': 'Chùy Kích', '回旋碎地击': 'Hồi Toàn Toái Địa Kích',
+  '毁天灭地': 'Hủy Thiên Diệt Địa', '真火天炼': 'Chân Hỏa Thiên Luyện', '斩切': 'Trảm Thiết', '极道': 'Cực Đạo',
+  '穷奇': 'Cùng Kỳ', '玉笛': 'Ngọc Địch', '激励奏鸣': 'Khích Lệ Tấu Minh', '激励': 'Khích lệ', '号令': 'Hiệu Lệnh',
+  '万箭': 'Vạn Tiễn', '奉献': 'Phụng Hiến', '豪情': 'Hào Tình', '毓秀': 'Dục Tú', '威震': 'Uy Chấn', '威望': 'uy vọng',
+  '威压': 'Uy Áp', '四世三公': 'Tứ Thế Tam Công', '穷奢极侈': 'Cùng Xa Cực Xỉ', '盾牌格挡': 'khiên đỡ', '暗黑': 'Ám Hắc',
+  // pass-10 terms
+  '溅射': 'bắn lan', '束缚': 'trói buộc', '盾牌': 'khiên', '范围': 'phạm vi', '传导': 'truyền dẫn', '连续': 'liên tục',
+  '受击': 'bị đánh', '召唤': 'triệu hồi', '挥': 'vung', '缚': 'trói', '怪': 'quái', '同': 'cùng', '及': 'và',
+  '第': 'thứ', '拥': 'sở hữu', '上': 'trên', '门': 'môn', '黑': 'hắc', '爪': 'vuốt', '怒': 'nộ',
+  // pass-10 CV names
+  '王宇航': 'Vương Vũ Hàng', '沈磊': 'Thẩm Lỗi', '醋醋': 'Thố Thố', '刘嘉': 'Lưu Gia', '刘': 'Lưu', '嘉': 'Gia',
   // pass-6 remaining skill names + terms
   '万兽奔腾': 'Vạn Thú Bôn Đằng', '万毒破阵': 'Vạn Độc Phá Trận', '书剑破阵袭': 'Thư Kiếm Phá Trận Tập',
   '仙露剑舞': 'Tiên Lộ Kiếm Vũ', '克己复礼': 'Khắc Kỷ Phục Lễ', '冰凤飞瀑': 'Băng Phụng Phi Bộc', '冲锋': 'Xung Phong',
