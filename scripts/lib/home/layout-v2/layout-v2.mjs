@@ -13,6 +13,7 @@
 import { NEWS_CSS, NEWS_JS } from './section-news.mjs';
 import { HEROES_CSS, HEROES_JS } from './section-heroes.mjs';
 import { FEATURES_CSS, FEATURES_JS } from './section-features.mjs';
+import { TREASURE_CSS, TREASURE_JS } from './section-treasure.mjs';
 
 const HEADER_H = 88;
 
@@ -103,8 +104,12 @@ html.hv2 #home-v2{display:block;position:relative;z-index:1;background:#0b0d18;c
 #home-v2 .hv2-section[data-ready]{display:block}
 #home-v2 .hv2-title{margin:0 0 36px;text-align:center;font-size:40px;font-weight:800;letter-spacing:.06em;
   text-transform:uppercase;color:#f3dfa6;text-shadow:0 2px 0 #6b3a14,0 0 22px rgba(243,197,106,.35)}
-#home-v2 .hv2-footer{padding:28px 24px 36px;border-top:1px solid rgba(214,176,106,.3);text-align:center;
+#home-v2 .hv2-footer{padding:32px 24px 40px;border-top:1px solid rgba(214,176,106,.3);text-align:center;
   color:#9b927c;font-size:13px;background:#07080f}
+#home-v2 .hv2-footer-brand{margin-bottom:14px;color:#f3dfa6;font-size:20px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+#home-v2 .hv2-footer-nav{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 26px}
+#home-v2 .hv2-footer-nav a{color:#bfb59a;font-size:14px;text-decoration:none}
+#home-v2 .hv2-footer-nav a:hover{color:#f3c56a}
 `;
 
 const JS = `(function(){
@@ -153,7 +158,13 @@ const JS = `(function(){
     SECTIONS.forEach(function(s){
       wrap.appendChild(el('section', { id: s[0], 'class': 'hv2-section' }, [el('h2', { 'class': 'hv2-title', text: s[1] })]));
     });
-    wrap.appendChild(el('footer', { 'class': 'hv2-footer', text: '© 3Q Đại Chiến' }));
+    // internal links only (the pages this site already serves)
+    var nav = el('nav', { 'class': 'hv2-footer-nav', 'aria-label': 'Liên kết' });
+    [['Tin tức', '/tin-tuc'], ['Kế hoạch', '/ke-hoach'], ['Tướng', '/tuong'], ['Đặc sắc', '/dac-sac'],
+      ['Kho báu', '/kho-bau'], ['Cộng đồng', '/cong-dong'], ['Hướng dẫn', '/huong-dan']].forEach(function(l){
+      nav.appendChild(el('a', { href: l[1], text: l[0] }));
+    });
+    wrap.appendChild(el('footer', { 'class': 'hv2-footer' }, [el('div', { 'class': 'hv2-footer-brand', text: '3Q Đại Chiến' }), nav]));
     document.body.appendChild(wrap);
     document.body.appendChild(el('div', { id: 'hv2-header-bg' }));
   }
@@ -253,8 +264,9 @@ const JS = `(function(){
 
 // Section scripts come after the layout script so window.__hv2 exists when they register.
 export const LAYOUT_V2_HTML =
-  `<style data-home-v2>${CSS}${NEWS_CSS}${HEROES_CSS}${FEATURES_CSS}</style>` +
+  `<style data-home-v2>${CSS}${NEWS_CSS}${HEROES_CSS}${FEATURES_CSS}${TREASURE_CSS}</style>` +
   `<script data-home-v2>${JS}</script>` +
   `<script data-home-v2>${NEWS_JS}</script>` +
   `<script data-home-v2>${HEROES_JS}</script>` +
-  `<script data-home-v2>${FEATURES_JS}</script>`;
+  `<script data-home-v2>${FEATURES_JS}</script>` +
+  `<script data-home-v2>${TREASURE_JS}</script>`;
