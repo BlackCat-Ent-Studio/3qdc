@@ -37,6 +37,8 @@ const DL_ART = [
   { src: '/3qdc-vi/home/nut-dang-ky-nhanh.png', label: 'Đăng ký nhanh (sắp ra mắt)' },
 ];
 const DL_TOPUP = '/3qdc-vi/home/nut-nap-the.png';
+// sidebar collapse arrow (omg3q floating-bar artwork, 86x58 strip): ">" (collapse) at 0 0, "<" (expand) at -44px 0
+const SB_TOGGLE = '/3qdc-vi/home/sidebar-toggle.png';
 
 // "Kho Báu" is hidden for now (2026-09-15): the feature will not be used for a long time. While false the home
 // page builds no treasure block (so no CG / wallpaper requests), drops the footer link and hides the treasure item
@@ -155,6 +157,16 @@ html.hv2.hv2-scrolled #hv2-sidebar{transform:translate(0,-50%);opacity:1;pointer
   #hv2-sidebar .hv2-top{width:104px;height:26px}
 }
 
+/* collapse/expand arrow on the sidebar's left edge; collapsed, the sidebar slides off screen and only the arrow stays */
+#hv2-sidebar .hv2-sb-toggle{position:absolute;left:-43px;top:50%;width:42px;height:58px;margin-top:-29px;padding:0;border:0;
+  background:url("${SB_TOGGLE}") 0 0 no-repeat;cursor:pointer}
+#hv2-sidebar .hv2-sb-toggle:hover{filter:brightness(1.1)}
+html.hv2-sb-collapsed #hv2-sidebar .hv2-sb-toggle{background-position:-44px 0}
+html.hv2.hv2-scrolled.hv2-sb-collapsed #hv2-sidebar{transform:translate(calc(100% + 14px),-50%)}
+@media (max-height:720px){
+  html.hv2.hv2-scrolled.hv2-sb-collapsed #hv2-sidebar{transform:translate(calc(100% + 14px),0)}
+}
+
 /* content area below the key visual */
 #home-v2{display:none}
 html.hv2 #home-v2{display:block;position:relative;z-index:1;background:#0b0d18;color:#e8e2d0;padding-top:var(--hv2-dl-push,0px);
@@ -254,6 +266,17 @@ const JS = `(function(){
     return matched ? out : src.map(function(l){ return l.cloneNode(true); });
   }
 
+  // Sidebar collapse state: a class on <html> drives the slide and the arrow direction; the viewer's choice is kept in
+  // this browser (localStorage can be unavailable, e.g. blocked storage, so every access is guarded)
+  var SB_KEY = 'hv2-sidebar-collapsed';
+  function sidebarCollapsedSaved(){ try { return localStorage.getItem(SB_KEY) === '1'; } catch (e) { return false; } }
+  function setSidebarCollapsed(on, save){
+    document.documentElement.classList.toggle('hv2-sb-collapsed', on);
+    var t = document.querySelector('#hv2-sidebar .hv2-sb-toggle');
+    if (t){ t.setAttribute('aria-label', on ? 'Mở thanh tải game' : 'Thu gọn thanh tải game'); t.setAttribute('aria-expanded', on ? 'false' : 'true'); }
+    if (save){ try { localStorage.setItem(SB_KEY, on ? '1' : '0'); } catch (e) {} }
+  }
+
   function buildSidebar(){
     if (document.getElementById('hv2-sidebar')) return true;
     var dl = document.querySelector('.star-site-index-download');
@@ -270,7 +293,13 @@ const JS = `(function(){
     var top = el('button', { type: 'button', 'class': 'hv2-top', text: 'Lên đầu trang' });
     top.addEventListener('click', function(){ window.scrollTo({ top: 0, behavior: 'smooth' }); });
     bar.appendChild(top);
+    var toggle = el('button', { type: 'button', 'class': 'hv2-sb-toggle' });
+    toggle.addEventListener('click', function(){
+      setSidebarCollapsed(!document.documentElement.classList.contains('hv2-sb-collapsed'), true);
+    });
+    bar.appendChild(toggle);
     document.body.appendChild(bar);
+    setSidebarCollapsed(sidebarCollapsedSaved(), false);
     return true;
   }
 
