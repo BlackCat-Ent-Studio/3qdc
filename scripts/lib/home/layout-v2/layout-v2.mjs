@@ -10,6 +10,8 @@
 // Sections (news, heroes, features, treasure) register through window.__hv2 and
 // stay hidden until they have rendered content, so no empty shell is ever shown.
 
+import { NEWS_CSS, NEWS_JS } from './section-news.mjs';
+
 const HEADER_H = 88;
 
 // Key-visual background (page_642a4eb04023f80ab7f3fb17/mqaggnekipux19ptb5s.jpg):
@@ -247,4 +249,8 @@ const JS = `(function(){
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', sync); else sync();
 })();`;
 
-export const LAYOUT_V2_HTML = `<style data-home-v2>${CSS}</style><script data-home-v2>${JS}</script>`;
+// Section scripts come after the layout script so window.__hv2 exists when they register.
+export const LAYOUT_V2_HTML =
+  `<style data-home-v2>${CSS}${NEWS_CSS}</style>` +
+  `<script data-home-v2>${JS}</script>` +
+  `<script data-home-v2>${NEWS_JS}</script>`;
