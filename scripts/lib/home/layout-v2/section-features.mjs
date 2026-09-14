@@ -1,0 +1,152 @@
+// section-features.mjs — "Tính Năng Đặc Sắc" block for the home layout-v2 overlay.
+// A light coverflow carousel of the five feature banners: the centre slide links to
+// /dac-sac, the neighbours are dimmed and smaller, autoplay pauses on mouse hover.
+//
+// The banners are the ones the /dac-sac accordion shows. They are not served by an API
+// snapshot: the umi bundle (views/umi.62525e29.js) hardcodes them in
+// pcConfig.versionImg[].banner, so they are listed here the same way. Update this list if
+// that artwork is replaced. The files are WEBP with alpha despite the .png name, 1211x680.
+
+const BANNER_DIR = '/cdn.aligames.com/raven/prod/upload/market-game-galaxy/page_642a4eb04023f80ab7f3fb17/';
+const BANNERS = [
+  'mqaftbcyqv2ikvy79i.png',
+  'mqaftjxe66vr86vpjsa.png',
+  'mqafttg4u79rjsylwvg.png',
+  'mqafu3nq9khwqsa2k24.png',
+  'mqafue7pg7k0k2zqqym.png',
+].map((f) => BANNER_DIR + f);
+
+// centre slide width as a fraction of the track; the track height follows the banner ratio
+const SLIDE_W = 0.66;
+const EDGE = ((1 - SLIDE_W) * 50).toFixed(1); // % from the track edge to the centre slide
+
+export const FEATURES_CSS = `
+#hv2-features .hv2-feat{position:relative;max-width:1280px;margin:0 auto}
+#hv2-features .hv2-feat-track{position:relative;overflow:hidden;aspect-ratio:1211/${(680 * SLIDE_W).toFixed(1)}}
+#hv2-features .hv2-feat-slide{position:absolute;top:0;left:50%;width:${SLIDE_W * 100}%;height:100%;box-sizing:border-box;
+  border-radius:12px;overflow:hidden;border:1px solid rgba(214,176,106,.4);background:#12152a;
+  transform:translateX(-50%);transition:transform .5s ease,opacity .5s ease,filter .5s ease}
+#hv2-features .hv2-feat-link{display:block;width:100%;height:100%}
+#hv2-features .hv2-feat-link img{display:block;width:100%;height:100%;object-fit:cover}
+#hv2-features .hv2-feat-slide.is-active{z-index:3;border-color:#f3dfa6}
+#hv2-features .hv2-feat-slide.is-prev,#hv2-features .hv2-feat-slide.is-next{z-index:2;filter:brightness(.5);cursor:pointer}
+#hv2-features .hv2-feat-slide.is-prev{transform:translateX(-50%) translateX(-46%) scale(.76)}
+#hv2-features .hv2-feat-slide.is-next{transform:translateX(-50%) translateX(46%) scale(.76)}
+#hv2-features .hv2-feat-slide.is-prev:hover,#hv2-features .hv2-feat-slide.is-next:hover{filter:brightness(.75)}
+#hv2-features .hv2-feat-slide.is-far-prev,#hv2-features .hv2-feat-slide.is-far-next{z-index:1;opacity:0;pointer-events:none}
+#hv2-features .hv2-feat-slide.is-far-prev{transform:translateX(-50%) translateX(-80%) scale(.56)}
+#hv2-features .hv2-feat-slide.is-far-next{transform:translateX(-50%) translateX(80%) scale(.56)}
+/* arrows sit on the edges of the centre slide, vertically centred on the track (dots row is 40px) */
+#hv2-features .hv2-feat-nav{position:absolute;top:calc(50% - 20px);z-index:4;display:flex;align-items:center;justify-content:center;
+  width:48px;height:48px;padding:0 0 4px;transform:translateY(-50%);border-radius:50%;border:1px solid #f3dfa6;
+  background:rgba(8,10,22,.72);color:#f3dfa6;font-size:32px;line-height:1;cursor:pointer;box-sizing:border-box}
+#hv2-features .hv2-feat-nav:hover{background:rgba(214,176,106,.28)}
+#hv2-features .hv2-feat-nav.is-left{left:calc(${EDGE}% - 24px)}
+#hv2-features .hv2-feat-nav.is-right{right:calc(${EDGE}% - 24px)}
+#hv2-features .hv2-feat-dots{display:flex;justify-content:center;align-items:flex-end;gap:10px;height:40px}
+#hv2-features .hv2-feat-dot{width:12px;height:12px;padding:0;border-radius:6px;border:1px solid #f3dfa6;background:transparent;
+  cursor:pointer;transition:width .3s ease,background .3s ease}
+#hv2-features .hv2-feat-dot.is-on{width:30px;background:#f3dfa6}
+@media (prefers-reduced-motion:reduce){
+  #hv2-features .hv2-feat-slide,#hv2-features .hv2-feat-dot{transition:none}
+}
+`;
+
+export const FEATURES_JS = `(function(){
+  if (!window.__hv2) return;
+  var BANNERS = ${JSON.stringify(BANNERS)};
+  window.__hv2.onMount(function(api){
+    var host = api.section('hv2-features');
+    var n = BANNERS.length;
+    if (!host || !n) return;
+    var el = api.el;
+    var reduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    var cur = 0, timer = null, hover = false, focused = false, inView = false, failed = 0;
+
+    var track = el('div', { 'class': 'hv2-feat-track' });
+    var dots = el('div', { 'class': 'hv2-feat-dots' });
+    var slides = BANNERS.map(function(src, i){
+      var img = el('img', { alt: 'Tính năng đặc sắc ' + (i + 1), draggable: 'false', 'data-src': src });
+      img.addEventListener('error', function(){
+        if (++failed < n) return;
+        stop();
+        host.removeAttribute('data-ready');
+        console.warn('[hv2 features] no banner could be loaded');
+      });
+      var link = el('a', { 'class': 'hv2-feat-link', href: '/dac-sac' }, [img]);
+      // a side slide brings itself to the centre instead of navigating
+      link.addEventListener('click', function(e){ if (i !== cur){ e.preventDefault(); go(i); } });
+      var slide = el('div', { 'class': 'hv2-feat-slide' }, [link]);
+      track.appendChild(slide);
+      var dot = el('button', { type: 'button', 'class': 'hv2-feat-dot', 'aria-label': 'Tính năng ' + (i + 1) });
+      dot.addEventListener('click', function(){ go(i); });
+      dots.appendChild(dot);
+      return { slide: slide, link: link, img: img, dot: dot };
+    });
+    var left = el('button', { type: 'button', 'class': 'hv2-feat-nav is-left', 'aria-label': 'Trước', text: '\\u2039' });
+    var right = el('button', { type: 'button', 'class': 'hv2-feat-nav is-right', 'aria-label': 'Sau', text: '\\u203a' });
+    left.addEventListener('click', function(){ go(cur - 1); });
+    right.addEventListener('click', function(){ go(cur + 1); });
+    var wrap = el('div', { 'class': 'hv2-feat', role: 'region', 'aria-roledescription': 'carousel', 'aria-label': 'Tính năng đặc sắc' },
+      [track, left, right, dots]);
+    wrap.addEventListener('pointerenter', function(e){ if (e.pointerType === 'mouse') hover = true; });
+    wrap.addEventListener('pointerleave', function(e){ if (e.pointerType === 'mouse'){ hover = false; restart(); } });
+    // keyboard focus pauses autoplay too, so a focused slide is never rotated away
+    wrap.addEventListener('focusin', function(){ focused = true; });
+    wrap.addEventListener('focusout', function(e){ if (!wrap.contains(e.relatedTarget)){ focused = false; restart(); } });
+    document.addEventListener('visibilitychange', function(){ if (!document.hidden) restart(); });
+    host.appendChild(wrap);
+
+    function render(){
+      slides.forEach(function(s, i){
+        var d = ((i - cur) % n + n) % n;
+        if (d > n / 2) d -= n;
+        var cls = d === 0 ? 'is-active' : d === -1 ? 'is-prev' : d === 1 ? 'is-next' : d < 0 ? 'is-far-prev' : 'is-far-next';
+        s.slide.className = 'hv2-feat-slide ' + cls;
+        s.slide.setAttribute('aria-hidden', d === 0 ? 'false' : 'true');
+        s.link.tabIndex = d === 0 ? 0 : -1;
+        s.dot.classList.toggle('is-on', d === 0);
+        s.dot.setAttribute('aria-current', d === 0 ? 'true' : 'false');
+      });
+    }
+    function go(i){ cur = ((i % n) + n) % n; render(); restart(); }
+    // autoplay only advances while the carousel is on screen, the home layout is active and nobody hovers or focuses it
+    function tick(){
+      if (hover || focused || !inView || document.hidden || !document.documentElement.classList.contains('hv2')) return;
+      cur = (cur + 1) % n;
+      render();
+    }
+    function stop(){ if (timer){ clearInterval(timer); timer = null; } }
+    function restart(){ stop(); if (!reduce && failed < n) timer = setInterval(tick, 5000); }
+
+    // banners are ~200KB each: only fetch once the section is close to the viewport
+    function loadImages(){
+      slides.forEach(function(s){ if (!s.img.getAttribute('src')) s.img.src = s.img.getAttribute('data-src'); });
+    }
+    if ('IntersectionObserver' in window){
+      var lazy = new IntersectionObserver(function(entries){
+        if (!entries.some(function(e){ return e.isIntersecting; })) return;
+        lazy.disconnect();
+        loadImages();
+      }, { rootMargin: '600px 0px' });
+      // news and heroes stay hidden until their data arrives, so at first paint this section sits
+      // right under the key visual; judge the distance only once the visitor starts scrolling
+      var arm = function(){ lazy.observe(host); };
+      if (window.scrollY > 0) arm(); else window.addEventListener('scroll', arm, { once: true, passive: true });
+      new IntersectionObserver(function(entries){
+        var was = inView;
+        inView = entries[entries.length - 1].isIntersecting;
+        if (inView && !was) restart(); // a full interval on screen before the first advance
+      }, { threshold: 0.3 }).observe(wrap);
+    } else {
+      loadImages();
+      inView = true;
+    }
+
+    render();
+    // the section must be displayed for the observers to fire, so it is shown once built;
+    // it is hidden again if every banner fails to load
+    api.ready('hv2-features');
+    restart();
+  });
+})();`;

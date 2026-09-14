@@ -12,6 +12,7 @@
 
 import { NEWS_CSS, NEWS_JS } from './section-news.mjs';
 import { HEROES_CSS, HEROES_JS } from './section-heroes.mjs';
+import { FEATURES_CSS, FEATURES_JS } from './section-features.mjs';
 
 const HEADER_H = 88;
 
@@ -252,7 +253,8 @@ const JS = `(function(){
 
 // Section scripts come after the layout script so window.__hv2 exists when they register.
 export const LAYOUT_V2_HTML =
-  `<style data-home-v2>${CSS}${NEWS_CSS}${HEROES_CSS}</style>` +
+  `<style data-home-v2>${CSS}${NEWS_CSS}${HEROES_CSS}${FEATURES_CSS}</style>` +
   `<script data-home-v2>${JS}</script>` +
   `<script data-home-v2>${NEWS_JS}</script>` +
-  `<script data-home-v2>${HEROES_JS}</script>`;
+  `<script data-home-v2>${HEROES_JS}</script>` +
+  `<script data-home-v2>${FEATURES_JS}</script>`;
