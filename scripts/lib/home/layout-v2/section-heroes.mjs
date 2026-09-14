@@ -4,10 +4,18 @@
 // The frame is named 'hv2-embed'; layout-v2 (also injected into /tuong) sees that name and hides the hero
 // page's left navigation, and never builds the home layout inside the frame.
 
+// On /tuong the hero layout fills the pane right of the left navigation (17.30475vh wide), and its pieces are
+// placed relative to that pane's centre and height. The frame therefore keeps that pane's aspect ratio for the
+// visitor's window, centred, so everything sits where it does on the original page.
+const NAV_VH = 0.1730475;
+const HEADER_H = 88;
+const MIN_FRAME_H = 560;
+
 export const HEROES_CSS = `
-/* full-bleed block: the embedded page lays itself out for the whole frame width */
 #home-v2 #hv2-heroes.hv2-section{max-width:none;padding:72px 0 64px}
-#hv2-heroes .hv2-heroes-frame{display:block;width:100%;height:calc(100vh - 88px);min-height:560px;border:0;background:#0b0d18}
+#hv2-heroes .hv2-heroes-stage{background:#dfe6f3}
+#hv2-heroes .hv2-heroes-frame{display:block;margin:0 auto;width:100%;height:calc(100vh - ${HEADER_H}px);min-height:${MIN_FRAME_H}px;
+  border:0;background:#dfe6f3}
 `;
 
 export const HEROES_JS = `(function(){
@@ -16,9 +24,23 @@ export const HEROES_JS = `(function(){
     var host = api.section('hv2-heroes');
     if (!host) return;
     var frame = api.el('iframe', { 'class': 'hv2-heroes-frame', name: 'hv2-embed', title: 'Hệ Thống Tướng' });
-    host.appendChild(frame);
-    // the section must be displayed for the observer below to fire
+    var stage = api.el('div', { 'class': 'hv2-heroes-stage' }, [frame]);
+    host.appendChild(stage);
+    // the section must be displayed for sizing and for the observer below
     api.ready('hv2-heroes');
+
+    // frame height = viewport below the fixed header; width = that height x the /tuong pane aspect in this window
+    function size(){
+      var vh = window.innerHeight;
+      var h = Math.max(${MIN_FRAME_H}, vh - ${HEADER_H});
+      var aspect = (window.innerWidth - ${NAV_VH} * vh) / vh;
+      var w = Math.min(stage.clientWidth, Math.round(h * aspect));
+      frame.style.height = h + 'px';
+      frame.style.width = w + 'px';
+    }
+    size();
+    var resizeTimer = null;
+    window.addEventListener('resize', function(){ clearTimeout(resizeTimer); resizeTimer = setTimeout(size, 150); });
 
     // the hero page is a whole app instance (plus its background video): load it only when the block is
     // near the viewport. Sections above render late, so judge the distance once the visitor starts scrolling.
@@ -28,7 +50,7 @@ export const HEROES_JS = `(function(){
     // video and any CV audio, and bring the hero page back when the home route returns
     window.addEventListener('hashchange', function(){
       if (!wanted) return;
-      if (document.documentElement.classList.contains('hv2')) load();
+      if (document.documentElement.classList.contains('hv2')){ size(); load(); }
       else if (frame.getAttribute('src') !== 'about:blank') frame.src = 'about:blank';
     });
     if (!('IntersectionObserver' in window)){ load(); return; }
