@@ -1,0 +1,165 @@
+
+<!DOCTYPE html>
+<html>
+  <head><meta wukong-verison="feature/6.1.6"><meta wukong-description="slogan">
+    <meta charset="UTF-8" />
+    <meta lang="zh" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+    <meta name="renderer" content="webkit" />
+    <meta
+      name="description"
+      content="高颜值卡牌王者《三国志幻想大陆》，殿堂级美术匠心打磨百将，声乐大咖云集重现乱世原声。多维玩法突破传统卡牌束缚，有颜值更有实力！小将军，来共赴这场突破幻想的三国之旅吧！"
+    />
+    <meta
+      name="keyword"
+      content="三国志,三国志幻想大陆,三国志幻想大陆手游,三国志幻想大陆手游官网,灵犀互娱,关晓彤,颜值,卡牌,三国,幻想,王牌,策略,角色,武将,高颜值卡牌王者,高颜值三国,颜值三国,王牌三国"
+    />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <link
+      rel="shortcut icon"
+      href="/cdn.aligames.com/wukong5b86229e386e6418539bfbad/star/220426/logo.png"
+    />
+    <title>三国志幻想大陆</title>
+    <style type="text/css">
+      * {
+        margin: 0;
+        padding: 0;
+        font: inherit;
+        font-size: 100%;
+        border: 0;
+      }
+    </style>
+    <script>
+      var oldWidth;
+      ~(function (window) {
+        var uAgent = window.navigator.userAgent;
+        var isIOS = uAgent.match(/iphone/i);
+        var isYIXIN = uAgent.match(/yixin/i);
+        var is2345 = uAgent.match(/Mb2345/i);
+        var ishaosou = uAgent.match(/mso_app/i);
+        var isSogou = uAgent.match(/sogoumobilebrowser/gi);
+        var isLiebao = uAgent.match(/liebaofast/i);
+        var isGnbr = uAgent.match(/GNBR/i);
+        var dataDv = document.documentElement.dataset.dw || 750;
+        var minFontSize = 42;
+        var maxFontSize = 100;
+        var resizeRoot = function () {
+          wWidth =
+            document.documentElement.clientWidth || document.body.clientWidth;
+          oldWidth = wWidth;
+          var wFsize = wWidth / (dataDv / 100);
+          console.log(
+            "resizeRoot     wWidth: ",
+            wWidth,
+            "     dataDv: ",
+            dataDv,
+            "     wFsize:",
+            wFsize
+          );
+          document.documentElement.style.fontSize = wFsize + "px";
+        };
+
+        var tid;
+        window.addEventListener(
+          "pageshow",
+          function (e) {
+            if (e.persisted) {
+              clearTimeout(tid);
+              tid = setTimeout(resizeRoot, 300);
+            }
+          },
+          false
+        );
+
+        // setTimeout(function () {
+        //   resizeRoot();
+        // }, 500);
+
+        if (isYIXIN || is2345 || ishaosou || isSogou || isLiebao || isGnbr) {
+          /*YIXIN11 和 2345 这里有个刚调用系统浏览器时候的bug，需要一点延迟来获取*/
+          setTimeout(function () {
+            resizeRoot();
+          }, 500);
+        } else {
+          resizeRoot();
+        }
+        window.addEventListener(
+          "orientationchange",
+          function () {
+            setTimeout(function () {
+              resizeRoot();
+            }, 500);
+          },
+          false
+        );
+      })(window);
+    </script>
+    <script>
+      !(function (c, b, d, a) {
+        c[a] || (c[a] = {});
+        c[a].config = {
+          pid: "dsv9zcel92@79a04ab7ca852bf",
+          imgUrl: "/r.png?",
+          appType: "web",
+          sendResource: true,
+          enableLinkTrace: true,
+          behavior: true,
+          tag: "starWebSite",
+          urlHelper: [
+            // 和官方默认隐藏规则冲突，恢复原页面路径上报
+            { rule: /\/([a-z\-_]+)?(\d{2,20})/g, target: "/$1$2" },
+            // 去掉URL末尾的'/'。
+            /\/$/,
+          ],
+          ignore: {
+            ignoreErrors: [
+              /ResizeObserver loop limit exceeded/,
+              /Cannot read property 'content' of undefined/,
+              /^Script error\.?$/,
+              /e.className.split is not a function/,
+              /$ is not defined/,
+            ],
+          },
+        };
+        document.write(
+          '\x3Cscript type="text/javascript" crossorigin src="' +
+            d +
+            '">\x3C/script>'
+        );
+      })(
+        window,
+        document,
+        "/cdn-cn.lingxigames.com/rdc/common/utils/boxer/bl.js",
+        "__bl"
+      );
+    </script>
+    <link
+      rel="stylesheet"
+      href="/cdn-cn.lingxigames.com/wukongbuild/star-gw/1.0.0/prod/views/umi.cc7a93ef.css"
+    />
+    <script>
+      window.routerBase = "/";
+    </script>
+    <script>
+      //! umi version: 3.5.43
+    </script>
+  </head>
+
+  <body>
+    <div id="root"></div>
+    <script
+      type="text/javascript"
+      src="/cdn-cn.lingxigames.com/xfu/lingxi/common/js/grey.js?a=1"
+      crossorigin="anonymous"
+    ></script>
+
+    <script
+      src="/cdn-cn.lingxigames.com/wukongbuild/star-gw/1.0.0/prod/views/umi.62525e29.js"
+      crossorigin="anonymous"
+    ></script>
+  </body>
+</html>
