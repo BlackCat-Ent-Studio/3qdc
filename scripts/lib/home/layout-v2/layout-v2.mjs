@@ -25,6 +25,10 @@ const KV = { width: 2560, height: 1306, eventFrameBottom: 1140 };
 
 const CSS = `
 html.hv2 body{overflow-x:hidden}
+
+/* hero page embedded in the home "Hệ Thống Tướng" block: hide its left navigation so the hero layout spans the frame */
+html.hv2-embed .star-site-main-left{display:none!important}
+html.hv2-embed .star-site-main-right{margin-left:0!important;width:100%!important}
 html.hv2{--hv2-dl-btn:clamp(34px,2.5vw,46px)}
 html.hv2 .star-site-index-left-mask{display:none!important}
 
@@ -117,6 +121,10 @@ html.hv2 #home-v2{display:block;position:relative;z-index:1;background:#0b0d18;c
 
 const JS = `(function(){
   if (window.__hv2) return;
+  // inside the home page's hero block (iframe named 'hv2-embed') this page shows only its hero layout:
+  // flag it before the app renders so the left navigation never flashes, and never build the home layout
+  var EMBED = window.name === 'hv2-embed' && window.top !== window;
+  if (EMBED) document.documentElement.classList.add('hv2-embed');
   var SECTIONS = [
     ['hv2-news', 'Tin Tức Sự Kiện'],
     ['hv2-heroes', 'Hệ Thống Tướng'],
@@ -131,6 +139,7 @@ const JS = `(function(){
   var panelBottom = 0; // document y of the download panel's bottom edge; the sidebar waits until it is scrolled past
 
   function isHome(){
+    if (EMBED) return false;
     var h = location.hash;
     return !h || h === '#' || h === '#/' || h.indexOf('#/index') === 0;
   }
