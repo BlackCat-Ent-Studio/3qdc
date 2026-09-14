@@ -12,8 +12,8 @@ const DICT = {
   '扫一扫下载游戏': 'Quét mã tải game', // the one real DOM text node on the page
   '国创加强版': 'Bản Nâng Cấp',
   '官方充值中心': 'Trung tâm nạp chính thức',
-  '六周年': '6 năm',
-  '五周年': '5 năm',
+  // No anniversary fragments (五周年/六周年) here: this overlay runs before the main
+  // one on build B, so short fragments would break the main dictionary's full-title keys.
 };
 
 // Exact element-text overrides by selector. (None needed on index yet — kept for
