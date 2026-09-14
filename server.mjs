@@ -28,6 +28,7 @@ import { NAVFX_HTML } from './scripts/lib/nav-hover-fx.mjs';
 // home (build B / index route) overlays
 import { I18N_HTML as HOME_I18N } from './scripts/lib/home/i18n-overlay.mjs';
 import { HIDE_HTML as HOME_HIDE } from './scripts/lib/home/hide-overlay.mjs';
+import { LAYOUT_V2_HTML } from './scripts/lib/home/layout-v2/layout-v2.mjs';
 // main (build B / main routes) overlays
 import { I18N_HTML as MAIN_I18N } from './scripts/lib/main/i18n-overlay.mjs';
 import { BBS_SHIM_HTML } from './scripts/lib/main/bbs-shim.mjs';
@@ -143,7 +144,8 @@ async function buildBEntry(route) {
   const html = await readFile(ENTRY_B, 'utf8');
   // index + main share build B → native hash nav handles #/index ↔ #/main/* in-app.
   // nav-sync wires the top menu to clean paths + sets the tab title per section.
-  const inject = RF(route) + BBS_SHIM_HTML + HOME_I18N + MAIN_I18N + HOME_HIDE + MAIN_NEUTER + BUILDB_NAV;
+  // layout-v2 is injected on every build-B entry but only activates while the hash is #/index.
+  const inject = RF(route) + BBS_SHIM_HTML + HOME_I18N + MAIN_I18N + HOME_HIDE + MAIN_NEUTER + BUILDB_NAV + LAYOUT_V2_HTML;
   return html.replace('<head>', '<head>' + inject);
 }
 async function wikiEntry() {
