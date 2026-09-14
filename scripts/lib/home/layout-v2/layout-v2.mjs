@@ -18,10 +18,10 @@ import { TREASURE_CSS, TREASURE_JS } from './section-treasure.mjs';
 const HEADER_H = 88;
 
 // Key-visual background (page_642a4eb04023f80ab7f3fb17/mqaggnekipux19ptb5s.jpg, cover-scaled, top-aligned):
-// natural size and the top edge of the event banner frame baked into the art, in image pixels. The gold
-// slogan glyphs end at y≈1060 and the frame border starts at 1064 (per-row pixel scan). The download panel
-// sits on that frame, just below the slogan. Update these if the home background artwork is replaced.
-const KV = { width: 2560, height: 1306, eventFrameTop: 1064 };
+// natural size and the bottom edge of the event banner frame baked into the art, in image pixels (slogan
+// glyphs end at y≈1060, the frame spans 1064–1138). The download panel starts just below that frame so no
+// text of the art is covered. Update these if the home background artwork is replaced.
+const KV = { width: 2560, height: 1306, eventFrameBottom: 1140 };
 
 const CSS = `
 html.hv2 body{overflow-x:hidden}
@@ -63,8 +63,8 @@ html.hv2 .star-site-index-navs__item:hover .star-site-index-navs__item-img_hover
    the panel is placed, so a bar React renders too late for the retry timer still offers downloads */
 html.hv2.hv2-dl-ready .star-site-index-download{display:none!important}
 
-/* download panel (omg3q style): QR | 2x2 platform buttons | top-up button, sitting on the event banner frame
-   below the slogan of the background art (top comes from --hv2-dl-top computed in JS), below the header layers */
+/* download panel (omg3q style): QR | 2x2 platform buttons | top-up button, starting just below the event banner
+   frame of the background art (top comes from --hv2-dl-top computed in JS), below the header layers */
 #hv2-dlpanel{display:none}
 html.hv2 #hv2-dlpanel{display:flex;align-items:center;gap:clamp(14px,1.3vw,24px);position:absolute;left:50%;
   top:var(--hv2-dl-top,auto);z-index:8;transform:translateX(-50%);box-sizing:border-box;
@@ -211,9 +211,9 @@ const JS = `(function(){
     return true;
   }
 
-  // Put the panel's top edge on the event banner frame of the background art, just below the slogan
-  // glyphs (never above the header). The part of the panel that runs past the 100vh key visual pushes
-  // the sections below down (--hv2-dl-push), so nothing is hidden under it.
+  // Put the panel's top edge just below the event banner frame of the background art, so neither the
+  // slogan nor the event line is covered (never above the header). The part of the panel that runs past
+  // the 100vh key visual pushes the sections below down (--hv2-dl-push), so nothing is hidden under it.
   function placePanel(){
     var html = document.documentElement;
     var panel = document.getElementById('hv2-dlpanel');
@@ -221,7 +221,7 @@ const JS = `(function(){
     if (!ph) return false;
     var vh = window.innerHeight;
     var scale = Math.max(window.innerWidth / KV.width, vh / KV.height);
-    var top = Math.max(${HEADER_H} + 8, Math.round(KV.eventFrameTop * scale));
+    var top = Math.max(${HEADER_H} + 8, Math.round(KV.eventFrameBottom * scale) + 6);
     html.style.setProperty('--hv2-dl-top', top + 'px');
     html.style.setProperty('--hv2-dl-push', Math.max(0, top + ph + 24 - vh) + 'px');
     panelBottom = top + ph;
