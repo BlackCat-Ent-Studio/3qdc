@@ -9,6 +9,7 @@
 //
 // Sections (news, heroes, features, treasure) register through window.__hv2 and
 // stay hidden until they have rendered content, so no empty shell is ever shown.
+// The treasure section is currently switched off (see SHOW_TREASURE).
 
 import { NEWS_CSS, NEWS_JS } from './section-news.mjs';
 import { HEROES_CSS, HEROES_JS } from './section-heroes.mjs';
@@ -22,6 +23,21 @@ const HEADER_H = 88;
 // glyphs end at y≈1060, the frame spans 1064–1138). The download panel starts just below that frame so no
 // text of the art is covered. Update these if the home background artwork is replaced.
 const KV = { width: 2560, height: 1306, eventFrameBottom: 1140 };
+
+// "Kho Báu" is hidden for now (2026-09-15): the feature will not be used for a long time. While false the home
+// page builds no treasure block (so no CG / wallpaper requests), drops the footer link and hides the treasure item
+// of the header image nav; server.mjs imports this flag and redirects /kho-bau to /home while it is false.
+// section-treasure.mjs is kept unchanged. To bring the feature back: set this to true and restart the service.
+export const SHOW_TREASURE = false;
+
+// internal footer links only (the pages this site already serves)
+const FOOTER_LINKS = [['Tin tức', '/tin-tuc'], ['Kế hoạch', '/ke-hoach'], ['Tướng', '/tuong'], ['Đặc sắc', '/dac-sac'],
+  ...(SHOW_TREASURE ? [['Kho báu', '/kho-bau']] : []), ['Cộng đồng', '/cong-dong'], ['Hướng dẫn', '/huong-dan']];
+
+// treasure hidden: drop its item from the header image nav; the remaining items stay centred in the row
+const TREASURE_OFF_CSS = `
+html.hv2 .star-site-index-navs__item:has(> a[href="#/main/treasure"]){display:none!important}
+`;
 
 const CSS = `
 html.hv2 body{overflow-x:hidden}
@@ -128,8 +144,8 @@ const JS = `(function(){
   var SECTIONS = [
     ['hv2-news', 'Tin Tức Sự Kiện'],
     ['hv2-heroes', 'Hệ Thống Tướng'],
-    ['hv2-features', 'Tính Năng Đặc Sắc'],
-    ['hv2-treasure', 'Kho Báu']
+    ['hv2-features', 'Tính Năng Đặc Sắc']${SHOW_TREASURE ? `,
+    ['hv2-treasure', 'Kho Báu']` : ''}
   ];
   var KV = ${JSON.stringify(KV)};
   var renderers = [];
@@ -170,10 +186,8 @@ const JS = `(function(){
     SECTIONS.forEach(function(s){
       wrap.appendChild(el('section', { id: s[0], 'class': 'hv2-section' }, [el('h2', { 'class': 'hv2-title', text: s[1] })]));
     });
-    // internal links only (the pages this site already serves)
     var nav = el('nav', { 'class': 'hv2-footer-nav', 'aria-label': 'Liên kết' });
-    [['Tin tức', '/tin-tuc'], ['Kế hoạch', '/ke-hoach'], ['Tướng', '/tuong'], ['Đặc sắc', '/dac-sac'],
-      ['Kho báu', '/kho-bau'], ['Cộng đồng', '/cong-dong'], ['Hướng dẫn', '/huong-dan']].forEach(function(l){
+    ${JSON.stringify(FOOTER_LINKS)}.forEach(function(l){
       nav.appendChild(el('a', { href: l[1], text: l[0] }));
     });
     wrap.appendChild(el('footer', { 'class': 'hv2-footer' }, [el('div', { 'class': 'hv2-footer-brand', text: '3Q Đại Chiến' }), nav]));
@@ -295,9 +309,9 @@ const JS = `(function(){
 
 // Section scripts come after the layout script so window.__hv2 exists when they register.
 export const LAYOUT_V2_HTML =
-  `<style data-home-v2>${CSS}${NEWS_CSS}${HEROES_CSS}${FEATURES_CSS}${TREASURE_CSS}</style>` +
+  `<style data-home-v2>${CSS}${NEWS_CSS}${HEROES_CSS}${FEATURES_CSS}${SHOW_TREASURE ? TREASURE_CSS : TREASURE_OFF_CSS}</style>` +
   `<script data-home-v2>${JS}</script>` +
   `<script data-home-v2>${NEWS_JS}</script>` +
   `<script data-home-v2>${HEROES_JS}</script>` +
   `<script data-home-v2>${FEATURES_JS}</script>` +
-  `<script data-home-v2>${TREASURE_JS}</script>`;
+  (SHOW_TREASURE ? `<script data-home-v2>${TREASURE_JS}</script>` : '');

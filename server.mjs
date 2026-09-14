@@ -28,7 +28,7 @@ import { NAVFX_HTML } from './scripts/lib/nav-hover-fx.mjs';
 // home (build B / index route) overlays
 import { I18N_HTML as HOME_I18N } from './scripts/lib/home/i18n-overlay.mjs';
 import { HIDE_HTML as HOME_HIDE } from './scripts/lib/home/hide-overlay.mjs';
-import { LAYOUT_V2_HTML } from './scripts/lib/home/layout-v2/layout-v2.mjs';
+import { LAYOUT_V2_HTML, SHOW_TREASURE } from './scripts/lib/home/layout-v2/layout-v2.mjs';
 // main (build B / main routes) overlays
 import { I18N_HTML as MAIN_I18N } from './scripts/lib/main/i18n-overlay.mjs';
 import { BBS_SHIM_HTML } from './scripts/lib/main/bbs-shim.mjs';
@@ -204,6 +204,9 @@ export function startServer(port = 8080) {
       if (pathname === '/__internal/pc' || pathname === '/__internal/pc/') return sendHtml(res, await fabEntry(false));
       if (pathname === '/__internal/m' || pathname === '/__internal/m/') return sendHtml(res, await fabEntry(true));
       const cleanPath = pathname.length > 1 ? pathname.replace(/\/$/, '') : pathname;
+      // While "Kho Báu" is switched off (SHOW_TREASURE in layout-v2.mjs), /kho-bau, including the
+      // treasure item of the section menus, goes to the home page.
+      if (!SHOW_TREASURE && cleanPath === '/kho-bau') { res.writeHead(302, { Location: '/home', 'Cache-Control': 'no-store' }); return res.end(); }
       if (BUILDB_PATHS[cleanPath]) return sendHtml(res, await buildBEntry(BUILDB_PATHS[cleanPath]));
       if (cleanPath === '/huong-dan' || cleanPath === '/wiki') return sendHtml(res, await wikiEntry());
 
