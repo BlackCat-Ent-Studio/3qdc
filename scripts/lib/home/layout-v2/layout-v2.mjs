@@ -26,6 +26,18 @@ const HEADER_H = 88;
 const KV_IMAGE = '/3qdc-vi/home/anh-nen-slogan-vi.webp';
 const KV = { width: 1756, height: 896, eventFrameBottom: 780 };
 
+// Vietnamese download buttons (omg3q-style artwork in overrides/home) in display order, filling a 2-column grid row by
+// row. Entries with `match` reuse the original link whose href contains it; entries without one have no 3qdc link yet
+// and are shown in place but not clickable (give the entry a `match` once 3qdc has that link). Original links without a
+// Vietnamese button (TapTap China page, PC client zip) are left off the home page.
+const DL_ART = [
+  { match: 'cddp-track.aligames.com/9gtrack', src: '/3qdc-vi/home/nut-tai-appstore.png', label: 'Tải trên App Store' },
+  { match: 'cddp-link.aligames.com/rlink/', src: '/3qdc-vi/home/nut-tai-file-apk.png', label: 'Tải file APK' },
+  { src: '/3qdc-vi/home/nut-tai-google-play.png', label: 'Tải trên Google Play (sắp ra mắt)' },
+  { src: '/3qdc-vi/home/nut-dang-ky-nhanh.png', label: 'Đăng ký nhanh (sắp ra mắt)' },
+];
+const DL_TOPUP = '/3qdc-vi/home/nut-nap-the.png';
+
 // "Kho Báu" is hidden for now (2026-09-15): the feature will not be used for a long time. While false the home
 // page builds no treasure block (so no CG / wallpaper requests), drops the footer link and hides the treasure item
 // of the header image nav; server.mjs imports this flag and redirects /kho-bau to /home while it is false.
@@ -90,7 +102,7 @@ html.hv2 .star-site-index-navs__item:hover .star-site-index-navs__item-img_hover
    the panel is placed, so a bar React renders too late for the retry timer still offers downloads */
 html.hv2.hv2-dl-ready .star-site-index-download{display:none!important}
 
-/* download panel (omg3q style): QR | 2x2 platform buttons | top-up button, starting just below the event banner
+/* download panel (omg3q style): QR | 2x2 Vietnamese buttons | top-up box, starting just below the event banner
    frame of the background art (top comes from --hv2-dl-top computed in JS), below the header layers */
 #hv2-dlpanel{display:none}
 html.hv2 #hv2-dlpanel{display:flex;align-items:center;gap:clamp(14px,1.3vw,24px);position:absolute;left:50%;
@@ -106,8 +118,14 @@ html.hv2 #hv2-dlpanel{display:flex;align-items:center;gap:clamp(14px,1.3vw,24px)
 #hv2-dlpanel .hv2-dl-grid{display:grid;grid-template-columns:repeat(2,auto);gap:8px}
 #hv2-dlpanel .hv2-dl-grid a{display:block;line-height:0}
 #hv2-dlpanel .hv2-dl-grid img{display:block;width:auto!important;height:var(--hv2-dl-btn)!important}
-#hv2-dlpanel a.star-site-index-store{display:block;margin:0!important;height:calc(var(--hv2-dl-btn) * 1.4)!important;
-  width:calc(var(--hv2-dl-btn) * 1.4 * 3.61)!important}
+/* top-up link as the Vietnamese "NẠP THẺ" box (131x150 art): two button rows tall plus the 18px it rises above them */
+#hv2-dlpanel a.star-site-index-store{display:block;margin:-18px 0 0!important;
+  background-image:url("${DL_TOPUP}")!important;background-size:100% 100%!important;
+  height:calc(var(--hv2-dl-btn) * 2 + 26px)!important;width:calc((var(--hv2-dl-btn) * 2 + 26px) * 0.8733)!important}
+#hv2-dlpanel a:hover,#hv2-sidebar a:hover{filter:brightness(1.1)}
+/* buttons with no 3qdc link yet: shown, not clickable */
+#hv2-dlpanel a.hv2-dl-soon,#hv2-sidebar a.hv2-dl-soon{cursor:default}
+#hv2-dlpanel a.hv2-dl-soon:hover,#hv2-sidebar a.hv2-dl-soon:hover{filter:none}
 
 /* right sidebar (cloned QR + download buttons): slides in once the key visual (and its download panel) is scrolled past */
 #hv2-sidebar{display:none}
@@ -121,10 +139,21 @@ html.hv2.hv2-scrolled #hv2-sidebar{transform:translate(0,-50%);opacity:1;pointer
 #hv2-sidebar .hv2-qr-text{color:#e9d9b0;font-size:12px;line-height:1.3;text-align:center}
 #hv2-sidebar a{display:block;line-height:0}
 #hv2-sidebar a img{width:128px!important;height:auto!important}
-#hv2-sidebar a.star-site-index-store{width:128px!important;height:36px!important;margin:0!important}
+#hv2-sidebar a.star-site-index-store{width:112px!important;height:128px!important;margin:2px auto 0!important;
+  background-image:url("${DL_TOPUP}")!important;background-size:100% 100%!important}
 #hv2-sidebar .hv2-top{margin-top:2px;width:128px;height:30px;border:1px solid rgba(214,176,106,.7);border-radius:6px;
   background:transparent;color:#e9d9b0;font-size:13px;cursor:pointer}
 #hv2-sidebar .hv2-top:hover{background:rgba(214,176,106,.18)}
+/* short windows (e.g. a 1366x768 laptop once browser bars are taken off): the centred full-size sidebar (~528px) would
+   run over the fixed header, so use a compact sidebar (~421px) anchored just below the header instead */
+@media (max-height:720px){
+  html.hv2 #hv2-sidebar{top:96px;gap:6px;padding:8px 10px;transform:translate(calc(100% + 24px),0)}
+  html.hv2.hv2-scrolled #hv2-sidebar{transform:translate(0,0)}
+  #hv2-sidebar .hv2-qr{width:88px;height:88px}
+  #hv2-sidebar a img{width:104px!important}
+  #hv2-sidebar a.star-site-index-store{width:88px!important;height:101px!important}
+  #hv2-sidebar .hv2-top{width:104px;height:26px}
+}
 
 /* content area below the key visual */
 #home-v2{display:none}
@@ -155,6 +184,7 @@ const JS = `(function(){
     ['hv2-treasure', 'Kho Báu']` : ''}
   ];
   var KV = ${JSON.stringify(KV)};
+  var DL_ART = ${JSON.stringify(DL_ART)};
   var renderers = [];
   var mounted = false;
   var sidebarTimer = null;
@@ -202,6 +232,28 @@ const JS = `(function(){
     document.body.appendChild(el('div', { id: 'hv2-header-bg' }));
   }
 
+  // Vietnamese download buttons in DL_ART order: clone the original link an entry matches and swap in its artwork, or,
+  // for an entry with no 3qdc link yet, a link-less placeholder that shows the artwork but cannot be clicked. If no
+  // original link matches (the bundle changed its links), clone every original link so the panel is never empty.
+  function dlLinks(dl){
+    var src = [].slice.call(dl.querySelectorAll('.star-site-index-download-ul a'));
+    var out = [], matched = 0;
+    DL_ART.forEach(function(art){
+      var c;
+      if (art.match){
+        var a = src.filter(function(l){ return (l.getAttribute('href') || '').indexOf(art.match) !== -1; })[0];
+        if (!a) return;
+        c = a.cloneNode(true); matched++;
+      } else {
+        c = el('a', { 'class': 'hv2-dl-soon', title: 'Sắp ra mắt' }, [el('img', {})]);
+      }
+      var img = c.querySelector('img');
+      if (img){ img.src = art.src; img.alt = art.label; }
+      out.push(c);
+    });
+    return matched ? out : src.map(function(l){ return l.cloneNode(true); });
+  }
+
   function buildSidebar(){
     if (document.getElementById('hv2-sidebar')) return true;
     var dl = document.querySelector('.star-site-index-download');
@@ -212,8 +264,9 @@ const JS = `(function(){
     bar.appendChild(qr);
     var desc = document.querySelector('.star-site-index-download-qrcode_box p');
     bar.appendChild(el('div', { 'class': 'hv2-qr-text', text: desc ? desc.textContent : '' }));
-    var links = dl.querySelectorAll('.star-site-index-download-ul a, a.star-site-index-store');
-    for (var i = 0; i < links.length; i++) bar.appendChild(links[i].cloneNode(true));
+    dlLinks(dl).forEach(function(a){ bar.appendChild(a); });
+    var store = dl.querySelector('a.star-site-index-store');
+    if (store) { var box = store.cloneNode(true); box.setAttribute('aria-label', 'Nạp thẻ'); bar.appendChild(box); }
     var top = el('button', { type: 'button', 'class': 'hv2-top', text: 'Lên đầu trang' });
     top.addEventListener('click', function(){ window.scrollTo({ top: 0, behavior: 'smooth' }); });
     bar.appendChild(top);
@@ -227,16 +280,16 @@ const JS = `(function(){
     if (document.getElementById('hv2-dlpanel')) return true;
     var dl = document.querySelector('.star-site-index-download');
     var qrImg = document.querySelector('.star-site-index-download-qrcode_box img');
-    var platforms = dl ? dl.querySelectorAll('.star-site-index-download-ul a') : [];
+    var platforms = dl ? dlLinks(dl) : [];
     if (!dl || !qrImg || !platforms.length) return false;
     var qr = el('div', { 'class': 'hv2-dl-qr' }, [el('div', { 'class': 'hv2-dl-qr-img' }, [qrImg.cloneNode(true)])]);
     var desc = document.querySelector('.star-site-index-download-qrcode_box p');
     if (desc && desc.textContent) qr.appendChild(el('div', { 'class': 'hv2-dl-qr-text', text: desc.textContent }));
     var grid = el('div', { 'class': 'hv2-dl-grid' });
-    for (var i = 0; i < platforms.length; i++) grid.appendChild(platforms[i].cloneNode(true));
+    platforms.forEach(function(a){ grid.appendChild(a); });
     var panel = el('div', { id: 'hv2-dlpanel', 'data-home-v2': '' }, [qr, grid]);
     var store = dl.querySelector('a.star-site-index-store');
-    if (store) panel.appendChild(store.cloneNode(true));
+    if (store) { var box = store.cloneNode(true); box.setAttribute('aria-label', 'Nạp thẻ'); panel.appendChild(box); }
     document.body.appendChild(panel);
     return true;
   }
