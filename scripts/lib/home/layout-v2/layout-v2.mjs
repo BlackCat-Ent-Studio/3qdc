@@ -1,6 +1,6 @@
 // layout-v2.mjs — omg3q-style scrolling layout for the build-B home route (#/index).
-// Additive overlay: restyles the existing React DOM (logo, 10 image nav items,
-// download bar, QR) and appends our own sections below the key visual. The umi
+// Additive overlay: restyles the existing React DOM (logo, 10 image nav items), clones the
+// download links into its own panel and sidebar, and appends sections below the key visual. The umi
 // bundle and mirror/ are never edited; every image and link stays as-is.
 //
 // Build B serves /home and every /main-family path from one entry, and index <->
@@ -17,15 +17,9 @@ import { TREASURE_CSS, TREASURE_JS } from './section-treasure.mjs';
 
 const HEADER_H = 88;
 
-// Key-visual background (page_642a4eb04023f80ab7f3fb17/mqaggnekipux19ptb5s.jpg):
-// natural size and the bottom edge of the event banner frame baked into the art, in
-// image pixels (frame spans y≈1065–1138). The download bar is placed in the free band
-// below that frame. Update these if the home background artwork is replaced.
-const KV = { width: 2560, height: 1306, eventBannerBottom: 1140 };
-
 const CSS = `
 html.hv2 body{overflow-x:hidden}
-html.hv2{--hv2-btn:clamp(28px,4.2vh,40px)}
+html.hv2{--hv2-dl-btn:clamp(34px,2.5vw,46px)}
 html.hv2 .star-site-index-left-mask{display:none!important}
 
 /* header bar behind the fixed logo / nav / store badges */
@@ -59,33 +53,36 @@ html.hv2 .star-site-index-navs__item:hover .star-site-index-navs__item-img{visib
 html.hv2 .star-site-index-navs__item-active .star-site-index-navs__item-img_hover,
 html.hv2 .star-site-index-navs__item:hover .star-site-index-navs__item-img_hover{display:block!important}
 
-/* download bar: compact centered strip placed below the event banner of the key visual
-   (top comes from --hv2-dl-top computed in JS), kept below the header layers */
-html.hv2 .star-site-index-download{left:50%!important;right:auto!important;top:var(--hv2-dl-top,auto)!important;
-  bottom:auto!important;z-index:8!important;transform:translateX(-50%);align-items:center!important;
-  gap:10px;padding:4px 10px;border-radius:10px;background:rgba(8,10,22,.6);border:1px solid rgba(214,176,106,.45)}
-/* too little room below the event banner (short viewports): hide the bar, the sidebar carries the same links */
-html.hv2.hv2-dl-tight .star-site-index-download{display:none!important}
-html.hv2 .star-site-index-download-left{flex-direction:row!important;align-items:center!important}
-html.hv2 .star-site-index-download-ul > li{margin-right:8px!important}
-html.hv2 .star-site-index-download-ul > li:last-child{margin-right:0!important}
-html.hv2 .star-site-index-download-ul > li img{width:auto!important;height:var(--hv2-btn)!important;display:block}
-html.hv2 .star-site-index-download-left .star-site-index-store{order:2;margin:0 0 0 8px!important;
-  height:var(--hv2-btn)!important;width:calc(var(--hv2-btn) * 3.61)!important}
-html.hv2 .star-site-index-download-qrcode_box > p{display:none!important}
-html.hv2 .star-site-index-download-qrcode_box-qrcode{width:calc(var(--hv2-btn) + 10px)!important;
-  height:calc(var(--hv2-btn) + 10px)!important}
-html.hv2 .star-site-index-download-qrcode_box-qrcode > img{width:100%!important;height:100%!important}
+/* the original download bar is the source cloned into the panel and sidebar; it is hidden only once
+   the panel is placed, so a bar React renders too late for the retry timer still offers downloads */
+html.hv2.hv2-dl-ready .star-site-index-download{display:none!important}
 
-/* right sidebar (cloned QR + download buttons): slides in once the key visual is scrolled past,
-   or immediately when the download bar is hidden */
+/* download panel (omg3q style): QR | 2x2 platform buttons | top-up button, pinned to the bottom of the
+   first screen (top comes from --hv2-dl-top computed in JS), kept below the header layers */
+#hv2-dlpanel{display:none}
+html.hv2 #hv2-dlpanel{display:flex;align-items:center;gap:clamp(14px,1.3vw,24px);position:absolute;left:50%;
+  top:var(--hv2-dl-top,auto);z-index:8;transform:translateX(-50%);box-sizing:border-box;
+  padding:clamp(10px,.8vw,14px) clamp(16px,1.5vw,28px);border:2px solid rgba(214,176,106,.8);border-radius:16px;
+  background:linear-gradient(180deg,rgba(30,37,84,.95),rgba(13,17,42,.95));
+  box-shadow:0 10px 30px rgba(0,0,0,.45),inset 0 0 0 1px rgba(255,255,255,.06)}
+#hv2-dlpanel .hv2-dl-qr{display:flex;flex-direction:column;align-items:center;gap:4px}
+#hv2-dlpanel .hv2-dl-qr-img{width:calc(var(--hv2-dl-btn) * 2 + 8px);aspect-ratio:1;padding:4px;box-sizing:border-box;
+  background:#fff;border-radius:8px}
+#hv2-dlpanel .hv2-dl-qr-img img{display:block;width:100%!important;height:100%!important}
+#hv2-dlpanel .hv2-dl-qr-text{color:#e9d9b0;font-size:12px;line-height:1.2;white-space:nowrap}
+#hv2-dlpanel .hv2-dl-grid{display:grid;grid-template-columns:repeat(2,auto);gap:8px}
+#hv2-dlpanel .hv2-dl-grid a{display:block;line-height:0}
+#hv2-dlpanel .hv2-dl-grid img{display:block;width:auto!important;height:var(--hv2-dl-btn)!important}
+#hv2-dlpanel a.star-site-index-store{display:block;margin:0!important;height:calc(var(--hv2-dl-btn) * 1.4)!important;
+  width:calc(var(--hv2-dl-btn) * 1.4 * 3.61)!important}
+
+/* right sidebar (cloned QR + download buttons): slides in once the key visual (and its download panel) is scrolled past */
 #hv2-sidebar{display:none}
 html.hv2 #hv2-sidebar{display:flex;flex-direction:column;align-items:center;gap:8px;position:fixed;right:14px;top:50%;
   transform:translate(calc(100% + 24px),-50%);opacity:0;pointer-events:none;transition:transform .3s ease,opacity .3s ease;
   z-index:12;width:148px;padding:12px 10px;border-radius:12px;
   background:rgba(8,10,22,.82);border:1px solid rgba(214,176,106,.55);box-shadow:0 8px 28px rgba(0,0,0,.45)}
-html.hv2.hv2-scrolled #hv2-sidebar,
-html.hv2.hv2-dl-tight #hv2-sidebar{transform:translate(0,-50%);opacity:1;pointer-events:auto}
+html.hv2.hv2-scrolled #hv2-sidebar{transform:translate(0,-50%);opacity:1;pointer-events:auto}
 #hv2-sidebar .hv2-qr{width:112px;height:112px;background:#fff;border-radius:6px;padding:4px;box-sizing:border-box}
 #hv2-sidebar .hv2-qr img{width:100%!important;height:100%!important;display:block}
 #hv2-sidebar .hv2-qr-text{color:#e9d9b0;font-size:12px;line-height:1.3;text-align:center}
@@ -120,12 +117,10 @@ const JS = `(function(){
     ['hv2-features', 'Tính Năng Đặc Sắc'],
     ['hv2-treasure', 'Kho Báu']
   ];
-  var KV = ${JSON.stringify(KV)};
   var renderers = [];
   var mounted = false;
   var sidebarTimer = null;
   var active = false;
-  var barHeight = 0; // last measured height of the visible compact download bar
 
   function isHome(){
     var h = location.hash;
@@ -188,30 +183,44 @@ const JS = `(function(){
     return true;
   }
 
-  // Place the download bar in the band between the event banner (baked into the
-  // cover-scaled, top-aligned background) and the bottom of the viewport. When that
-  // band is too thin, hide the bar and let the sidebar (same links + QR) show instead.
-  function placeDownloadBar(){
-    var html = document.documentElement;
+  // omg3q-style download panel: the QR, the platform buttons and the top-up link of the
+  // original (hidden) download bar, cloned so React's own nodes are never moved
+  function buildPanel(){
+    if (document.getElementById('hv2-dlpanel')) return true;
     var dl = document.querySelector('.star-site-index-download');
-    if (!dl) return false;
-    // the bar measures 0 while hidden, so keep the height seen while it was visible
-    if (dl.offsetHeight) barHeight = dl.offsetHeight;
-    if (!barHeight) return false;
-    var vh = window.innerHeight;
-    var scale = Math.max(window.innerWidth / KV.width, vh / KV.height);
-    var bannerBottom = Math.round(KV.eventBannerBottom * scale) + 6;
-    var free = vh - bannerBottom;
-    var tight = free < barHeight + 6;
-    html.classList.toggle('hv2-dl-tight', tight);
-    if (!tight) html.style.setProperty('--hv2-dl-top', Math.round(bannerBottom + (free - barHeight) / 2) + 'px');
+    var qrImg = document.querySelector('.star-site-index-download-qrcode_box img');
+    var platforms = dl ? dl.querySelectorAll('.star-site-index-download-ul a') : [];
+    if (!dl || !qrImg || !platforms.length) return false;
+    var qr = el('div', { 'class': 'hv2-dl-qr' }, [el('div', { 'class': 'hv2-dl-qr-img' }, [qrImg.cloneNode(true)])]);
+    var desc = document.querySelector('.star-site-index-download-qrcode_box p');
+    if (desc && desc.textContent) qr.appendChild(el('div', { 'class': 'hv2-dl-qr-text', text: desc.textContent }));
+    var grid = el('div', { 'class': 'hv2-dl-grid' });
+    for (var i = 0; i < platforms.length; i++) grid.appendChild(platforms[i].cloneNode(true));
+    var panel = el('div', { id: 'hv2-dlpanel', 'data-home-v2': '' }, [qr, grid]);
+    var store = dl.querySelector('a.star-site-index-store');
+    if (store) panel.appendChild(store.cloneNode(true));
+    document.body.appendChild(panel);
+    return true;
+  }
+
+  // Pin the panel to the bottom of the key visual (the 100vh first screen) at every window size,
+  // over the event line of the background art, never above the header. The free band below the
+  // event banner is too thin for the panel at every common desktop height, so it is not used.
+  function placePanel(){
+    var html = document.documentElement;
+    var panel = document.getElementById('hv2-dlpanel');
+    var ph = panel ? panel.offsetHeight : 0;
+    if (!ph) return false;
+    var top = Math.max(${HEADER_H} + 8, window.innerHeight - ph - 16);
+    html.style.setProperty('--hv2-dl-top', Math.round(top) + 'px');
+    html.classList.add('hv2-dl-ready');
     return true;
   }
   var resizeTimer = null;
   function onResize(){
     if (!active) return;
     clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(placeDownloadBar, 120);
+    resizeTimer = setTimeout(placePanel, 120);
   }
   function onScroll(){
     if (!active) return;
@@ -231,20 +240,19 @@ const JS = `(function(){
     buildContainer();
     runRenderers();
     onScroll();
-    // React renders the download bar late; one shared retry timer (~10s) for the
-    // sidebar clone and the bar placement (placement needs the compact bar height)
-    var placed = placeDownloadBar();
-    if ((!buildSidebar() || !placed) && !sidebarTimer){
+    // React renders the download bar late; one shared retry timer (~30s) clones it into the
+    // panel and the sidebar, then places the panel (placement needs its rendered height)
+    if (!(buildPanel() && buildSidebar() && placePanel()) && !sidebarTimer){
       var n = 0;
       sidebarTimer = setInterval(function(){
-        var done = placeDownloadBar() && buildSidebar();
-        if (done || ++n > 40){ clearInterval(sidebarTimer); sidebarTimer = null; }
+        var done = buildPanel() && buildSidebar() && placePanel();
+        if (done || ++n > 120){ clearInterval(sidebarTimer); sidebarTimer = null; }
       }, 250);
     }
   }
   function teardown(){
     active = false;
-    document.documentElement.classList.remove('hv2', 'hv2-scrolled', 'hv2-dl-tight');
+    document.documentElement.classList.remove('hv2', 'hv2-scrolled');
   }
   // RF sets the hash while <head> is still parsing, so an early hashchange can fire
   // before <body> exists; the DOMContentLoaded listener performs the first apply.
