@@ -17,6 +17,12 @@ import { TREASURE_CSS, TREASURE_JS } from './section-treasure.mjs';
 
 const HEADER_H = 88;
 
+// Key-visual background (page_642a4eb04023f80ab7f3fb17/mqaggnekipux19ptb5s.jpg, cover-scaled, top-aligned):
+// natural size and the top edge of the event banner frame baked into the art, in image pixels. The gold
+// slogan glyphs end at y≈1060 and the frame border starts at 1064 (per-row pixel scan). The download panel
+// sits on that frame, just below the slogan. Update these if the home background artwork is replaced.
+const KV = { width: 2560, height: 1306, eventFrameTop: 1064 };
+
 const CSS = `
 html.hv2 body{overflow-x:hidden}
 html.hv2{--hv2-dl-btn:clamp(34px,2.5vw,46px)}
@@ -57,8 +63,8 @@ html.hv2 .star-site-index-navs__item:hover .star-site-index-navs__item-img_hover
    the panel is placed, so a bar React renders too late for the retry timer still offers downloads */
 html.hv2.hv2-dl-ready .star-site-index-download{display:none!important}
 
-/* download panel (omg3q style): QR | 2x2 platform buttons | top-up button, pinned to the bottom of the
-   first screen (top comes from --hv2-dl-top computed in JS), kept below the header layers */
+/* download panel (omg3q style): QR | 2x2 platform buttons | top-up button, sitting on the event banner frame
+   below the slogan of the background art (top comes from --hv2-dl-top computed in JS), below the header layers */
 #hv2-dlpanel{display:none}
 html.hv2 #hv2-dlpanel{display:flex;align-items:center;gap:clamp(14px,1.3vw,24px);position:absolute;left:50%;
   top:var(--hv2-dl-top,auto);z-index:8;transform:translateX(-50%);box-sizing:border-box;
@@ -95,7 +101,7 @@ html.hv2.hv2-scrolled #hv2-sidebar{transform:translate(0,-50%);opacity:1;pointer
 
 /* content area below the key visual */
 #home-v2{display:none}
-html.hv2 #home-v2{display:block;position:relative;z-index:1;background:#0b0d18;color:#e8e2d0;
+html.hv2 #home-v2{display:block;position:relative;z-index:1;background:#0b0d18;color:#e8e2d0;padding-top:var(--hv2-dl-push,0px);
   font-family:"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
 #home-v2 .hv2-section{display:none;padding:72px 180px 64px 24px;max-width:1280px;margin:0 auto;box-sizing:content-box}
 #home-v2 .hv2-section[data-ready]{display:block}
@@ -117,10 +123,12 @@ const JS = `(function(){
     ['hv2-features', 'Tính Năng Đặc Sắc'],
     ['hv2-treasure', 'Kho Báu']
   ];
+  var KV = ${JSON.stringify(KV)};
   var renderers = [];
   var mounted = false;
   var sidebarTimer = null;
   var active = false;
+  var panelBottom = 0; // document y of the download panel's bottom edge; the sidebar waits until it is scrolled past
 
   function isHome(){
     var h = location.hash;
@@ -203,16 +211,21 @@ const JS = `(function(){
     return true;
   }
 
-  // Pin the panel to the bottom of the key visual (the 100vh first screen) at every window size,
-  // over the event line of the background art, never above the header. The free band below the
-  // event banner is too thin for the panel at every common desktop height, so it is not used.
+  // Put the panel's top edge on the event banner frame of the background art, just below the slogan
+  // glyphs (never above the header). The part of the panel that runs past the 100vh key visual pushes
+  // the sections below down (--hv2-dl-push), so nothing is hidden under it.
   function placePanel(){
     var html = document.documentElement;
     var panel = document.getElementById('hv2-dlpanel');
     var ph = panel ? panel.offsetHeight : 0;
     if (!ph) return false;
-    var top = Math.max(${HEADER_H} + 8, window.innerHeight - ph - 16);
-    html.style.setProperty('--hv2-dl-top', Math.round(top) + 'px');
+    var vh = window.innerHeight;
+    var scale = Math.max(window.innerWidth / KV.width, vh / KV.height);
+    var top = Math.max(${HEADER_H} + 8, Math.round(KV.eventFrameTop * scale));
+    html.style.setProperty('--hv2-dl-top', top + 'px');
+    html.style.setProperty('--hv2-dl-push', Math.max(0, top + ph + 24 - vh) + 'px');
+    panelBottom = top + ph;
+    onScroll();
     html.classList.add('hv2-dl-ready');
     return true;
   }
@@ -224,7 +237,8 @@ const JS = `(function(){
   }
   function onScroll(){
     if (!active) return;
-    var past = window.scrollY > window.innerHeight * 0.75;
+    // show the sidebar only once the download panel has gone under the fixed header
+    var past = window.scrollY > Math.max(window.innerHeight * 0.75, panelBottom - ${HEADER_H});
     document.documentElement.classList.toggle('hv2-scrolled', past);
   }
 
