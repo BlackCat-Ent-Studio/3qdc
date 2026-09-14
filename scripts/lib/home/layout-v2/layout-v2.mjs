@@ -18,11 +18,13 @@ import { TREASURE_CSS, TREASURE_JS } from './section-treasure.mjs';
 
 const HEADER_H = 88;
 
-// Key-visual background (page_642a4eb04023f80ab7f3fb17/mqaggnekipux19ptb5s.jpg, cover-scaled, top-aligned):
-// natural size and the bottom edge of the event banner frame baked into the art, in image pixels (slogan
-// glyphs end at y≈1060, the frame spans 1064–1138). The download panel starts just below that frame so no
-// text of the art is covered. Update these if the home background artwork is replaced.
-const KV = { width: 2560, height: 1306, eventFrameBottom: 1140 };
+// Key-visual background: the Vietnamese artwork served from overrides/home (KV_IMAGE), replacing the original
+// page_642a4eb04023f80ab7f3fb17/mqaggnekipux19ptb5s.jpg; cover-scaled, top-aligned. Natural size and the bottom
+// edge of the event banner frame baked into the art, in image pixels (the frame's lower gold border is row 778).
+// The download panel starts just below that frame so no text of the art is covered. Update these if the home
+// background artwork is replaced (the original art was 2560x1306 with eventFrameBottom 1140).
+const KV_IMAGE = '/3qdc-vi/home/anh-nen-slogan-vi.webp';
+const KV = { width: 1756, height: 896, eventFrameBottom: 780 };
 
 // "Kho Báu" is hidden for now (2026-09-15): the feature will not be used for a long time. While false the home
 // page builds no treasure block (so no CG / wallpaper requests), drops the footer link and hides the treasure item
@@ -47,6 +49,11 @@ html.hv2-embed .star-site-main-left{display:none!important}
 html.hv2-embed .star-site-main-right{margin-left:0!important;width:100%!important}
 html.hv2{--hv2-dl-btn:clamp(34px,2.5vw,46px)}
 html.hv2 .star-site-index-left-mask{display:none!important}
+
+/* Vietnamese key visual. The app sets the original art as an inline background on the index route's element;
+   keyed on .star-site-index (present only on #/index) rather than html.hv2, which is added at DOMContentLoaded,
+   so the original art is never fetched or flashed first */
+.star-site-index .star-site-imgBg{background-image:url("${KV_IMAGE}")!important}
 
 /* header bar behind the fixed logo / nav / store badges */
 #hv2-header-bg{display:none}

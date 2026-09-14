@@ -16,7 +16,7 @@
 import { createServer as createHttp } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import { createReadStream } from 'node:fs';
-import { join, extname, normalize } from 'node:path';
+import { join, extname, normalize, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { createHash } from 'node:crypto';
 // fab (build A) overlays
@@ -43,6 +43,9 @@ const ROOT = join(process.cwd(), 'mirror');
 const ENTRY_B = join(ROOT, 'index.html');          // build B entry (umi.62525e29)
 const ENTRY_FAB = join(ROOT, '_fab-index.html');   // build A entry (umi.ca75703e)
 const ENTRY_WIKI = join(ROOT, '_wiki-index.html'); // build C entry (umi.cd0e3129, /wukongbuild/ss/)
+// Localised artwork that replaces mirrored images (e.g. the Vietnamese home key visual); tracked in git, unlike mirror/.
+const OVERRIDES = join(process.cwd(), 'overrides');
+const OVERRIDES_URL = '/3qdc-vi/';
 
 const BREAKPOINT = 768;
 // fab dual-view shell: one URL, swaps PC/mobile internal entry by viewport width.
@@ -209,6 +212,15 @@ export function startServer(port = 8080) {
       if (!SHOW_TREASURE && cleanPath === '/kho-bau') { res.writeHead(302, { Location: '/home', 'Cache-Control': 'no-store' }); return res.end(); }
       if (BUILDB_PATHS[cleanPath]) return sendHtml(res, await buildBEntry(BUILDB_PATHS[cleanPath]));
       if (cleanPath === '/huong-dan' || cleanPath === '/wiki') return sendHtml(res, await wikiEntry());
+
+      // --- localised artwork from overrides/ (never resolves outside that folder) ---
+      if (pathname.startsWith(OVERRIDES_URL)) {
+        const file = join(OVERRIDES, normalize(pathname.slice(OVERRIDES_URL.length)).replace(/^(\.\.[/\\])+/, ''));
+        const s = file.startsWith(OVERRIDES + sep) ? await stat(file).catch(() => null) : null;
+        if (s && s.isFile()) return await send(res, file, MIME[extname(file).toLowerCase()] || 'application/octet-stream', req);
+        res.writeHead(404, { 'Content-Type': 'text/plain' });
+        return res.end('404 ' + pathname);
+      }
 
       // --- static asset from merged mirror/ ---
       const safe = normalize(pathname).replace(/^(\.\.[/\\])+/, '');
