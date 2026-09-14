@@ -13,10 +13,10 @@
 const HEADER_H = 88;
 
 // Key-visual background (page_642a4eb04023f80ab7f3fb17/mqaggnekipux19ptb5s.jpg):
-// natural size and the bottom edge of the event banner baked into the art, in image
-// pixels. The download bar is placed in the free band below that banner. Update these
-// if the home background artwork is replaced.
-const KV = { width: 2560, height: 1306, eventBannerBottom: 1100 };
+// natural size and the bottom edge of the event banner frame baked into the art, in
+// image pixels (frame spans y≈1065–1138). The download bar is placed in the free band
+// below that frame. Update these if the home background artwork is replaced.
+const KV = { width: 2560, height: 1306, eventBannerBottom: 1140 };
 
 const CSS = `
 html.hv2 body{overflow-x:hidden}
@@ -57,8 +57,10 @@ html.hv2 .star-site-index-navs__item:hover .star-site-index-navs__item-img_hover
 /* download bar: compact centered strip placed below the event banner of the key visual
    (top comes from --hv2-dl-top computed in JS), kept below the header layers */
 html.hv2 .star-site-index-download{left:50%!important;right:auto!important;top:var(--hv2-dl-top,auto)!important;
-  bottom:var(--hv2-dl-bottom,auto)!important;z-index:8!important;transform:translateX(-50%);align-items:center!important;
+  bottom:auto!important;z-index:8!important;transform:translateX(-50%);align-items:center!important;
   gap:10px;padding:4px 10px;border-radius:10px;background:rgba(8,10,22,.6);border:1px solid rgba(214,176,106,.45)}
+/* too little room below the event banner (short viewports): hide the bar, the sidebar carries the same links */
+html.hv2.hv2-dl-tight .star-site-index-download{display:none!important}
 html.hv2 .star-site-index-download-left{flex-direction:row!important;align-items:center!important}
 html.hv2 .star-site-index-download-ul > li{margin-right:8px!important}
 html.hv2 .star-site-index-download-ul > li:last-child{margin-right:0!important}
@@ -70,13 +72,15 @@ html.hv2 .star-site-index-download-qrcode_box-qrcode{width:calc(var(--hv2-btn) +
   height:calc(var(--hv2-btn) + 10px)!important}
 html.hv2 .star-site-index-download-qrcode_box-qrcode > img{width:100%!important;height:100%!important}
 
-/* right sidebar (cloned QR + download buttons): slides in once the key visual is scrolled past */
+/* right sidebar (cloned QR + download buttons): slides in once the key visual is scrolled past,
+   or immediately when the download bar is hidden */
 #hv2-sidebar{display:none}
 html.hv2 #hv2-sidebar{display:flex;flex-direction:column;align-items:center;gap:8px;position:fixed;right:14px;top:50%;
   transform:translate(calc(100% + 24px),-50%);opacity:0;pointer-events:none;transition:transform .3s ease,opacity .3s ease;
   z-index:12;width:148px;padding:12px 10px;border-radius:12px;
   background:rgba(8,10,22,.82);border:1px solid rgba(214,176,106,.55);box-shadow:0 8px 28px rgba(0,0,0,.45)}
-html.hv2.hv2-scrolled #hv2-sidebar{transform:translate(0,-50%);opacity:1;pointer-events:auto}
+html.hv2.hv2-scrolled #hv2-sidebar,
+html.hv2.hv2-dl-tight #hv2-sidebar{transform:translate(0,-50%);opacity:1;pointer-events:auto}
 #hv2-sidebar .hv2-qr{width:112px;height:112px;background:#fff;border-radius:6px;padding:4px;box-sizing:border-box}
 #hv2-sidebar .hv2-qr img{width:100%!important;height:100%!important;display:block}
 #hv2-sidebar .hv2-qr-text{color:#e9d9b0;font-size:12px;line-height:1.3;text-align:center}
@@ -112,6 +116,7 @@ const JS = `(function(){
   var mounted = false;
   var sidebarTimer = null;
   var active = false;
+  var barHeight = 0; // last measured height of the visible compact download bar
 
   function isHome(){
     var h = location.hash;
@@ -169,24 +174,22 @@ const JS = `(function(){
   }
 
   // Place the download bar in the band between the event banner (baked into the
-  // cover-scaled, top-aligned background) and the bottom of the viewport. When the
-  // band is too thin (very wide screens) fall back to hugging the bottom edge.
+  // cover-scaled, top-aligned background) and the bottom of the viewport. When that
+  // band is too thin, hide the bar and let the sidebar (same links + QR) show instead.
   function placeDownloadBar(){
-    var root = document.documentElement.style;
+    var html = document.documentElement;
     var dl = document.querySelector('.star-site-index-download');
     if (!dl) return false;
-    var vw = window.innerWidth, vh = window.innerHeight;
-    var scale = Math.max(vw / KV.width, vh / KV.height);
+    // the bar measures 0 while hidden, so keep the height seen while it was visible
+    if (dl.offsetHeight) barHeight = dl.offsetHeight;
+    if (!barHeight) return false;
+    var vh = window.innerHeight;
+    var scale = Math.max(window.innerWidth / KV.width, vh / KV.height);
     var bannerBottom = Math.round(KV.eventBannerBottom * scale) + 6;
-    var barH = dl.offsetHeight;
     var free = vh - bannerBottom;
-    if (free >= barH + 4){
-      root.setProperty('--hv2-dl-top', Math.round(bannerBottom + (free - barH) / 2) + 'px');
-      root.setProperty('--hv2-dl-bottom', 'auto');
-    } else {
-      root.setProperty('--hv2-dl-top', 'auto');
-      root.setProperty('--hv2-dl-bottom', '6px');
-    }
+    var tight = free < barHeight + 6;
+    html.classList.toggle('hv2-dl-tight', tight);
+    if (!tight) html.style.setProperty('--hv2-dl-top', Math.round(bannerBottom + (free - barHeight) / 2) + 'px');
     return true;
   }
   var resizeTimer = null;
@@ -226,7 +229,7 @@ const JS = `(function(){
   }
   function teardown(){
     active = false;
-    document.documentElement.classList.remove('hv2', 'hv2-scrolled');
+    document.documentElement.classList.remove('hv2', 'hv2-scrolled', 'hv2-dl-tight');
   }
   // RF sets the hash while <head> is still parsing, so an early hashchange can fire
   // before <body> exists; the DOMContentLoaded listener performs the first apply.
