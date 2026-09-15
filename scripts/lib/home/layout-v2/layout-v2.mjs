@@ -473,9 +473,27 @@ const JS = `(function(){
     active = false;
     document.documentElement.classList.remove('hv2', 'hv2-scrolled');
   }
+  // The main site is served at /: the app only renders the home page on #/index (set before it starts), but the address
+  // bar shows the plain site address. The hash is removed once the app's router has read it (a timeout also lets the
+  // router's own hashchange listener, added after this one, see #/index first). Coming back to / without a hash (the back
+  // button) makes the app redirect to its unmirrored #/fab, so that is sent back to #/index.
+  var ROOT_HOME = !EMBED && location.pathname === '/';
+  function stripIndexHash(){
+    // exactly #/index only: a hash carrying a query or a sub-path keeps it in the address
+    if (ROOT_HOME && location.hash === '#/index') history.replaceState(history.state, '', location.pathname + location.search);
+  }
   // RF sets the hash while <head> is still parsing, so an early hashchange can fire
   // before <body> exists; the DOMContentLoaded listener performs the first apply.
-  function sync(){ if (!document.body) return; if (isHome()) apply(); else teardown(); }
+  function sync(){
+    if (!document.body) return;
+    var h = location.hash;
+    // back at / without a hash (the back button) or sent to the unmirrored #/fab: put #/index back in place without an
+    // event, before the router reads the address (this hashchange listener is registered before the router's)
+    if (ROOT_HOME && (!h || h === '#' || h === '#/' || h.indexOf('#/fab') === 0)) {
+      history.replaceState(history.state, '', location.pathname + location.search + '#/index');
+    }
+    if (isHome()) { apply(); setTimeout(stripIndexHash, 0); } else teardown();
+  }
 
   // header nav: keep the NAV_VI items with their Vietnamese art (React may re-render the list at any time)
   var NAV_VI = ${JSON.stringify(NAV_VI)};
