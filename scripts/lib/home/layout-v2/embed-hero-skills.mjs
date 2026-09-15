@@ -2,6 +2,8 @@
 // Only inside the home page's hero iframe (html.hv2-embed, set by layout-v2.mjs): the skill / bond / guide
 // tabs (技绊略) and the skill description panel are hidden, and the current hero's Nộ công, Bị động and
 // Giác tỉnh icons are shown where the tabs were, as gold-ringed round icons with the skill name on hover.
+// The biography row (type ribbon, quality badge, biography text) is hidden too but keeps its space, so the
+// icons stay exactly where they are.
 // Icons and names are read from the skill list the hero page keeps rendering (hidden), so they follow every
 // hero change and the i18n overlay's translation. The standalone /tuong page is not affected.
 
@@ -9,6 +11,7 @@ export const HERO_SKILLS_CSS = `
 html.hv2-embed .star-site-person-advance-wrapper,
 html.hv2-embed .star-site-person-advance-skills__wrapper,
 html.hv2-embed .star-site-person-advance-restrain{display:none!important}
+html.hv2-embed .star-site-person-introduction{visibility:hidden!important}
 html.hv2-embed .hv2-sk{display:flex;align-items:center;gap:21px;height:65px}
 html.hv2-embed .hv2-sk-item{position:relative;display:block;flex:0 0 auto;width:62px;height:62px;outline:none}
 html.hv2-embed .hv2-sk-item img{position:absolute;left:2px;top:2px;width:54px;height:54px;border-radius:50%;object-fit:cover;
