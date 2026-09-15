@@ -6,6 +6,19 @@
 // sits right under the red name band; the icons are 72px (the Nộ công / Bị động artwork is 80px), and 64px
 // in a hero frame of 1200px or less, where the home sidebar's collapse arrow would otherwise cover the last icon.
 // Next to the big hero name, the CV block (voice button, "cv", dot, voice actor) is hidden; the name stays put.
+// The faction tabs (魏吴蜀群, normal and selected) show the Vietnamese artwork from overrides/home instead of the
+// bundle's base64 PNGs, which are told apart by a chunk of base64 unique to each of the eight images.
+
+const FACTION_TABS = [
+  ['LS3od1jOVT/AHgzAHgzAHgyfLSylKCOf', '/3qdc-vi/home/phe-1-nguy-hover-dang-chon.png'],
+  ['HgzAHgyfLS1wICExEBLAHgzAHgyYJiKH', '/3qdc-vi/home/phe-1-nguy-thuong.png'],
+  ['HgzAHgzPVkDVXkbhbVHBRTTAHgzAHgyl', '/3qdc-vi/home/phe-2-ngo-hover-dang-chon.png'],
+  ['FxrAHgxLFBefLS2fLS2fLS2fLS1PFRhm', '/3qdc-vi/home/phe-2-ngo-thuong.png'],
+  ['YUjPV0GsJx7AHgzAHgzpeFneak/AHgzA', '/3qdc-vi/home/phe-3-thuc-hover-dang-chon.png'],
+  ['HgzAHgyfLS0xEBKfLS1pGx/AHgyYJiKH', '/3qdc-vi/home/phe-3-thuc-thuong.png'],
+  ['LS3lc1beaU7AHgzAHgzAHgyfLS2fLS2r', '/3qdc-vi/home/phe-4-quan-hover-dang-chon.png'],
+  ['LS1dGBvAHgxLFBeeLCyfLS1wICExEBJp', '/3qdc-vi/home/phe-4-quan-thuong.png'],
+];
 // Icons and names are read from the skill list the hero page keeps rendering (hidden), so they follow every
 // hero change and the i18n overlay's translation. The standalone /tuong page is not affected.
 
@@ -80,9 +93,26 @@ export const HERO_SKILLS_JS = `(function(){
     });
   }
 
+  // faction tabs: the app sets a base64 src on render and on every faction change; swap it for the Vietnamese file
+  // (the normal and hover images together load all eight files when the tabs first render, so later swaps
+  // paint at once; measured under a slow no-store network, no preload needed)
+  var FACTION_TABS = ${JSON.stringify(FACTION_TABS)};
+  function swapTabs(){
+    // each tab has two images: __item, and __item-hover which the page's CSS shows instead while hovering
+    var imgs = document.querySelectorAll('.star-site-person-battle—tab-wrapper__item, .star-site-person-battle—tab-wrapper__item-hover');
+    for (var i = 0; i < imgs.length; i++){
+      var src = imgs[i].getAttribute('src') || '';
+      if (src.indexOf('data:') !== 0) continue;
+      for (var k = 0; k < FACTION_TABS.length; k++){
+        if (src.indexOf(FACTION_TABS[k][0]) !== -1){ imgs[i].setAttribute('src', FACTION_TABS[k][1]); break; }
+      }
+    }
+  }
+
+  function update(){ swapTabs(); sync(); }
   function start(){
-    sync();
-    new MutationObserver(sync).observe(document.body, { subtree: true, childList: true, characterData: true });
+    update();
+    new MutationObserver(update).observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['src'] });
   }
   if (document.body) start(); else document.addEventListener('DOMContentLoaded', start);
 })();`;
