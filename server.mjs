@@ -6,10 +6,10 @@
 // so we serve each section's NATIVE build by selecting the right entry HTML per
 // real PATH; absolute asset URLs resolve against the shared root regardless.
 //
-//   /              → fab  (build A, _fab-index.html, dual-view shell)
-//   /__internal/pc → fab PC entry   (+ i18n/hide/neuter/navfx)
-//   /__internal/m  → fab mobile entry (+ UA-spoof shim)
-//   /home, /home/  → home (build B, index.html, ROUTE_FORCE #/index)
+//   /              → home, the main site (build B, index.html, ROUTE_FORCE #/index, layout-v2), every device
+//   /home, /kho-bau → 302 /  (old home address; treasure is switched off)
+//   /__internal/pc → old fab PC entry (build A; no longer linked, kept for reference)
+//   /__internal/m  → old fab mobile entry (+ UA-spoof shim)
 //   /main, /main/  → main (build B, index.html, ROUTE_FORCE #/main)
 //   (/wiki         → deferred)
 // API: same-origin snapshots (galaxias one-door body-keyed + game-ages + bbs).
@@ -73,7 +73,6 @@ const RF = (route) => `<script>(function(){var h=location.hash;if(!h||h==='#'||h
 
 // Clean sitemap: each path → one section (build B), so /tuong → Tướng, /huong-dan → wiki, etc.
 const BUILDB_PATHS = {
-  '/home': '#/index',
   '/main': '#/main',
   '/tin-tuc': '#/main/news',
   '/ke-hoach': '#/main/planning',
@@ -90,11 +89,10 @@ const BUILDB_TITLES = {
   '#/main/fans': 'Cộng đồng', '#/main': 'Tin tức',
 };
 const BUILDB_LINKS = {
-  '#/index': '/home', '#/main/news': '/tin-tuc', '#/main/planning': '/ke-hoach',
+  '#/index': '/', '#/main/news': '/tin-tuc', '#/main/planning': '/ke-hoach',
   '#/main/person': '/tuong', '#/main/feature': '/dac-sac', '#/main/treasure': '/kho-bau',
   '#/main/fans': '/cong-dong',
 };
-const isMobileUA = (ua) => /iphone|android.+mobile|ipod|windows phone/i.test(ua || '');
 
 const MIME = {
   '.html': 'text/html; charset=utf-8', '.js': 'application/javascript; charset=utf-8',
@@ -201,15 +199,17 @@ export function startServer(port = 8080) {
       }
 
       // --- section entries (real-path → native build entry) ---
-      // Landing fab served directly (no iframe) → address bar shows the real route.
-      // PC vs mobile picked by request UA (real devices route natively, like the origin).
-      if (pathname === '/' || pathname === '') return sendHtml(res, await fabEntry(isMobileUA(req.headers['user-agent'])));
+      // The home page (layout-v2) is the main site at /, for every device (it replaced the old fab landing).
+      if (pathname === '/' || pathname === '') return sendHtml(res, await buildBEntry('#/index'));
       if (pathname === '/__internal/pc' || pathname === '/__internal/pc/') return sendHtml(res, await fabEntry(false));
       if (pathname === '/__internal/m' || pathname === '/__internal/m/') return sendHtml(res, await fabEntry(true));
       const cleanPath = pathname.length > 1 ? pathname.replace(/\/$/, '') : pathname;
-      // While "Kho Báu" is switched off (SHOW_TREASURE in layout-v2.mjs), /kho-bau, including the
-      // treasure item of the section menus, goes to the home page.
-      if (!SHOW_TREASURE && cleanPath === '/kho-bau') { res.writeHead(302, { Location: '/home', 'Cache-Control': 'no-store' }); return res.end(); }
+      // the old home address, and /kho-bau while "Kho Báu" is switched off (SHOW_TREASURE in layout-v2.mjs), including
+      // the treasure item of the section menus, go to the main site
+      if (cleanPath === '/home' || (!SHOW_TREASURE && cleanPath === '/kho-bau')) {
+        res.writeHead(302, { Location: '/', 'Cache-Control': 'no-store' });
+        return res.end();
+      }
       if (BUILDB_PATHS[cleanPath]) return sendHtml(res, await buildBEntry(BUILDB_PATHS[cleanPath]));
       if (cleanPath === '/huong-dan' || cleanPath === '/wiki') return sendHtml(res, await wikiEntry());
 
@@ -241,7 +241,7 @@ export function startServer(port = 8080) {
     }
   });
   return new Promise((resolve) => server.listen(port, () => {
-    console.log(`unified 3qdc serving at http://localhost:${port}/  (/, /home, /main)`);
+    console.log(`unified 3qdc serving at http://localhost:${port}/  (/ = home, /main)`);
     resolve(server);
   }));
 }
