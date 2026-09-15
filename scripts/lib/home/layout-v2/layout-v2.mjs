@@ -94,8 +94,8 @@ html.hv2 #hv2-header-bg{display:block;position:fixed;top:0;left:0;right:0;height
 /* logo, badge and nav scale with viewport width so the row fits 1366px laptops */
 html.hv2 .star-site-index-logo{position:fixed!important;top:${HEADER_H / 2}px!important;left:24px!important;
   width:auto!important;height:clamp(56px,4vw,76px)!important;transform:translateY(-50%);z-index:11!important}
-html.hv2 .star-site-index-beishu{position:fixed!important;top:${HEADER_H / 2}px!important;right:24px!important;
-  width:auto!important;height:clamp(28px,2.1vw,40px)!important;transform:translateY(-50%);z-index:11!important}
+/* the "App Store 精选推荐 / TapTap 热门榜第一" badge (one image) is not shown on the home header */
+html.hv2 .star-site-index-beishu{display:none!important}
 
 /* image nav: vertical list -> centered horizontal row inside the header, reduced to the NAV_VI items */
 html.hv2 .star-site-index-navs{position:fixed!important;top:0!important;left:clamp(170px,13.5vw,260px)!important;
