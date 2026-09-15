@@ -1,6 +1,7 @@
 // section-features.mjs — "Tính Năng Đặc Sắc" block for the home layout-v2 overlay.
-// A light coverflow carousel of the five feature banners: the centre slide links to
-// /dac-sac, the neighbours are dimmed and smaller, autoplay pauses on mouse hover.
+// A light coverflow carousel of the five feature banners: the centre slide is not a link for now (the site's
+// own pages come later), the neighbours are dimmed and smaller and come to the centre when clicked, autoplay
+// pauses on mouse hover.
 //
 // The banners are Vietnamese versions of the ones the /dac-sac accordion shows (the umi bundle
 // hardcodes those in pcConfig.versionImg[].banner, mqaf*.png), served from overrides/home at
@@ -73,9 +74,9 @@ export const FEATURES_JS = `(function(){
         host.removeAttribute('data-ready');
         console.warn('[hv2 features] no banner could be loaded');
       });
-      var link = el('a', { 'class': 'hv2-feat-link', href: '/dac-sac' }, [img]);
-      // a side slide brings itself to the centre instead of navigating
-      link.addEventListener('click', function(e){ if (i !== cur){ e.preventDefault(); go(i); } });
+      var link = el('div', { 'class': 'hv2-feat-link' }, [img]);
+      // a side slide brings itself to the centre
+      link.addEventListener('click', function(){ if (i !== cur) go(i); });
       var slide = el('div', { 'class': 'hv2-feat-slide' }, [link]);
       track.appendChild(slide);
       var dot = el('button', { type: 'button', 'class': 'hv2-feat-dot', 'aria-label': 'Tính năng ' + (i + 1) });
@@ -104,7 +105,6 @@ export const FEATURES_JS = `(function(){
         var cls = d === 0 ? 'is-active' : d === -1 ? 'is-prev' : d === 1 ? 'is-next' : d < 0 ? 'is-far-prev' : 'is-far-next';
         s.slide.className = 'hv2-feat-slide ' + cls;
         s.slide.setAttribute('aria-hidden', d === 0 ? 'false' : 'true');
-        s.link.tabIndex = d === 0 ? 0 : -1;
         s.dot.classList.toggle('is-on', d === 0);
         s.dot.setAttribute('aria-current', d === 0 ? 'true' : 'false');
       });

@@ -1,8 +1,8 @@
 // section-news.mjs — "Tin Tức Sự Kiện" block for the home layout-v2 overlay.
 // Left: autoplaying slider of the static planning banners already in the mirror.
 // Right: three tabs — Thông báo and Sự kiện backed by the news-list API snapshots the site already serves
-// (getListRecommend, size 4, page 0), each row linking to the existing news page; Cẩm nang has no source
-// on the home page yet and shows the empty-list state.
+// (getListRecommend, size 4, page 0); Cẩm nang has no source on the home page yet and shows the empty-list state.
+// No links for now (the site's own pages come later): the banner, the rows and "Xem thêm" are not clickable.
 // Titles are rendered raw; the i18n overlay already on the page translates them.
 
 const STATIC = '/cdn-cn.lingxigames.com/wukongbuild/star-gw/1.0.0/prod/views/static/';
@@ -38,14 +38,12 @@ export const NEWS_CSS = `
 #hv2-news .hv2-list{list-style:none;margin:0;padding:0;min-height:236px}
 #hv2-news .hv2-row{display:flex;align-items:center;gap:14px;padding:10px 4px;border-bottom:1px dashed rgba(214,176,106,.18);
   color:#e8e2d0;text-decoration:none}
-#hv2-news .hv2-row:hover .hv2-row-title{color:#f3c56a}
 #hv2-news .hv2-date{flex:0 0 46px;text-align:center;line-height:1.1;color:#f3dfa6;font-weight:700;font-size:18px}
 #hv2-news .hv2-date small{display:block;font-size:12px;font-weight:400;color:#9b927c}
 #hv2-news .hv2-row-title{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:15px}
 #hv2-news .hv2-empty{padding:24px 4px;color:#9b927c}
 #hv2-news .hv2-more{display:block;margin-top:16px;padding:10px;text-align:center;border:1px solid rgba(214,176,106,.6);
   border-radius:8px;color:#f3dfa6;text-decoration:none}
-#hv2-news .hv2-more:hover{background:rgba(214,176,106,.14)}
 `;
 
 export const NEWS_JS = `(function(){
@@ -57,9 +55,9 @@ export const NEWS_JS = `(function(){
     if (!host) return;
     var el = api.el;
 
-    // slider: the link wraps only the images; dots are siblings so they never navigate
+    // slider: the image layer (no link for now) and the dots as siblings
     var slider = el('div', { 'class': 'hv2-slider' });
-    var link = el('a', { 'class': 'hv2-slider-link', href: '/ke-hoach', 'aria-label': 'Kế hoạch' });
+    var link = el('div', { 'class': 'hv2-slider-link' });
     var dots = el('div', { 'class': 'hv2-dots' });
     var slides = BANNERS.map(function(src, i){
       var img = el('img', { 'class': 'hv2-slide' + (i === 0 ? ' is-on' : ''), src: src, alt: '', loading: 'lazy' });
@@ -96,7 +94,7 @@ export const NEWS_JS = `(function(){
       items.slice(0, 4).forEach(function(it){
         var t = String(it.onlineTime || '');
         var date = el('span', { 'class': 'hv2-date' }, [t.slice(8, 10) || '--', el('small', { text: t.slice(5, 7) ? t.slice(5, 7) + '/' + t.slice(0, 4) : '' })]);
-        var row = el('a', { 'class': 'hv2-row', href: '/tin-tuc' }, [date, el('span', { 'class': 'hv2-row-title', text: it.title || '' })]);
+        var row = el('div', { 'class': 'hv2-row' }, [date, el('span', { 'class': 'hv2-row-title', text: it.title || '' })]);
         list.appendChild(el('li', null, [row]));
       });
     }
@@ -124,7 +122,7 @@ export const NEWS_JS = `(function(){
       tabsBar.appendChild(b);
     });
 
-    var right = el('div', null, [tabsBar, list, el('a', { 'class': 'hv2-more', href: '/tin-tuc', text: 'Xem thêm +' })]);
+    var right = el('div', null, [tabsBar, list, el('div', { 'class': 'hv2-more', text: 'Xem thêm +' })]);
     host.appendChild(el('div', { 'class': 'hv2-news' }, [slider, right]));
     // warm every tab so later switches render instantly
     TABS.forEach(function(tab){ load(tab[1]); });

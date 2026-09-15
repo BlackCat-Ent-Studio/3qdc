@@ -1,7 +1,7 @@
 // layout-v2.mjs — omg3q-style scrolling layout for the build-B home route (#/index).
-// Additive overlay: restyles the existing React DOM (logo, 10 image nav items), clones the
-// download links into its own panel and sidebar, and appends sections below the key visual. The umi
-// bundle and mirror/ are never edited; every image and link stays as-is.
+// Additive overlay: restyles the existing React DOM (logo, 10 image nav items), builds its own download panel and
+// sidebar (Vietnamese buttons, no links until the site has its own), and appends sections below the key visual.
+// The umi bundle and mirror/ are never edited; the original download bar is hidden, its links are not reused.
 //
 // Build B serves /home and every /main-family path from one entry, and index <->
 // main navigation is hash-based, so the layout is gated at runtime: it is active
@@ -28,14 +28,13 @@ const KV_IMAGE = '/3qdc-vi/home/anh-nen-slogan-vi.webp';
 const KV = { width: 1756, height: 896, eventFrameBottom: 785 };
 
 // Vietnamese download buttons (omg3q-style artwork in overrides/home) in display order, filling a 2-column grid row by
-// row. Entries with `match` reuse the original link whose href contains it; entries without one have no 3qdc link yet
-// and are shown in place but not clickable (give the entry a `match` once 3qdc has that link). Original links without a
-// Vietnamese button (TapTap China page, PC client zip) are left off the home page.
+// row. The site has no links of its own yet: an entry without `href` is shown in place but not clickable; give it the
+// 3qdc URL to make it a link (opens in a new tab). The original Chinese download links of the app are not used.
 const DL_ART = [
-  { match: 'cddp-track.aligames.com/9gtrack', src: '/3qdc-vi/home/nut-tai-appstore.png', label: 'Tải trên App Store' },
-  { match: 'cddp-link.aligames.com/rlink/', src: '/3qdc-vi/home/nut-tai-file-apk.png', label: 'Tải file APK' },
-  { src: '/3qdc-vi/home/nut-tai-google-play.png', label: 'Tải trên Google Play (sắp ra mắt)' },
-  { src: '/3qdc-vi/home/nut-dang-ky-nhanh.png', label: 'Đăng ký nhanh (sắp ra mắt)' },
+  { href: null, src: '/3qdc-vi/home/nut-tai-appstore.png', label: 'Tải trên App Store' },
+  { href: null, src: '/3qdc-vi/home/nut-tai-file-apk.png', label: 'Tải file APK' },
+  { href: null, src: '/3qdc-vi/home/nut-tai-google-play.png', label: 'Tải trên Google Play' },
+  { href: null, src: '/3qdc-vi/home/nut-dang-ky-nhanh.png', label: 'Đăng ký nhanh' },
 ];
 const DL_TOPUP = '/3qdc-vi/home/nut-nap-the.png';
 // sidebar collapse arrow (omg3q floating-bar artwork, 86x58 strip): ">" (collapse) at 0 0, "<" (expand) at -44px 0
@@ -58,9 +57,9 @@ const socialSvg = (d) => `url("data:image/svg+xml,${encodeURIComponent(`<svg xml
 // section-treasure.mjs is kept unchanged. To bring the feature back: set this to true and restart the service.
 export const SHOW_TREASURE = false;
 
-// internal footer links only (the pages this site already serves)
-const FOOTER_LINKS = [['Tin tức', '/tin-tuc'], ['Kế hoạch', '/ke-hoach'], ['Tướng', '/tuong'], ['Đặc sắc', '/dac-sac'],
-  ...(SHOW_TREASURE ? [['Kho báu', '/kho-bau']] : []), ['Cộng đồng', '/cong-dong'], ['Hướng dẫn', '/huong-dan']];
+// footer items [label, link]; no links until the site's own pages are given (null = shown, not clickable)
+const FOOTER_LINKS = [['Tin tức', null], ['Kế hoạch', null], ['Tướng', null], ['Đặc sắc', null],
+  ...(SHOW_TREASURE ? [['Kho báu', null]] : []), ['Cộng đồng', null], ['Hướng dẫn', null]];
 
 // header nav on the home page: only these items stay, drawn with the Vietnamese menu art from overrides/home
 // (normal 41px / hover 79px high, transparent right margin trimmed). Clicking scrolls to the section on this page
@@ -130,9 +129,9 @@ html.hv2 .star-site-index-navs__item-img_hover{display:none!important;position:a
 html.hv2 .star-site-index-navs__item:hover .star-site-index-navs__item-img{visibility:hidden}
 html.hv2 .star-site-index-navs__item:hover .star-site-index-navs__item-img_hover{display:block!important}
 
-/* the original download bar is the source cloned into the panel and sidebar; it is hidden only once
-   the panel is placed, so a bar React renders too late for the retry timer still offers downloads */
-html.hv2.hv2-dl-ready .star-site-index-download{display:none!important}
+/* the original download bar carries the app's Chinese download and shop links: never shown on the home route (keyed on
+   .star-site-index, present from the first render, like the background rule); the panel only copies its QR and caption */
+.star-site-index .star-site-index-download{display:none!important}
 
 /* download panel (omg3q style): QR | 2x2 Vietnamese buttons | top-up box, starting just below the event banner
    frame of the background art (top comes from --hv2-dl-top computed in JS), below the header layers */
@@ -155,11 +154,11 @@ html.hv2 #hv2-dlpanel{display:flex;align-items:center;gap:clamp(14px,1.3vw,24px)
   background-image:url("${DL_TOPUP}")!important;background-size:100% 100%!important;
   height:calc(var(--hv2-dl-btn) * 2 + 26px)!important;width:calc((var(--hv2-dl-btn) * 2 + 26px) * 0.8733)!important}
 #hv2-dlpanel a:hover,#hv2-sidebar a:hover{filter:brightness(1.1)}
-/* buttons with no 3qdc link yet: shown, not clickable */
-#hv2-dlpanel a.hv2-dl-soon,#hv2-sidebar a.hv2-dl-soon{cursor:default}
-#hv2-dlpanel a.hv2-dl-soon:hover,#hv2-sidebar a.hv2-dl-soon:hover{filter:none}
+/* buttons, top-up box and footer items with no link yet: shown, not clickable */
+#hv2-dlpanel a:not([href]),#hv2-sidebar a:not([href]),#home-v2 a:not([href]){cursor:default}
+#hv2-dlpanel a:not([href]):hover,#hv2-sidebar a:not([href]):hover{filter:none}
 
-/* right sidebar (cloned QR + download buttons): slides in once the key visual (and its download panel) is scrolled past */
+/* right sidebar (cloned QR, Vietnamese download buttons, top-up box): slides in once the key visual (and its download panel) is scrolled past */
 #hv2-sidebar{display:none}
 html.hv2 #hv2-sidebar{display:flex;flex-direction:column;align-items:center;gap:8px;position:fixed;right:14px;top:50%;
   transform:translate(calc(100% + 24px),-50%);opacity:0;pointer-events:none;transition:transform .3s ease,opacity .3s ease;
@@ -229,7 +228,7 @@ html.hv2 #home-v2{display:block;position:relative;z-index:1;background:#0b0d18;c
 #home-v2 .hv2-footer-brand{margin-bottom:14px;color:#f3dfa6;font-size:20px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
 #home-v2 .hv2-footer-nav{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 26px}
 #home-v2 .hv2-footer-nav a{color:#bfb59a;font-size:14px;text-decoration:none}
-#home-v2 .hv2-footer-nav a:hover{color:#f3c56a}
+#home-v2 .hv2-footer-nav a[href]:hover{color:#f3c56a}
 `;
 
 const JS = `(function(){
@@ -286,33 +285,31 @@ const JS = `(function(){
     });
     var nav = el('nav', { 'class': 'hv2-footer-nav', 'aria-label': 'Liên kết' });
     ${JSON.stringify(FOOTER_LINKS)}.forEach(function(l){
-      nav.appendChild(el('a', { href: l[1], text: l[0] }));
+      var attrs = { text: l[0] };
+      if (l[1]) attrs.href = l[1]; else { attrs.role = 'link'; attrs['aria-disabled'] = 'true'; }
+      nav.appendChild(el('a', attrs));
     });
     wrap.appendChild(el('footer', { 'class': 'hv2-footer' }, [el('div', { 'class': 'hv2-footer-brand', text: '3Q Đại Chiến' }), nav]));
     document.body.appendChild(wrap);
     document.body.appendChild(el('div', { id: 'hv2-header-bg' }));
   }
 
-  // Vietnamese download buttons in DL_ART order: clone the original link an entry matches and swap in its artwork, or,
-  // for an entry with no 3qdc link yet, a link-less placeholder that shows the artwork but cannot be clicked. If no
-  // original link matches (the bundle changed its links), clone every original link so the panel is never empty.
-  function dlLinks(dl){
-    var src = [].slice.call(dl.querySelectorAll('.star-site-index-download-ul a'));
-    var out = [], matched = 0;
-    DL_ART.forEach(function(art){
-      var c;
-      if (art.match){
-        var a = src.filter(function(l){ return (l.getAttribute('href') || '').indexOf(art.match) !== -1; })[0];
-        if (!a) return;
-        c = a.cloneNode(true); matched++;
-      } else {
-        c = el('a', { 'class': 'hv2-dl-soon', title: 'Sắp ra mắt' }, [el('img', {})]);
-      }
-      var img = c.querySelector('img');
-      if (img){ img.src = art.src; img.alt = art.label; }
-      out.push(c);
+  // Vietnamese download buttons in DL_ART order: a link when the entry has an href, otherwise the artwork shown in
+  // place but not clickable (the site has no links of its own yet). The app's original download links are not used.
+  function dlLinks(){
+    return DL_ART.map(function(art){
+      var attrs = { 'aria-label': art.label };
+      if (art.href) { attrs.href = art.href; attrs.target = '_blank'; attrs.rel = 'noopener'; }
+      else { attrs['class'] = 'hv2-dl-soon'; attrs.role = 'link'; attrs['aria-disabled'] = 'true'; }
+      return el('a', attrs, [el('img', { src: art.src, alt: art.label })]);
     });
-    return matched ? out : src.map(function(l){ return l.cloneNode(true); });
+  }
+  // the top-up box keeps the app's element (its artwork is a CSS background) without the original shop link
+  function topupBox(store){
+    var box = store.cloneNode(true);
+    box.removeAttribute('href'); box.removeAttribute('target');
+    box.setAttribute('aria-label', 'Nạp thẻ'); box.setAttribute('role', 'link'); box.setAttribute('aria-disabled', 'true');
+    return box;
   }
 
   // Sidebar collapse state: a class on <html> drives the slide and the arrow direction; the viewer's choice is kept in
@@ -336,9 +333,9 @@ const JS = `(function(){
     bar.appendChild(qr);
     var desc = document.querySelector('.star-site-index-download-qrcode_box p');
     bar.appendChild(el('div', { 'class': 'hv2-qr-text', text: desc ? desc.textContent : '' }));
-    dlLinks(dl).forEach(function(a){ bar.appendChild(a); });
+    dlLinks().forEach(function(a){ bar.appendChild(a); });
     var store = dl.querySelector('a.star-site-index-store');
-    if (store) { var box = store.cloneNode(true); box.setAttribute('aria-label', 'Nạp thẻ'); bar.appendChild(box); }
+    if (store) bar.appendChild(topupBox(store));
     var top = el('button', { type: 'button', 'class': 'hv2-top', text: 'Lên đầu trang' });
     top.addEventListener('click', function(){ window.scrollTo({ top: 0, behavior: 'smooth' }); });
     bar.appendChild(top);
@@ -397,14 +394,14 @@ const JS = `(function(){
     updateSocial();
   }
 
-  // omg3q-style download panel: the QR, the platform buttons and the top-up link of the
-  // original (hidden) download bar, cloned so React's own nodes are never moved
+  // omg3q-style download panel: the QR and caption of the original (hidden) download bar, cloned so React's own nodes
+  // are never moved, the Vietnamese buttons from DL_ART and the top-up box (both without links for now)
   function buildPanel(){
     if (document.getElementById('hv2-dlpanel')) return true;
     var dl = document.querySelector('.star-site-index-download');
     var qrImg = document.querySelector('.star-site-index-download-qrcode_box img');
-    var platforms = dl ? dlLinks(dl) : [];
-    if (!dl || !qrImg || !platforms.length) return false;
+    if (!dl || !qrImg) return false;
+    var platforms = dlLinks();
     var qr = el('div', { 'class': 'hv2-dl-qr' }, [el('div', { 'class': 'hv2-dl-qr-img' }, [qrImg.cloneNode(true)])]);
     var desc = document.querySelector('.star-site-index-download-qrcode_box p');
     if (desc && desc.textContent) qr.appendChild(el('div', { 'class': 'hv2-dl-qr-text', text: desc.textContent }));
@@ -412,7 +409,7 @@ const JS = `(function(){
     platforms.forEach(function(a){ grid.appendChild(a); });
     var panel = el('div', { id: 'hv2-dlpanel', 'data-home-v2': '' }, [qr, grid]);
     var store = dl.querySelector('a.star-site-index-store');
-    if (store) { var box = store.cloneNode(true); box.setAttribute('aria-label', 'Nạp thẻ'); panel.appendChild(box); }
+    if (store) panel.appendChild(topupBox(store));
     document.body.appendChild(panel);
     return true;
   }
