@@ -15,6 +15,7 @@ import { NEWS_CSS, NEWS_JS } from './section-news.mjs';
 import { HEROES_CSS, HEROES_JS } from './section-heroes.mjs';
 import { FEATURES_CSS, FEATURES_JS } from './section-features.mjs';
 import { TREASURE_CSS, TREASURE_JS } from './section-treasure.mjs';
+import { HERO_SKILLS_CSS, HERO_SKILLS_JS } from './embed-hero-skills.mjs';
 
 const HEADER_H = 88;
 
@@ -396,10 +397,12 @@ const JS = `(function(){
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', sync); else sync();
 })();`;
 
-// Section scripts come after the layout script so window.__hv2 exists when they register.
+// Section scripts come after the layout script so window.__hv2 exists when they register; the hero skill icons
+// script needs the html.hv2-embed flag the layout script sets inside the home hero iframe.
 export const LAYOUT_V2_HTML =
-  `<style data-home-v2>${CSS}${NEWS_CSS}${HEROES_CSS}${FEATURES_CSS}${SHOW_TREASURE ? TREASURE_CSS : TREASURE_OFF_CSS}</style>` +
+  `<style data-home-v2>${CSS}${NEWS_CSS}${HEROES_CSS}${FEATURES_CSS}${HERO_SKILLS_CSS}${SHOW_TREASURE ? TREASURE_CSS : TREASURE_OFF_CSS}</style>` +
   `<script data-home-v2>${JS}</script>` +
+  `<script data-home-v2>${HERO_SKILLS_JS}</script>` +
   `<script data-home-v2>${NEWS_JS}</script>` +
   `<script data-home-v2>${HEROES_JS}</script>` +
   `<script data-home-v2>${FEATURES_JS}</script>` +
