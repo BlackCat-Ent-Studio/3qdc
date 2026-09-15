@@ -11,6 +11,11 @@ const NAV_VH = 0.1730475;
 const HEADER_H = 88;
 const MIN_FRAME_H = 560;
 
+// The frame's navigations share the visitor's back/forward history. The hero page opens at the address its app pushes when
+// it starts (first hero of the default faction), so that push is ignored as the same path and adds no entry; switching the
+// frame off and on again uses location.replace for the same reason. Otherwise the back button only steps the hidden frame.
+const FRAME_URL = '/tuong#/main/person?rowId=0&tbId=454680400827016707';
+
 export const HEROES_CSS = `
 #home-v2 #hv2-heroes.hv2-section{max-width:none;padding:72px 0 64px}
 #hv2-heroes .hv2-heroes-stage{background:#dfe6f3}
@@ -44,14 +49,19 @@ export const HEROES_JS = `(function(){
 
     // the hero page is a whole app instance (plus its background video): load it only when the block is
     // near the viewport. Sections above render late, so judge the distance once the visitor starts scrolling.
-    var wanted = false;
-    function load(){ wanted = true; if (frame.getAttribute('src') !== '/tuong') frame.src = '/tuong'; }
+    var wanted = false, started = false, showing = false;
+    function go(url){
+      // a new frame's first navigation replaces its initial blank document; later ones must not add history entries
+      if (!started){ started = true; frame.src = url; return; }
+      try { frame.contentWindow.location.replace(url); } catch (e) { frame.src = url; }
+    }
+    function load(){ wanted = true; if (!showing){ showing = true; go(${JSON.stringify(FRAME_URL)}); } }
     // leaving the home route without a reload hides the layout: stop the embedded app, its background
     // video and any CV audio, and bring the hero page back when the home route returns
     window.addEventListener('hashchange', function(){
       if (!wanted) return;
       if (document.documentElement.classList.contains('hv2')){ size(); load(); }
-      else if (frame.getAttribute('src') !== 'about:blank') frame.src = 'about:blank';
+      else if (showing){ showing = false; go('about:blank'); }
     });
     if (!('IntersectionObserver' in window)){ load(); return; }
     var io = new IntersectionObserver(function(entries){
