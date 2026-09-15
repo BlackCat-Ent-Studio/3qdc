@@ -111,13 +111,12 @@ html.hv2 .star-site-index-navs__item:before{display:none!important}
 html.hv2 .star-site-index-navs__item.hv2-nav-off{display:none!important}
 html.hv2 .star-site-index-navs__item:not(${NAV_KEEP}){display:none!important}
 html.hv2 .star-site-index-navs__item > a{position:relative;display:flex;align-items:center;height:100%}
-/* keep the normal image in flow (stable width), swap to the hover art on top of it */
+/* keep the normal image in flow (stable width), swap to the hover art on top of it. Hover only: the app always
+   marks Trang chủ active, and the original active style would pin it on the hover art */
 html.hv2 .star-site-index-navs__item-img{display:block!important;height:${NAV_H}!important;width:auto!important}
 html.hv2 .star-site-index-navs__item-img_hover{display:none!important;position:absolute;left:0;top:50%;
   height:${NAV_HOVER_H}!important;width:auto!important;margin:0!important;transform:translate(calc(${NAV_H} * -0.8815),-50%)}
-html.hv2 .star-site-index-navs__item-active .star-site-index-navs__item-img,
 html.hv2 .star-site-index-navs__item:hover .star-site-index-navs__item-img{visibility:hidden}
-html.hv2 .star-site-index-navs__item-active .star-site-index-navs__item-img_hover,
 html.hv2 .star-site-index-navs__item:hover .star-site-index-navs__item-img_hover{display:block!important}
 
 /* the original download bar is the source cloned into the panel and sidebar; it is hidden only once
