@@ -1,17 +1,18 @@
 // section-news.mjs — "Tin Tức Sự Kiện" block for the home layout-v2 overlay.
 // Left: autoplaying slider of the static planning banners already in the mirror.
-// Right: four tabs backed by the news-list API snapshots the site already serves
-// (getListRecommend, size 4, page 0), each row linking to the existing news page.
+// Right: three tabs — Thông báo and Sự kiện backed by the news-list API snapshots the site already serves
+// (getListRecommend, size 4, page 0), each row linking to the existing news page; Cẩm nang has no source
+// on the home page yet and shows the empty-list state.
 // Titles are rendered raw; the i18n overlay already on the page translates them.
 
 const STATIC = '/cdn-cn.lingxigames.com/wukongbuild/star-gw/1.0.0/prod/views/static/';
 
-// collectionIds per tab (see sgzhx-main HANDOFF: 322 news, 323 notices, 324 events)
+// snapshot file per tab (collectionIds 323 notices, 324 events); the first tab is selected by default.
+// Cẩm nang (guides) intentionally has no file: its articles live on /huong-dan with their own title dictionary.
 const TABS = [
-  ['Mới nhất', 'endpoint.json__bdcb232458b058963'],
-  ['Tin tức', 'endpoint.json__bd960fb58dcc82779'],
   ['Thông báo', 'endpoint.json__b5a051b4db5a8cbca'],
   ['Sự kiện', 'endpoint.json__b586100e43cbf4eaf'],
+  ['Cẩm nang', null],
 ];
 
 // banners belong to the planning page (official comics / hero side stories); the first one is the
@@ -100,6 +101,7 @@ export const NEWS_JS = `(function(){
       });
     }
     function load(file){
+      if (!file) return Promise.resolve([]); // a tab without a source shows the empty state
       if (!cache[file]){
         cache[file] = api.snap(file)
           .then(function(j){ return (j && j.result && j.result.list) || []; })
