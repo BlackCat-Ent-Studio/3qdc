@@ -93,7 +93,7 @@ html.hv2 #hv2-header-bg{display:block;position:fixed;top:0;left:0;right:0;height
 
 /* logo, badge and nav scale with viewport width so the row fits 1366px laptops */
 html.hv2 .star-site-index-logo{position:fixed!important;top:${HEADER_H / 2}px!important;left:24px!important;
-  width:auto!important;height:clamp(48px,3.75vw,72px)!important;transform:translateY(-50%);z-index:11!important}
+  width:auto!important;height:clamp(56px,4vw,76px)!important;transform:translateY(-50%);z-index:11!important}
 html.hv2 .star-site-index-beishu{position:fixed!important;top:${HEADER_H / 2}px!important;right:24px!important;
   width:auto!important;height:clamp(28px,2.1vw,40px)!important;transform:translateY(-50%);z-index:11!important}
 
@@ -411,6 +411,12 @@ const JS = `(function(){
     return null;
   }
   function navVi(){
+    // header logo: the 3Q Đại Chiến artwork (round, 203x152 WEBP) instead of the original Chinese logo
+    var logo = document.querySelector('img.star-site-index-logo');
+    if (logo && logo.getAttribute('src') !== '/3qdc-vi/home/logo-3qdc.webp'){
+      logo.setAttribute('src', '/3qdc-vi/home/logo-3qdc.webp');
+      logo.setAttribute('alt', '3Q Đại Chiến');
+    }
     var items = document.querySelectorAll('.star-site-index-navs__item');
     for (var i = 0; i < items.length; i++){
       var a = items[i].querySelector('a');
