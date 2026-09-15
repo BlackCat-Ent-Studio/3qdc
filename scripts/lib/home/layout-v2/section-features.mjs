@@ -3,16 +3,17 @@
 // /dac-sac, the neighbours are dimmed and smaller, autoplay pauses on mouse hover.
 //
 // The banners are Vietnamese versions of the ones the /dac-sac accordion shows (the umi bundle
-// hardcodes those in pcConfig.versionImg[].banner, mqaf*.png), served from overrides/home as
-// WEBP 1211x680 in the same order. Only the home page uses these; /dac-sac keeps the originals.
+// hardcodes those in pcConfig.versionImg[].banner, mqaf*.png), served from overrides/home at
+// 1211x680 in the same order. Only the home page uses these; /dac-sac keeps the originals.
+// Banners 2, 4 and 5 are the artist's PNG files as delivered (no re-encoding), the others WEBP.
 
 const BANNER_DIR = '/3qdc-vi/home/';
 const BANNERS = [
   'tinh-nang-1-vi.webp',
-  'tinh-nang-2-vi.webp',
+  'tinh-nang-2-vi.png',
   'tinh-nang-3-vi.webp',
-  'tinh-nang-4-vi.webp',
-  'tinh-nang-5-vi.webp',
+  'tinh-nang-4-vi.png',
+  'tinh-nang-5-vi.png',
 ].map((f) => BANNER_DIR + f);
 
 // centre slide width as a fraction of the track; the track height follows the banner ratio
