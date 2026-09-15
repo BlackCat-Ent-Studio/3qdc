@@ -5,6 +5,7 @@
 // The biography row (type ribbon, quality badge, biography text) is removed from the layout, so the icon row
 // sits right under the red name band; the icons are 72px (the Nộ công / Bị động artwork is 80px), and 64px
 // in a hero frame of 1200px or less, where the home sidebar's collapse arrow would otherwise cover the last icon.
+// Next to the big hero name, the CV block (voice button, "cv", dot, voice actor) is hidden; the name stays put.
 // Icons and names are read from the skill list the hero page keeps rendering (hidden), so they follow every
 // hero change and the i18n overlay's translation. The standalone /tuong page is not affected.
 
@@ -13,6 +14,7 @@ html.hv2-embed .star-site-person-advance-wrapper,
 html.hv2-embed .star-site-person-advance-skills__wrapper,
 html.hv2-embed .star-site-person-advance-restrain{display:none!important}
 html.hv2-embed .star-site-person-introduction{display:none!important}
+html.hv2-embed .star-site-person-cv-wrapper{display:none!important}
 html.hv2-embed .hv2-sk{display:flex;align-items:center;gap:26px;height:80px}
 html.hv2-embed .hv2-sk-item{position:relative;display:block;flex:0 0 auto;width:80px;height:80px;outline:none}
 html.hv2-embed .hv2-sk-item img{position:absolute;left:2px;top:2px;width:72px;height:72px;border-radius:50%;object-fit:cover;
