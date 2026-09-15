@@ -14,9 +14,10 @@ const TABS = [
   ['Sự kiện', 'endpoint.json__b586100e43cbf4eaf'],
 ];
 
-// banners belong to the planning page (official comics / hero side stories)
-const BANNERS = ['banner1.f07fcfbe.jpg', 'banner2.50e6c137.jpg', 'banner3.8050d575.jpg', 'banner4.7d8e2d36.jpg']
-  .map((f) => STATIC + f);
+// banners belong to the planning page (official comics / hero side stories); the first one is the
+// Vietnamese artwork served from overrides/home (same 808x316 size), the others are still the originals
+const BANNERS = ['/3qdc-vi/home/tin-tuc-banner-1-vi.webp']
+  .concat(['banner2.50e6c137.jpg', 'banner3.8050d575.jpg', 'banner4.7d8e2d36.jpg'].map((f) => STATIC + f));
 
 export const NEWS_CSS = `
 #hv2-news .hv2-news{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:28px;padding:24px;

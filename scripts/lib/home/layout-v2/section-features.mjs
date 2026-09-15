@@ -2,18 +2,17 @@
 // A light coverflow carousel of the five feature banners: the centre slide links to
 // /dac-sac, the neighbours are dimmed and smaller, autoplay pauses on mouse hover.
 //
-// The banners are the ones the /dac-sac accordion shows. They are not served by an API
-// snapshot: the umi bundle (views/umi.62525e29.js) hardcodes them in
-// pcConfig.versionImg[].banner, so they are listed here the same way. Update this list if
-// that artwork is replaced. The files are WEBP with alpha despite the .png name, 1211x680.
+// The banners are Vietnamese versions of the ones the /dac-sac accordion shows (the umi bundle
+// hardcodes those in pcConfig.versionImg[].banner, mqaf*.png), served from overrides/home as
+// WEBP 1211x680 in the same order. Only the home page uses these; /dac-sac keeps the originals.
 
-const BANNER_DIR = '/cdn.aligames.com/raven/prod/upload/market-game-galaxy/page_642a4eb04023f80ab7f3fb17/';
+const BANNER_DIR = '/3qdc-vi/home/';
 const BANNERS = [
-  'mqaftbcyqv2ikvy79i.png',
-  'mqaftjxe66vr86vpjsa.png',
-  'mqafttg4u79rjsylwvg.png',
-  'mqafu3nq9khwqsa2k24.png',
-  'mqafue7pg7k0k2zqqym.png',
+  'tinh-nang-1-vi.webp',
+  'tinh-nang-2-vi.webp',
+  'tinh-nang-3-vi.webp',
+  'tinh-nang-4-vi.webp',
+  'tinh-nang-5-vi.webp',
 ].map((f) => BANNER_DIR + f);
 
 // centre slide width as a fraction of the track; the track height follows the banner ratio

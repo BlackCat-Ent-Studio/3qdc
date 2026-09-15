@@ -20,11 +20,11 @@ const HEADER_H = 88;
 
 // Key-visual background: the Vietnamese artwork served from overrides/home (KV_IMAGE), replacing the original
 // page_642a4eb04023f80ab7f3fb17/mqaggnekipux19ptb5s.jpg; cover-scaled, top-aligned. Natural size and the bottom
-// edge of the event banner frame baked into the art, in image pixels (the frame's lower gold border is row 778).
+// edge of the event banner frame baked into the art, in image pixels (the frame's lower gold border is rows 782-783).
 // The download panel starts just below that frame so no text of the art is covered. Update these if the home
 // background artwork is replaced (the original art was 2560x1306 with eventFrameBottom 1140).
 const KV_IMAGE = '/3qdc-vi/home/anh-nen-slogan-vi.webp';
-const KV = { width: 1756, height: 896, eventFrameBottom: 780 };
+const KV = { width: 1756, height: 896, eventFrameBottom: 785 };
 
 // Vietnamese download buttons (omg3q-style artwork in overrides/home) in display order, filling a 2-column grid row by
 // row. Entries with `match` reuse the original link whose href contains it; entries without one have no 3qdc link yet
