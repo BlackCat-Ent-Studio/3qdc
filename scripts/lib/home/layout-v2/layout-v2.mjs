@@ -75,8 +75,9 @@ const NAV_VI = [
 const NAV_KEEP = NAV_VI.map(([href]) => `:has(> a[href="${href}"])`).join(',');
 // image heights: the hover art is 1.626x the normal art so both titles render at the same size; its title starts
 // at x=64/79 against x=18/41 in the normal art, hence the left shift of 0.8815 normal heights
-const NAV_H = 'clamp(38px,2.8vw,54px)';
-const NAV_HOVER_H = 'clamp(62px,4.58vw,88px)';
+// (1.75x the first size: the art is only 41 / 79px tall, so it is drawn upscaled)
+const NAV_H = 'clamp(66.5px,4.9vw,94.5px)';
+const NAV_HOVER_H = 'clamp(108.5px,8.015vw,154px)';
 
 // treasure hidden: drop its item from the header image nav; the remaining items stay centred in the row
 const TREASURE_OFF_CSS = `
@@ -121,13 +122,14 @@ html.hv2 .star-site-index-logo{position:fixed!important;top:${HEADER_H / 2}px!im
 /* the "App Store 精选推荐 / TapTap 热门榜第一" badge (one image) is not shown on the home header */
 html.hv2 .star-site-index-beishu{display:none!important}
 
-/* image nav: vertical list -> centered horizontal row inside the header, reduced to the NAV_VI items */
+/* image nav: vertical list -> centered horizontal row, reduced to the NAV_VI items. The row is as tall as the blurred
+   header background (not the 88px bar) so the large menu art is not cut at the top */
 html.hv2 .star-site-index-navs{position:fixed!important;top:0!important;left:clamp(170px,13.5vw,260px)!important;
-  right:clamp(200px,15.6vw,300px)!important;height:${HEADER_H}px!important;display:flex!important;
+  right:clamp(200px,15.6vw,300px)!important;height:${HEADER_FADE}px!important;display:flex!important;
   flex-direction:row!important;align-items:center!important;justify-content:center!important;gap:clamp(18px,2.4vw,46px);
   transform:none!important;animation:none!important;filter:none!important;opacity:1!important;z-index:11!important;
   margin:0!important;padding:0!important}
-html.hv2 .star-site-index-navs__item{width:auto!important;height:${HEADER_H}px!important;margin:0!important;
+html.hv2 .star-site-index-navs__item{width:auto!important;height:${HEADER_FADE}px!important;margin:0!important;
   padding:0 clamp(2px,.3vw,8px)!important;justify-content:center}
 html.hv2 .star-site-index-navs__item:before{display:none!important}
 /* items outside NAV_VI: hidden by CSS before the script runs, and by the class it sets. Two separate rules: a
