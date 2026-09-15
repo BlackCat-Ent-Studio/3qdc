@@ -8,6 +8,8 @@
 //
 //   /              → home, the main site (build B, index.html, ROUTE_FORCE #/index, layout-v2), every device
 //   /home, /kho-bau → 302 /  (old home address; treasure is switched off)
+//   /tin-tuc, /tin-tuc/<slug>, /api/tin-tuc → the site's own news pages (scripts/lib/news, articles in data/news)
+//   /__internal/tin-tuc → old news section (build B #/main/news; kept for reference)
 //   /__internal/pc → old fab PC entry (build A; no longer linked, kept for reference)
 //   /__internal/m  → old fab mobile entry (+ UA-spoof shim)
 //   /main, /main/  → main (build B, index.html, ROUTE_FORCE #/main)
@@ -38,6 +40,8 @@ import { I18N_HTML as WIKI_I18N } from './scripts/lib/wiki/i18n-overlay.mjs';
 import { NEUTER_HTML as WIKI_NEUTER } from './scripts/lib/wiki/neuter-links.mjs';
 // shared nav-sync (tab title per page + menu → clean path wiring)
 import { NAV_SYNC_HTML } from './scripts/lib/nav-sync.mjs';
+// the site's own news pages
+import { handleNews } from './scripts/lib/news/news-routes.mjs';
 
 const ROOT = join(process.cwd(), 'mirror');
 const ENTRY_B = join(ROOT, 'index.html');          // build B entry (umi.62525e29)
@@ -72,9 +76,10 @@ const SHELL_HTML = `<!DOCTYPE html><html lang="vi"><head>
 const RF = (route) => `<script>(function(){var h=location.hash;if(!h||h==='#'||h==='#/'||h.indexOf('#/fab')===0){location.hash='${route}';}})();</script>`;
 
 // Clean sitemap: each path → one section (build B), so /tuong → Tướng, /huong-dan → wiki, etc.
+// /tin-tuc is the site's own news page now; the old news section stays reachable at /__internal/tin-tuc.
 const BUILDB_PATHS = {
   '/main': '#/main',
-  '/tin-tuc': '#/main/news',
+  '/__internal/tin-tuc': '#/main/news',
   '/ke-hoach': '#/main/planning',
   '/tuong': '#/main/person',
   '/dac-sac': '#/main/feature',
@@ -82,6 +87,7 @@ const BUILDB_PATHS = {
   '/cong-dong': '#/main/fans',
 };
 // nav-sync maps (build B): hash → tab title, and menu hash → clean path.
+// The old section menus' "Tin tức" item leads to the new news page.
 const BRAND = '3Q Đại Chiến';
 const BUILDB_TITLES = {
   '#/index': 'Trang chủ', '#/main/news': 'Tin tức', '#/main/planning': 'Kế hoạch',
@@ -210,6 +216,8 @@ export function startServer(port = 8080) {
         res.writeHead(302, { Location: '/', 'Cache-Control': 'no-store' });
         return res.end();
       }
+      // the site's own news pages (/tin-tuc, /tin-tuc/<slug>, /api/tin-tuc)
+      if (await handleNews(req, res, cleanPath, u)) return;
       if (BUILDB_PATHS[cleanPath]) return sendHtml(res, await buildBEntry(BUILDB_PATHS[cleanPath]));
       if (cleanPath === '/huong-dan' || cleanPath === '/wiki') return sendHtml(res, await wikiEntry());
 

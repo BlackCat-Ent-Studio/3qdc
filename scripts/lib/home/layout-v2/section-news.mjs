@@ -1,19 +1,16 @@
 // section-news.mjs — "Tin Tức Sự Kiện" block for the home layout-v2 overlay.
-// Left: autoplaying slider of the static planning banners already in the mirror.
-// Right: three tabs — Thông báo and Sự kiện backed by the news-list API snapshots the site already serves
-// (getListRecommend, size 4, page 0); Cẩm nang has no source on the home page yet and shows the empty-list state.
-// No links for now (the site's own pages come later): the banner, the rows and "Xem thêm" still look and react like
-// links (hand cursor, hover) so they can be tried, but a click leads nowhere.
-// Titles are rendered raw; the i18n overlay already on the page translates them.
+// Left: autoplaying slider of the static planning banners already in the mirror (no link).
+// Right: three tabs — Thông báo, Sự kiện, Cẩm nang — with the newest articles of the site's own news pages
+// (/api/tin-tuc, published articles only). Each row opens its article at /tin-tuc/<slug>; "Xem thêm" opens the
+// news page on the selected tab. A tab without articles shows "Chưa có bài viết".
 
 const STATIC = '/cdn-cn.lingxigames.com/wukongbuild/star-gw/1.0.0/prod/views/static/';
 
-// snapshot file per tab (collectionIds 323 notices, 324 events); the first tab is selected by default.
-// Cẩm nang (guides) intentionally has no file: its articles live on /huong-dan with their own title dictionary.
+// tab label and news category id; the first tab is selected by default
 const TABS = [
-  ['Thông báo', 'endpoint.json__b5a051b4db5a8cbca'],
-  ['Sự kiện', 'endpoint.json__b586100e43cbf4eaf'],
-  ['Cẩm nang', null],
+  ['Thông báo', 'thong-bao'],
+  ['Sự kiện', 'su-kien'],
+  ['Cẩm nang', 'cam-nang'],
 ];
 
 // banners belong to the planning page (official comics / hero side stories); the first one is the
@@ -58,7 +55,7 @@ export const NEWS_JS = `(function(){
     if (!host) return;
     var el = api.el;
 
-    // slider: the image layer (no link for now) and the dots as siblings
+    // slider: the image layer (no link) and the dots as siblings
     var slider = el('div', { 'class': 'hv2-slider' });
     var link = el('div', { 'class': 'hv2-slider-link' });
     var dots = el('div', { 'class': 'hv2-dots' });
@@ -89,26 +86,30 @@ export const NEWS_JS = `(function(){
     // tabs + list
     var tabsBar = el('div', { 'class': 'hv2-tabs', role: 'tablist' });
     var list = el('ul', { 'class': 'hv2-list' });
-    var cache = {};   // file -> promise of items (shared by concurrent clicks)
+    var more = el('a', { 'class': 'hv2-more', href: '/tin-tuc?muc=' + TABS[0][1], text: 'Xem thêm +' });
+    var cache = {};   // category -> promise of articles (shared by concurrent clicks)
     var selected = 0;
     function renderList(items){
       list.textContent = '';
-      if (!items.length){ list.appendChild(el('li', { 'class': 'hv2-empty', text: 'Chưa có dữ liệu' })); return; }
+      if (!items.length){ list.appendChild(el('li', { 'class': 'hv2-empty', text: 'Chưa có bài viết' })); return; }
       items.slice(0, 4).forEach(function(it){
-        var t = String(it.onlineTime || '');
+        var t = String(it.publishAt || '');
         var date = el('span', { 'class': 'hv2-date' }, [t.slice(8, 10) || '--', el('small', { text: t.slice(5, 7) ? t.slice(5, 7) + '/' + t.slice(0, 4) : '' })]);
-        var row = el('div', { 'class': 'hv2-row' }, [date, el('span', { 'class': 'hv2-row-title', text: it.title || '' })]);
+        var row = el('a', { 'class': 'hv2-row', href: '/tin-tuc/' + encodeURIComponent(it.slug) }, [date, el('span', { 'class': 'hv2-row-title', text: it.title || '' })]);
         list.appendChild(el('li', null, [row]));
       });
     }
-    function load(file){
-      if (!file) return Promise.resolve([]); // a tab without a source shows the empty state
-      if (!cache[file]){
-        cache[file] = api.snap(file)
-          .then(function(j){ return (j && j.result && j.result.list) || []; })
-          .catch(function(e){ delete cache[file]; console.warn('[hv2 news]', e); return []; });
+    function load(muc){
+      if (!cache[muc]){
+        // a hung request gives up after 8s so the block still shows (empty) instead of staying hidden
+        var ctl = window.AbortController ? new AbortController() : null;
+        var timer = ctl ? setTimeout(function(){ ctl.abort(); }, 8000) : 0;
+        cache[muc] = fetch('/api/tin-tuc?muc=' + encodeURIComponent(muc) + '&limit=4', { cache: 'no-store', signal: ctl ? ctl.signal : undefined })
+          .then(function(r){ clearTimeout(timer); if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+          .then(function(j){ return Array.isArray(j) ? j : []; })
+          .catch(function(e){ delete cache[muc]; console.warn('[hv2 news]', e); return []; });
       }
-      return cache[file];
+      return cache[muc];
     }
     function select(i){
       selected = i;
@@ -116,6 +117,7 @@ export const NEWS_JS = `(function(){
         tabsBar.children[k].classList.toggle('is-on', k === i);
         tabsBar.children[k].setAttribute('aria-selected', k === i ? 'true' : 'false');
       }
+      more.setAttribute('href', '/tin-tuc?muc=' + TABS[i][1]);
       // a slower earlier response must not overwrite the list of the tab now selected
       return load(TABS[i][1]).then(function(items){ if (selected === i) renderList(items); });
     }
@@ -125,7 +127,7 @@ export const NEWS_JS = `(function(){
       tabsBar.appendChild(b);
     });
 
-    var right = el('div', null, [tabsBar, list, el('div', { 'class': 'hv2-more', text: 'Xem thêm +' })]);
+    var right = el('div', null, [tabsBar, list, more]);
     host.appendChild(el('div', { 'class': 'hv2-news' }, [slider, right]));
     // warm every tab so later switches render instantly
     TABS.forEach(function(tab){ load(tab[1]); });

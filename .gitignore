@@ -1,5 +1,6 @@
-﻿mirror/
+mirror/
 node_modules/
 verify-out/
 *.log
 image-backup/
+/data/
