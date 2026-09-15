@@ -2,7 +2,8 @@
 // Left: autoplaying slider of the static planning banners already in the mirror.
 // Right: three tabs — Thông báo and Sự kiện backed by the news-list API snapshots the site already serves
 // (getListRecommend, size 4, page 0); Cẩm nang has no source on the home page yet and shows the empty-list state.
-// No links for now (the site's own pages come later): the banner, the rows and "Xem thêm" are not clickable.
+// No links for now (the site's own pages come later): the banner, the rows and "Xem thêm" still look and react like
+// links (hand cursor, hover) so they can be tried, but a click leads nowhere.
 // Titles are rendered raw; the i18n overlay already on the page translates them.
 
 const STATIC = '/cdn-cn.lingxigames.com/wukongbuild/star-gw/1.0.0/prod/views/static/';
@@ -24,7 +25,7 @@ export const NEWS_CSS = `
 #hv2-news .hv2-news{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:28px;padding:24px;
   background:rgba(18,21,38,.92);border:1px solid rgba(214,176,106,.35);border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.35)}
 #hv2-news .hv2-slider{position:relative;aspect-ratio:808/316;border-radius:10px;overflow:hidden;background:#000}
-#hv2-news .hv2-slider-link{position:absolute;inset:0;display:block}
+#hv2-news .hv2-slider-link{position:absolute;inset:0;display:block;cursor:pointer}
 #hv2-news .hv2-slide{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .6s ease}
 #hv2-news .hv2-slide.is-on{opacity:1}
 #hv2-news .hv2-dots{position:absolute;left:0;right:0;bottom:10px;display:flex;justify-content:center;gap:8px;pointer-events:none}
@@ -37,13 +38,15 @@ export const NEWS_CSS = `
 #hv2-news .hv2-tab.is-on{background:linear-gradient(180deg,#e8a23a,#b9621c);color:#fff}
 #hv2-news .hv2-list{list-style:none;margin:0;padding:0;min-height:236px}
 #hv2-news .hv2-row{display:flex;align-items:center;gap:14px;padding:10px 4px;border-bottom:1px dashed rgba(214,176,106,.18);
-  color:#e8e2d0;text-decoration:none}
+  color:#e8e2d0;text-decoration:none;cursor:pointer}
+#hv2-news .hv2-row:hover .hv2-row-title{color:#f3c56a}
 #hv2-news .hv2-date{flex:0 0 46px;text-align:center;line-height:1.1;color:#f3dfa6;font-weight:700;font-size:18px}
 #hv2-news .hv2-date small{display:block;font-size:12px;font-weight:400;color:#9b927c}
 #hv2-news .hv2-row-title{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:15px}
 #hv2-news .hv2-empty{padding:24px 4px;color:#9b927c}
 #hv2-news .hv2-more{display:block;margin-top:16px;padding:10px;text-align:center;border:1px solid rgba(214,176,106,.6);
-  border-radius:8px;color:#f3dfa6;text-decoration:none}
+  border-radius:8px;color:#f3dfa6;text-decoration:none;cursor:pointer}
+#hv2-news .hv2-more:hover{background:rgba(214,176,106,.14)}
 `;
 
 export const NEWS_JS = `(function(){

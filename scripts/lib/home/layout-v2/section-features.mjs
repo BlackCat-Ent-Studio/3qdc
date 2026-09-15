@@ -27,7 +27,7 @@ export const FEATURES_CSS = `
 #hv2-features .hv2-feat-slide{position:absolute;top:0;left:50%;width:${SLIDE_W * 100}%;height:100%;box-sizing:border-box;
   border-radius:12px;overflow:hidden;border:1px solid rgba(214,176,106,.4);background:#12152a;
   transform:translateX(-50%);transition:transform .5s ease,opacity .5s ease,filter .5s ease}
-#hv2-features .hv2-feat-link{display:block;width:100%;height:100%}
+#hv2-features .hv2-feat-link{display:block;width:100%;height:100%;cursor:pointer}
 #hv2-features .hv2-feat-link img{display:block;width:100%;height:100%;object-fit:cover}
 #hv2-features .hv2-feat-slide.is-active{z-index:3;border-color:#f3dfa6}
 #hv2-features .hv2-feat-slide.is-prev,#hv2-features .hv2-feat-slide.is-next{z-index:2;filter:brightness(.5);cursor:pointer}

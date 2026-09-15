@@ -153,10 +153,10 @@ html.hv2 #hv2-dlpanel{display:flex;align-items:center;gap:clamp(14px,1.3vw,24px)
 #hv2-dlpanel a.star-site-index-store{display:block;margin:-18px 0 0!important;
   background-image:url("${DL_TOPUP}")!important;background-size:100% 100%!important;
   height:calc(var(--hv2-dl-btn) * 2 + 26px)!important;width:calc((var(--hv2-dl-btn) * 2 + 26px) * 0.8733)!important}
+/* buttons, top-up box and footer items look and react like real buttons even without a link yet (hand cursor, hover),
+   so the owner can try each one; a click leads nowhere until its link is filled in */
+#hv2-dlpanel a,#hv2-sidebar a,#home-v2 a{cursor:pointer}
 #hv2-dlpanel a:hover,#hv2-sidebar a:hover{filter:brightness(1.1)}
-/* buttons, top-up box and footer items with no link yet: shown, not clickable */
-#hv2-dlpanel a:not([href]),#hv2-sidebar a:not([href]),#home-v2 a:not([href]){cursor:default}
-#hv2-dlpanel a:not([href]):hover,#hv2-sidebar a:not([href]):hover{filter:none}
 
 /* right sidebar (cloned QR, Vietnamese download buttons, top-up box): slides in once the key visual (and its download panel) is scrolled past */
 #hv2-sidebar{display:none}
@@ -206,8 +206,8 @@ html.hv2 #hv2-social{display:flex;flex-direction:column;align-items:center;gap:1
   background:rgba(8,10,22,.82);border:1px solid rgba(214,176,106,.55);box-shadow:0 8px 28px rgba(0,0,0,.45)}
 #hv2-social .hv2-soc-i{display:block;width:46px;height:46px;box-sizing:border-box;border-radius:50%;
   border:1px solid rgba(214,176,106,.75);background:rgba(20,22,40,.9) center/22px 22px no-repeat}
-#hv2-social a.hv2-soc-i[href]:hover{border-color:#e9d9b0;background-color:rgba(214,176,106,.22)}
-#hv2-social a.hv2-soc-i:not([href]){cursor:default}
+#hv2-social a.hv2-soc-i{cursor:pointer}
+#hv2-social a.hv2-soc-i:hover{border-color:#e9d9b0;background-color:rgba(214,176,106,.22)}
 ${SOCIAL.map(([id, , , d]) => `#hv2-social .hv2-soc-${id}{background-image:${socialSvg(d)}}`).join('\n')}
 #hv2-social .hv2-soc-toggle{position:absolute;right:-43px;top:50%;width:42px;height:58px;margin-top:-29px;padding:0;border:0;
   background:url("${SB_TOGGLE}") 0 0 no-repeat;transform:scaleX(-1);cursor:pointer}
@@ -228,7 +228,7 @@ html.hv2 #home-v2{display:block;position:relative;z-index:1;background:#0b0d18;c
 #home-v2 .hv2-footer-brand{margin-bottom:14px;color:#f3dfa6;font-size:20px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
 #home-v2 .hv2-footer-nav{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 26px}
 #home-v2 .hv2-footer-nav a{color:#bfb59a;font-size:14px;text-decoration:none}
-#home-v2 .hv2-footer-nav a[href]:hover{color:#f3c56a}
+#home-v2 .hv2-footer-nav a:hover{color:#f3c56a}
 `;
 
 const JS = `(function(){
