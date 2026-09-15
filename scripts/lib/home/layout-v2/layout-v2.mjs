@@ -18,6 +18,8 @@ import { TREASURE_CSS, TREASURE_JS } from './section-treasure.mjs';
 import { HERO_SKILLS_CSS, HERO_SKILLS_JS } from './embed-hero-skills.mjs';
 
 const HEADER_H = 88;
+// the blurred header background runs this far down, fading out below the 88px bar
+const HEADER_FADE = HEADER_H + 36;
 
 // Key-visual background: the Vietnamese artwork served from overrides/home (KV_IMAGE), replacing the original
 // page_642a4eb04023f80ab7f3fb17/mqaggnekipux19ptb5s.jpg; cover-scaled, top-aligned. Natural size and the bottom
@@ -95,11 +97,23 @@ html.hv2 .star-site-index-left-mask{display:none!important}
    so the original art is never fetched or flashed first */
 .star-site-index .star-site-imgBg{background-image:url("${KV_IMAGE}")!important}
 
-/* header bar behind the fixed logo / nav / store badges */
+/* header background behind the fixed logo / nav: the page under it is blurred heavily at the top, less further down,
+   and is sharp again a little below the bar (no hard bottom edge). Each stacked .hv2-hb layer blurs a band that ends
+   lower as its radius gets smaller. The parent must not get filter / opacity / backdrop-filter: that would change the
+   layers' backdrop root and they would blur nothing. */
 #hv2-header-bg{display:none}
-html.hv2 #hv2-header-bg{display:block;position:fixed;top:0;left:0;right:0;height:${HEADER_H}px;z-index:9;
-  background:linear-gradient(180deg,rgba(6,8,18,.92),rgba(6,8,18,.72));border-bottom:1px solid rgba(214,176,106,.45);
-  box-shadow:0 6px 24px rgba(0,0,0,.35);pointer-events:none}
+html.hv2 #hv2-header-bg{display:block;position:fixed;top:0;left:0;right:0;height:${HEADER_FADE}px;z-index:9;
+  background:linear-gradient(180deg,rgba(6,8,18,.55) 0,rgba(6,8,18,.32) ${HEADER_H}px,rgba(6,8,18,0) ${HEADER_FADE}px);
+  pointer-events:none}
+#hv2-header-bg .hv2-hb{position:absolute;top:0;left:0;right:0;height:100%}
+#hv2-header-bg .hv2-hb-1{-webkit-backdrop-filter:blur(1.5px);backdrop-filter:blur(1.5px);
+  -webkit-mask-image:linear-gradient(180deg,#000 100px,transparent ${HEADER_FADE}px);mask-image:linear-gradient(180deg,#000 100px,transparent ${HEADER_FADE}px)}
+#hv2-header-bg .hv2-hb-2{-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);
+  -webkit-mask-image:linear-gradient(180deg,#000 76px,transparent 108px);mask-image:linear-gradient(180deg,#000 76px,transparent 108px)}
+#hv2-header-bg .hv2-hb-3{-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  -webkit-mask-image:linear-gradient(180deg,#000 48px,transparent 88px);mask-image:linear-gradient(180deg,#000 48px,transparent 88px)}
+#hv2-header-bg .hv2-hb-4{-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+  -webkit-mask-image:linear-gradient(180deg,#000 20px,transparent 64px);mask-image:linear-gradient(180deg,#000 20px,transparent 64px)}
 
 /* logo, badge and nav scale with viewport width so the row fits 1366px laptops */
 html.hv2 .star-site-index-logo{position:fixed!important;top:${HEADER_H / 2}px!important;left:24px!important;
@@ -291,7 +305,9 @@ const JS = `(function(){
     });
     wrap.appendChild(el('footer', { 'class': 'hv2-footer' }, [el('div', { 'class': 'hv2-footer-brand', text: '3Q Đại Chiến' }), nav]));
     document.body.appendChild(wrap);
-    document.body.appendChild(el('div', { id: 'hv2-header-bg' }));
+    var headerBg = el('div', { id: 'hv2-header-bg' });
+    for (var i = 1; i <= 4; i++) headerBg.appendChild(el('div', { 'class': 'hv2-hb hv2-hb-' + i }));
+    document.body.appendChild(headerBg);
   }
 
   // Vietnamese download buttons in DL_ART order: a link when the entry has an href, otherwise the artwork shown in
