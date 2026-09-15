@@ -51,6 +51,21 @@ export const SHOW_TREASURE = false;
 const FOOTER_LINKS = [['Tin tức', '/tin-tuc'], ['Kế hoạch', '/ke-hoach'], ['Tướng', '/tuong'], ['Đặc sắc', '/dac-sac'],
   ...(SHOW_TREASURE ? [['Kho báu', '/kho-bau']] : []), ['Cộng đồng', '/cong-dong'], ['Hướng dẫn', '/huong-dan']];
 
+// header nav on the home page: only these items stay, drawn with the Vietnamese menu art from overrides/home
+// (normal 41px / hover 79px high, transparent right margin trimmed). Clicking scrolls to the section on this page
+// instead of leaving it; a null section means the top of the page. [app href, section id, image base name, label]
+const NAV_VI = [
+  ['#/index', null, 'menu-01-trang-chu', 'Trang chủ'],
+  ['#/main/news', 'hv2-news', 'menu-02-tin-tuc', 'Tin tức'],
+  ['#/main/person', 'hv2-heroes', 'menu-04-tuong', 'Tướng'],
+  ['#/main/feature', 'hv2-features', 'menu-05-dac-sac', 'Đặc sắc'],
+];
+const NAV_KEEP = NAV_VI.map(([href]) => `:has(> a[href="${href}"])`).join(',');
+// image heights: the hover art is 1.626x the normal art so both titles render at the same size; its title starts
+// at x=64/79 against x=18/41 in the normal art, hence the left shift of 0.8815 normal heights
+const NAV_H = 'clamp(38px,2.8vw,54px)';
+const NAV_HOVER_H = 'clamp(62px,4.58vw,88px)';
+
 // treasure hidden: drop its item from the header image nav; the remaining items stay centred in the row
 const TREASURE_OFF_CSS = `
 html.hv2 .star-site-index-navs__item:has(> a[href="#/main/treasure"]){display:none!important}
@@ -82,20 +97,24 @@ html.hv2 .star-site-index-logo{position:fixed!important;top:${HEADER_H / 2}px!im
 html.hv2 .star-site-index-beishu{position:fixed!important;top:${HEADER_H / 2}px!important;right:24px!important;
   width:auto!important;height:clamp(28px,2.1vw,40px)!important;transform:translateY(-50%);z-index:11!important}
 
-/* 10 image nav items: vertical list -> centered horizontal row inside the header */
+/* image nav: vertical list -> centered horizontal row inside the header, reduced to the NAV_VI items */
 html.hv2 .star-site-index-navs{position:fixed!important;top:0!important;left:clamp(170px,13.5vw,260px)!important;
   right:clamp(200px,15.6vw,300px)!important;height:${HEADER_H}px!important;display:flex!important;
-  flex-direction:row!important;align-items:center!important;justify-content:center!important;gap:clamp(2px,.8vw,22px);
+  flex-direction:row!important;align-items:center!important;justify-content:center!important;gap:clamp(18px,2.4vw,46px);
   transform:none!important;animation:none!important;filter:none!important;opacity:1!important;z-index:11!important;
   margin:0!important;padding:0!important}
 html.hv2 .star-site-index-navs__item{width:auto!important;height:${HEADER_H}px!important;margin:0!important;
   padding:0 clamp(2px,.3vw,8px)!important;justify-content:center}
 html.hv2 .star-site-index-navs__item:before{display:none!important}
+/* items outside NAV_VI: hidden by CSS before the script runs, and by the class it sets. Two separate rules: a
+   browser without :has drops the whole :has rule, and the class rule must survive that */
+html.hv2 .star-site-index-navs__item.hv2-nav-off{display:none!important}
+html.hv2 .star-site-index-navs__item:not(${NAV_KEEP}){display:none!important}
 html.hv2 .star-site-index-navs__item > a{position:relative;display:flex;align-items:center;height:100%}
 /* keep the normal image in flow (stable width), swap to the hover art on top of it */
-html.hv2 .star-site-index-navs__item-img{display:block!important;height:clamp(16px,1.25vw,24px)!important;width:auto!important}
-html.hv2 .star-site-index-navs__item-img_hover{display:none!important;position:absolute;left:50%;top:50%;
-  height:clamp(28px,2.25vw,43px)!important;width:auto!important;margin:0!important;transform:translate(-50%,-50%)}
+html.hv2 .star-site-index-navs__item-img{display:block!important;height:${NAV_H}!important;width:auto!important}
+html.hv2 .star-site-index-navs__item-img_hover{display:none!important;position:absolute;left:0;top:50%;
+  height:${NAV_HOVER_H}!important;width:auto!important;margin:0!important;transform:translate(calc(${NAV_H} * -0.8815),-50%)}
 html.hv2 .star-site-index-navs__item-active .star-site-index-navs__item-img,
 html.hv2 .star-site-index-navs__item:hover .star-site-index-navs__item-img{visibility:hidden}
 html.hv2 .star-site-index-navs__item-active .star-site-index-navs__item-img_hover,
@@ -385,6 +404,64 @@ const JS = `(function(){
   // before <body> exists; the DOMContentLoaded listener performs the first apply.
   function sync(){ if (!document.body) return; if (isHome()) apply(); else teardown(); }
 
+  // header nav: keep the NAV_VI items with their Vietnamese art (React may re-render the list at any time)
+  var NAV_VI = ${JSON.stringify(NAV_VI)};
+  function navEntry(href){
+    for (var i = 0; i < NAV_VI.length; i++) if (NAV_VI[i][0] === href) return NAV_VI[i];
+    return null;
+  }
+  function navVi(){
+    var items = document.querySelectorAll('.star-site-index-navs__item');
+    for (var i = 0; i < items.length; i++){
+      var a = items[i].querySelector('a');
+      var entry = a && navEntry(a.getAttribute('href'));
+      items[i].classList.toggle('hv2-nav-off', !entry);
+      if (!entry) continue;
+      var pairs = [['.star-site-index-navs__item-img', '.png'], ['.star-site-index-navs__item-img_hover', '-hover.png']];
+      for (var k = 0; k < pairs.length; k++){
+        var img = items[i].querySelector(pairs[k][0]), src = '/3qdc-vi/home/' + entry[2] + pairs[k][1];
+        if (img && img.getAttribute('src') !== src) img.setAttribute('src', src);
+      }
+      if (a.getAttribute('aria-label') !== entry[3]) a.setAttribute('aria-label', entry[3]);
+    }
+  }
+  // on the home layout a nav click scrolls to its section (below the fixed header) instead of changing the route.
+  // Registered in the capture phase on window, so it runs before nav-sync (capture on document), which would
+  // otherwise reload to the section page for these exact menu hrefs. Propagation is stopped for that reason.
+  var navFix = null;
+  function navTarget(entry){
+    if (!entry[1]) return 0;
+    var s = section(entry[1]);
+    // a section still waiting for its data is display:none and has no position yet
+    if (!s || !s.hasAttribute('data-ready')) return null;
+    return Math.max(0, Math.round(s.getBoundingClientRect().top + window.scrollY - ${HEADER_H}));
+  }
+  function onNavClick(e){
+    if (!active || !e.target.closest) return;
+    var a = e.target.closest('.star-site-index-navs__item > a');
+    var entry = a && navEntry(a.getAttribute('href'));
+    if (!entry) return;
+    e.stopPropagation();
+    // ctrl / cmd / shift click: the browser opens the link as usual, this page stays where it is
+    if (e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
+    var top = navTarget(entry);
+    if (top === null) return;
+    window.scrollTo({ top: top, behavior: 'smooth' });
+    // blocks above may still change height during the smooth scroll: correct the landing once it ends
+    var fixed = false;
+    var fix = function(){
+      if (fixed) return;
+      fixed = true;
+      window.removeEventListener('scrollend', fix);
+      var t = navTarget(entry);
+      if (t !== null && Math.abs(t - window.scrollY) > 2) window.scrollTo({ top: t, behavior: 'auto' });
+    };
+    clearTimeout(navFix);
+    window.addEventListener('scrollend', fix);
+    navFix = setTimeout(fix, 900);
+  }
+
   var api = {
     el: el, local: local, snap: snap, section: section, ready: ready,
     onMount: function(fn){ renderers.push(fn); if (mounted) { try { fn(api); } catch (e) { console.error('[hv2]', e); } } }
@@ -394,6 +471,12 @@ const JS = `(function(){
   window.addEventListener('hashchange', sync);
   window.addEventListener('resize', onResize);
   window.addEventListener('scroll', onScroll, { passive: true });
+  if (!EMBED){
+    // capture phase on window: runs before nav-sync (document capture) and the app's handlers on its root element
+    window.addEventListener('click', onNavClick, true);
+    new MutationObserver(navVi).observe(document.documentElement, { subtree: true, childList: true, attributes: true, attributeFilter: ['src'] });
+    navVi();
+  }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', sync); else sync();
 })();`;
 
