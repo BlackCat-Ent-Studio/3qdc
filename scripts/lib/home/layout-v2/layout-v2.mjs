@@ -41,6 +41,20 @@ const DL_TOPUP = '/3qdc-vi/home/nut-nap-the.png';
 // sidebar collapse arrow (omg3q floating-bar artwork, 86x58 strip): ">" (collapse) at 0 0, "<" (expand) at -44px 0
 const SB_TOGGLE = '/3qdc-vi/home/sidebar-toggle.png';
 
+// Left social bar on the home page, top to bottom. [id, label, link, Simple Icons path (CC0, 24x24 viewBox)]. A null link
+// means 3qdc has no such page yet: the icon is shown but not clickable; put the URL in to make it open in a new tab.
+const SOCIAL = [
+  ['zalo', 'Zalo', null, 'M12.49 10.2722v-.4496h1.3467v6.3218h-.7704a.576.576 0 01-.5763-.5729l-.0006.0005a3.273 3.273 0 01-1.9372.6321c-1.8138 0-3.2844-1.4697-3.2844-3.2823 0-1.8125 1.4706-3.2822 3.2844-3.2822a3.273 3.273 0 011.9372.6321l.0006.0005zM6.9188 7.7896v.205c0 .3823-.051.6944-.2995 1.0605l-.03.0343c-.0542.0615-.1815.206-.2421.2843L2.024 14.8h4.8948v.7682a.5764.5764 0 01-.5767.5761H0v-.3622c0-.4436.1102-.6414.2495-.8476L4.8582 9.23H.1922V7.7896h6.7266zm8.5513 8.3548a.4805.4805 0 01-.4803-.4798v-7.875h1.4416v8.3548H15.47zM20.6934 9.6C22.52 9.6 24 11.0807 24 12.9044c0 1.8252-1.4801 3.306-3.3066 3.306-1.8264 0-3.3066-1.4808-3.3066-3.306 0-1.8237 1.4802-3.3044 3.3066-3.3044zm-10.1412 5.253c1.0675 0 1.9324-.8645 1.9324-1.9312 0-1.065-.865-1.9295-1.9324-1.9295s-1.9324.8644-1.9324 1.9295c0 1.0667.865 1.9312 1.9324 1.9312zm10.1412-.0033c1.0737 0 1.945-.8707 1.945-1.9453 0-1.073-.8713-1.9436-1.945-1.9436-1.0753 0-1.945.8706-1.945 1.9436 0 1.0746.8697 1.9453 1.945 1.9453z'],
+  ['facebook', 'Facebook', null, 'M9.101 23.691v-7.98H6.627v-3.667h2.474v-1.58c0-4.085 1.848-5.978 5.858-5.978.401 0 .955.042 1.468.103a8.68 8.68 0 0 1 1.141.195v3.325a8.623 8.623 0 0 0-.653-.036 26.805 26.805 0 0 0-.733-.009c-.707 0-1.259.096-1.675.309a1.686 1.686 0 0 0-.679.622c-.258.42-.374.995-.374 1.752v1.297h3.919l-.386 2.103-.287 1.564h-3.246v8.245C19.396 23.238 24 18.179 24 12.044c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.628 3.874 10.35 9.101 11.647Z'],
+  ['discord', 'Discord', null, 'M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z'],
+  ['tiktok', 'TikTok', null, 'M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z'],
+  ['youtube', 'YouTube', null, 'M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z'],
+];
+// the bar sits just under the fixed header rather than centred: centred, its lower icons covered the slogan baked into the
+// key visual on 1366x768 / 1366x650 windows
+const SOCIAL_TOP = 120;
+const socialSvg = (d) => `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="#e9d9b0" d="${d}"/></svg>`)}")`;
+
 // "Kho Báu" is hidden for now (2026-09-15): the feature will not be used for a long time. While false the home
 // page builds no treasure block (so no CG / wallpaper requests), drops the footer link and hides the treasure item
 // of the header image nav; server.mjs imports this flag and redirects /kho-bau to /home while it is false.
@@ -186,6 +200,24 @@ html.hv2.hv2-scrolled.hv2-sb-collapsed #hv2-sidebar{transform:translate(calc(100
   html.hv2.hv2-scrolled.hv2-sb-collapsed #hv2-sidebar{transform:translate(calc(100% + 14px),0)}
 }
 
+/* left social bar (SOCIAL): shown at the top of the home page, anchored under the header, tucked away (arrow only) once
+   the key visual is scrolled past (see updateSocial); same frame as the right sidebar, gold icons on dark; the collapse
+   arrow is the sidebar artwork mirrored, on the bar's right edge */
+#hv2-social{display:none}
+html.hv2 #hv2-social{display:flex;flex-direction:column;align-items:center;gap:12px;position:fixed;left:14px;top:${SOCIAL_TOP}px;
+  z-index:12;width:72px;padding:14px 0;box-sizing:border-box;border-radius:12px;transition:transform .3s ease;
+  background:rgba(8,10,22,.82);border:1px solid rgba(214,176,106,.55);box-shadow:0 8px 28px rgba(0,0,0,.45)}
+#hv2-social .hv2-soc-i{display:block;width:46px;height:46px;box-sizing:border-box;border-radius:50%;
+  border:1px solid rgba(214,176,106,.75);background:rgba(20,22,40,.9) center/22px 22px no-repeat}
+#hv2-social a.hv2-soc-i[href]:hover{border-color:#e9d9b0;background-color:rgba(214,176,106,.22)}
+#hv2-social a.hv2-soc-i:not([href]){cursor:default}
+${SOCIAL.map(([id, , , d]) => `#hv2-social .hv2-soc-${id}{background-image:${socialSvg(d)}}`).join('\n')}
+#hv2-social .hv2-soc-toggle{position:absolute;right:-43px;top:50%;width:42px;height:58px;margin-top:-29px;padding:0;border:0;
+  background:url("${SB_TOGGLE}") 0 0 no-repeat;transform:scaleX(-1);cursor:pointer}
+#hv2-social .hv2-soc-toggle:hover{filter:brightness(1.1)}
+html.hv2-soc-collapsed #hv2-social{transform:translateX(calc(-100% - 14px))}
+html.hv2-soc-collapsed #hv2-social .hv2-soc-toggle{background-position:-44px 0}
+
 /* content area below the key visual */
 #home-v2{display:none}
 html.hv2 #home-v2{display:block;position:relative;z-index:1;background:#0b0d18;color:#e8e2d0;padding-top:var(--hv2-dl-push,0px);
@@ -322,6 +354,51 @@ const JS = `(function(){
     return true;
   }
 
+  // Left social bar: built once from SOCIAL (needs nothing from the app, so it is there from the first paint of the
+  // home page). Shown at the top of the page; once the key visual is scrolled past (hv2-scrolled) it tucks itself away
+  // so it never covers the sections on laptop-width windows, and its arrow reopens it until the viewer is back at the top.
+  // A collapse chosen at the top of the page is kept in this browser; the automatic one is not.
+  var SOC_KEY = 'hv2-social-collapsed';
+  var socSaved = false;   // collapsed by the viewer at the top of the page (kept)
+  var socOpened = false;  // reopened by the viewer while scrolled (until back at the top)
+  function setSocSaved(on){
+    socSaved = on;
+    try { localStorage.setItem(SOC_KEY, on ? '1' : '0'); } catch (e) {}
+  }
+  function updateSocial(){
+    var html = document.documentElement;
+    var scrolled = html.classList.contains('hv2-scrolled');
+    if (!scrolled) socOpened = false;
+    var on = socSaved || (scrolled && !socOpened);
+    html.classList.toggle('hv2-soc-collapsed', on);
+    var t = document.querySelector('#hv2-social .hv2-soc-toggle');
+    if (t){ t.setAttribute('aria-label', on ? 'Mở thanh mạng xã hội' : 'Thu gọn thanh mạng xã hội'); t.setAttribute('aria-expanded', on ? 'false' : 'true'); }
+  }
+  function toggleSocial(){
+    var html = document.documentElement;
+    var scrolled = html.classList.contains('hv2-scrolled');
+    if (html.classList.contains('hv2-soc-collapsed')) { socOpened = scrolled; setSocSaved(false); }
+    else if (scrolled) socOpened = false;
+    else setSocSaved(true);
+    updateSocial();
+  }
+  function buildSocialBar(){
+    if (document.getElementById('hv2-social')) return;
+    var bar = el('nav', { id: 'hv2-social', 'data-home-v2': '', 'aria-label': 'Mạng xã hội' });
+    ${JSON.stringify(SOCIAL.map(([id, label, link]) => [id, label, link]))}.forEach(function(s){
+      var attrs = { 'class': 'hv2-soc-i hv2-soc-' + s[0], 'aria-label': s[1], title: s[1] };
+      // without an href an <a> has no role, so screen readers would drop its label: announce it as a disabled link
+      if (s[2]) { attrs.href = s[2]; attrs.target = '_blank'; attrs.rel = 'noopener'; } else { attrs.role = 'link'; attrs['aria-disabled'] = 'true'; }
+      bar.appendChild(el('a', attrs));
+    });
+    var toggle = el('button', { type: 'button', 'class': 'hv2-soc-toggle' });
+    toggle.addEventListener('click', toggleSocial);
+    bar.appendChild(toggle);
+    document.body.appendChild(bar);
+    try { socSaved = localStorage.getItem(SOC_KEY) === '1'; } catch (e) {}
+    updateSocial();
+  }
+
   // omg3q-style download panel: the QR, the platform buttons and the top-up link of the
   // original (hidden) download bar, cloned so React's own nodes are never moved
   function buildPanel(){
@@ -371,6 +448,7 @@ const JS = `(function(){
     // show the sidebar only once the download panel has gone under the fixed header
     var past = window.scrollY > Math.max(window.innerHeight * 0.75, panelBottom - ${HEADER_H});
     document.documentElement.classList.toggle('hv2-scrolled', past);
+    updateSocial();
   }
 
   function runRenderers(){
@@ -383,6 +461,7 @@ const JS = `(function(){
     active = true;
     document.documentElement.classList.add('hv2');
     buildContainer();
+    buildSocialBar();
     runRenderers();
     onScroll();
     // React renders the download bar late; one shared retry timer (~30s) clones it into the
