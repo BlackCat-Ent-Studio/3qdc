@@ -73,6 +73,10 @@ const SOCIAL = [
 // each logo is drawn in cream on the owner's round badge (overrides/home/mxh-huy-hieu.webp, 318x336 = the 56x59 shown at
 // about 6x; red gem on top, so the plain inner circle sits a little below the middle: centre at 49.9% / 52.9%)
 const SOCIAL_BADGE = '/3qdc-vi/home/mxh-huy-hieu.webp';
+// the bar sits in the owner's navy frame with gold cloud corners (overrides/home/khung-mxh-may.webp, 320x937), drawn as a
+// 9-slice border image: the four cloud corners (the clouds reach 118px in) keep their shape, only the straight edges and
+// the navy middle stretch with the bar's height. Shown 88px wide = 0.275x, so the slices are 122/124 x 0.275
+const SOCIAL_FRAME = '/3qdc-vi/home/khung-mxh-may.webp';
 const socialSvg = (d) => `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="#fff3d6" d="${d}"/></svg>`)}")`;
 
 // "Kho Báu" is hidden for now (2026-09-15): the feature will not be used for a long time. While false the home
@@ -233,12 +237,13 @@ html.hv2.hv2-scrolled.hv2-sb-collapsed #hv2-sidebar{transform:translate(calc(100
 
 /* left social bar (SOCIAL): shown at the top of the home page, vertically centred like the right sidebar (on laptop-height
    windows its lower edge reaches the top of the slogan in the key visual, accepted), tucked away (arrow only) once the key
-   visual is scrolled past (see updateSocial); same frame as the right sidebar, gold icons on dark; the collapse arrow is
-   the sidebar artwork mirrored, on the bar's right edge */
+   visual is scrolled past (see updateSocial); icons inside the cloud frame (SOCIAL_FRAME), padded clear of the corner
+   clouds; the collapse arrow is the sidebar artwork mirrored, on the bar's right edge */
 #hv2-social{display:none}
 html.hv2 #hv2-social{display:flex;flex-direction:column;align-items:center;gap:10px;position:fixed;left:14px;top:50%;
-  transform:translateY(-50%);z-index:12;width:72px;padding:14px 0;box-sizing:border-box;border-radius:12px;transition:transform .3s ease;
-  background:rgba(8,10,22,.82);border:1px solid rgba(214,176,106,.55);box-shadow:0 8px 28px rgba(0,0,0,.45)}
+  transform:translateY(-50%);z-index:12;width:88px;padding:36px 0;box-sizing:border-box;transition:transform .3s ease;
+  border:0 solid transparent;border-image:url("${SOCIAL_FRAME}") 122 124 122 fill / 33.5px 34px 33.5px stretch;
+  filter:drop-shadow(0 8px 18px rgba(0,0,0,.55))}
 #hv2-social .hv2-soc-i{display:block;width:56px;height:59px;box-sizing:border-box;
   background-repeat:no-repeat;background-size:22px 22px,100% 100%;background-position:17px 20px,0 0;
   filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}
@@ -320,7 +325,7 @@ html.hv2 #home-v2{display:block;position:relative;z-index:1;background:#0b0d18;c
   /* social icons: a row at the end of the page instead of the floating bar */
   html.hv2 #hv2-social{position:static;flex-direction:row;flex-wrap:wrap;justify-content:center;gap:14px;width:auto;
     transform:none!important;padding:22px 16px calc(22px + env(safe-area-inset-bottom));border:0;border-top:1px solid rgba(214,176,106,.3);
-    border-radius:0;box-shadow:none;background:#0b0d18}
+    border-radius:0;box-shadow:none;background:#0b0d18;border-image:none;filter:none}
   #hv2-social .hv2-soc-toggle{display:none}
 
   /* sections: one column with phone-sized spacing and titles */
