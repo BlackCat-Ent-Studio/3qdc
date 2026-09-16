@@ -175,8 +175,11 @@ async function findApiSnapshot(pathname, rawPathname, search, body) {
   const cands = [];
   const paths = rawPathname && rawPathname !== pathname ? [pathname, rawPathname] : [pathname];
   for (const dir of API_HOST_DIRS) {
+    const hostRoot = join(ROOT, dir);
     for (const p of paths) {
-      const base = join(ROOT, dir, p);
+      const base = join(hostRoot, p);
+      // a path with ".." (e.g. "..\..\") must never leave this host's snapshot folder
+      if (!base.startsWith(hostRoot + sep)) continue;
       if (bk) cands.push(base + bk);
       cands.push(base + qSuffix(search));
       cands.push(base);
