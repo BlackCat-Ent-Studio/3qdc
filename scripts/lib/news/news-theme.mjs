@@ -14,7 +14,7 @@ export const NEWS_CSS = `
   --text:#ece6d6;--muted:#a39a82;--faint:#6f6a5c;
   --cat-tb:#f3dfa6;--cat-sk:#f08a5d;--cat-cn:#7fc4a4;
   --text-2:#cfc7b1;--nav:#d9d1bc;--prose:#e4ddca;--strong:#fff;
-  --head-bg:rgba(8,10,22,.9);--tint:rgba(214,176,106,.08);--tint-row:rgba(214,176,106,.04);--tint-th:rgba(214,176,106,.14);
+  --tint:rgba(214,176,106,.08);--tint-row:rgba(214,176,106,.04);--tint-th:rgba(214,176,106,.14);
   --on-gold:#1a1405;--toast-bg:var(--gold-hi);--toast-text:#1a1405;
   --gift-bg:linear-gradient(135deg,rgba(214,176,106,.14),rgba(185,98,28,.12));--note-bg:rgba(127,196,164,.08);
   --display:"Cormorant Garamond","Noto Serif",Georgia,serif;
@@ -26,7 +26,7 @@ html[data-theme="light"]{color-scheme:light;
   --text:#2a2014;--muted:#5e4f39;--faint:#6f6044;
   --cat-tb:#8a5a0e;--cat-sk:#b3441c;--cat-cn:#2a6e50;
   --text-2:#4a3a24;--nav:#4a3a24;--prose:#33281a;--strong:#1c140a;
-  --head-bg:rgba(243,234,215,.92);--tint:rgba(154,107,31,.1);--tint-row:rgba(154,107,31,.06);--tint-th:rgba(154,107,31,.12);
+  --tint:rgba(154,107,31,.1);--tint-row:rgba(154,107,31,.06);--tint-th:rgba(154,107,31,.12);
   --on-gold:#fff;--toast-bg:#2a2014;--toast-text:#f3ead7;
   --gift-bg:linear-gradient(135deg,rgba(154,107,31,.12),rgba(168,74,12,.08));--note-bg:rgba(42,110,80,.08)}
 *{box-sizing:border-box}
@@ -39,23 +39,57 @@ button,input{font:inherit;color:inherit}
 img{max-width:100%}
 :focus-visible{outline:2px solid var(--gold-hi);outline-offset:2px}
 .wrap{max-width:1180px;margin:0 auto;padding-inline:16px}
-.site-h{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--head-bg);backdrop-filter:blur(8px);border-bottom:1px solid var(--line-soft)}
-.site-h .wrap{display:flex;align-items:center;gap:20px;min-height:68px}
-.site-h .logo img{height:50px;width:auto;display:block}
-.nav{display:flex;gap:4px;margin-left:auto}
-.nav a{text-decoration:none;padding:8px 14px;border-radius:6px;color:var(--nav);font-weight:500}
-.nav a:hover{color:var(--gold-hi)}
-.nav a.on{color:var(--gold-hi);box-shadow:inset 0 -2px 0 var(--ember)}
+/* header = the home page's: fixed 88px bar, logo at the far left, the home menu art centred (same sizes), background
+   blurred heavily at the top and fading out by 124px with no border. It stays dark in both themes (the menu art is
+   drawn for a dark bar) and is a little darker than the home's, which sits on artwork, so article text scrolling
+   under it does not show through the menu. The blur layers' parent must not get filter / opacity / backdrop-filter. */
+.has-site-h{padding-top:88px}
+.site-h{position:fixed;top:0;left:0;right:0;height:88px;z-index:20}
+.site-h-bg{position:absolute;top:0;left:0;right:0;height:124px;pointer-events:none;
+  background:linear-gradient(180deg,rgba(6,8,18,.78) 0,rgba(6,8,18,.5) 88px,rgba(6,8,18,0) 124px)}
+.site-h-bg i{position:absolute;inset:0}
+.site-h-bg i:nth-child(1){-webkit-backdrop-filter:blur(1.5px);backdrop-filter:blur(1.5px);-webkit-mask-image:linear-gradient(180deg,#000 100px,transparent 124px);mask-image:linear-gradient(180deg,#000 100px,transparent 124px)}
+.site-h-bg i:nth-child(2){-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);-webkit-mask-image:linear-gradient(180deg,#000 76px,transparent 108px);mask-image:linear-gradient(180deg,#000 76px,transparent 108px)}
+.site-h-bg i:nth-child(3){-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);-webkit-mask-image:linear-gradient(180deg,#000 48px,transparent 88px);mask-image:linear-gradient(180deg,#000 48px,transparent 88px)}
+.site-h-bg i:nth-child(4){-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);-webkit-mask-image:linear-gradient(180deg,#000 20px,transparent 64px);mask-image:linear-gradient(180deg,#000 20px,transparent 64px)}
+.site-h .logo{position:absolute;top:44px;left:24px;transform:translateY(-50%)}
+.site-h .logo img{height:clamp(56px,4vw,76px);width:auto;display:block}
+/* menu art: the normal image stays in flow (stable width), the hover art (brush stroke) is laid over it on hover;
+   the row is as tall as the faded background so the hover art is not cut, but only the links take clicks */
+.nav{position:absolute;top:0;left:clamp(170px,13.5vw,260px);right:clamp(200px,15.6vw,300px);height:124px;
+  display:flex;align-items:center;justify-content:center;gap:clamp(18px,2.4vw,46px);pointer-events:none}
+.nav a{position:relative;display:flex;align-items:center;height:124px;margin:0 clamp(2px,.3vw,8px);pointer-events:auto}
+.nav img{display:block;height:clamp(66.5px,4.9vw,94.5px);width:auto}
+.nav img.hv{display:none;position:absolute;left:0;top:50%;height:clamp(108.5px,8.015vw,154px);transform:translate(calc(clamp(66.5px,4.9vw,94.5px) * -0.8815),-50%)}
+.nav a:hover img.nm,.nav a:focus-visible img.nm{visibility:hidden}
+.nav a:hover img.hv,.nav a:focus-visible img.hv{display:block}
+.h-acts{position:absolute;top:44px;right:24px;transform:translateY(-50%);display:flex;align-items:center;gap:16px}
+.site-h .theme-btn{color:#f3dfa6;border-color:rgba(214,176,106,.35)}
+.site-h .theme-btn:hover{border-color:#d6b06a;background:rgba(214,176,106,.12)}
+@media (max-width:760px){
+  .has-site-h{padding-top:64px}
+  .site-h{height:64px}
+  .site-h-bg{height:92px;background:linear-gradient(180deg,rgba(6,8,18,.78) 0,rgba(6,8,18,.5) 64px,rgba(6,8,18,0) 92px)}
+  .site-h .logo{top:32px;left:12px}
+  .site-h .logo img{height:44px}
+  .nav{left:62px;right:58px;height:64px;gap:8px}
+  .nav a{height:64px;margin:0 2px}
+  .nav img{height:40px}
+  .nav img.hv{height:65px;transform:translate(-35px,-50%)}
+  .h-acts{top:32px;right:12px}
+  .site-h .btn-fire{display:none}
+}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;cursor:pointer;border-radius:8px;padding:10px 18px;font-weight:600;text-decoration:none;white-space:nowrap}
 .btn-fire{background:linear-gradient(180deg,var(--ember),var(--ember-dk));color:#fff}
 .btn-fire:hover{filter:brightness(1.08)}
 .btn-ghost{background:transparent;border:1px solid var(--line);color:var(--text)}
 .btn-ghost:hover{border-color:var(--gold);background:var(--tint)}
 .btn-sm{padding:6px 12px;font-size:13.5px}
-@media (max-width:600px){.site-h .btn-fire{display:none}.nav a{padding:8px 10px}}
-.band{position:relative;background-color:var(--ink-2);background-size:cover;background-position:center 30%;border-bottom:1px solid var(--line-soft)}
+/* the artwork band starts under the fixed header, like the home page's key art */
+.band{position:relative;margin-top:-88px;background-color:var(--ink-2);background-size:cover;background-position:center 30%;border-bottom:1px solid var(--line-soft)}
 .band::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(8,10,22,.94) 0%,rgba(8,10,22,.78) 45%,rgba(8,10,22,.35) 100%)}
-.band .wrap{position:relative;padding-block:44px 38px}
+.band .wrap{position:relative;padding-block:132px 38px}
+@media (max-width:760px){.band{margin-top:-64px}.band .wrap{padding-top:108px}}
 .crumb{display:flex;gap:8px;align-items:center;color:var(--muted);font-size:13px;flex-wrap:wrap}
 .crumb a{text-decoration:none}.crumb a:hover{color:var(--gold-hi)}
 .band h1{font-family:var(--display);font-weight:700;font-size:clamp(40px,6vw,64px);line-height:1;margin:10px 0 8px;color:var(--gold-hi)}
@@ -107,7 +141,7 @@ img{max-width:100%}
 @media (max-width:940px){.d-grid{grid-template-columns:minmax(0,1fr)}}
 .prose{max-width:700px;font-size:17px;line-height:1.8;color:var(--prose);overflow-wrap:anywhere}
 .prose>p:first-child{font-size:19px;color:var(--text)}
-.prose h2{font-family:var(--display);font-size:32px;line-height:1.15;color:var(--gold-hi);margin:44px 0 12px;scroll-margin-top:90px}
+.prose h2{font-family:var(--display);font-size:32px;line-height:1.15;color:var(--gold-hi);margin:44px 0 12px;scroll-margin-top:112px}
 .prose h3{font-size:19px;margin:28px 0 8px;color:var(--text)}
 .prose ul,.prose ol{padding-left:22px}
 .prose li{margin:4px 0}
@@ -134,7 +168,7 @@ img{max-width:100%}
 .pn small{color:var(--muted)}
 .pn .nx{text-align:right;grid-column:2}
 @media (max-width:600px){.pn{grid-template-columns:1fr}.pn .nx{text-align:left;grid-column:auto}}
-.aside{position:sticky;top:90px;display:flex;flex-direction:column;gap:26px}
+.aside{position:sticky;top:112px;display:flex;flex-direction:column;gap:26px}
 @media (max-width:940px){.aside{position:static}}
 .aside h2{margin:0 0 10px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
 .toc{list-style:none;margin:0;padding:0;border-left:1px solid var(--line)}
@@ -199,13 +233,22 @@ function themeHelper(key) {
 }
 export const THEME_JS = '(' + themeHelper.toString() + ')(' + JSON.stringify(THEME_KEY) + ');';
 
-// active: 'home' | 'news' — which menu item is underlined
+// the home header's menu art (overrides/home): [href, key, file stem, label, normal w×h, hover w×h]
+const MENU = [
+  ['/', 'home', 'menu-01-trang-chu', 'Trang chủ', [385, 205], [835, 395]],
+  ['/tin-tuc', 'news', 'menu-02-tin-tuc', 'Tin tức', [305, 205], [585, 395]],
+];
+
+// active: 'home' | 'news' — the current page's menu item (marked for screen readers only, like the home menu)
 export function siteHeader(active = 'news') {
-  return `<header class="site-h"><div class="wrap">
+  const items = MENU.map(([href, key, art, label, n, h]) => `<a href="${href}" aria-label="${label}"${active === key ? ' aria-current="page"' : ''}>`
+    + `<img class="nm" src="/3qdc-vi/home/${art}.png" alt="" width="${n[0]}" height="${n[1]}">`
+    + `<img class="hv" src="/3qdc-vi/home/${art}-hover.png" alt="" width="${h[0]}" height="${h[1]}"></a>`).join('');
+  return `<header class="site-h"><div class="site-h-bg" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
 <a class="logo" href="/" aria-label="3Q Đại Chiến — Trang chủ"><img src="${LOGO}" alt="3Q Đại Chiến" width="203" height="152"></a>
-<nav class="nav" aria-label="Menu chính"><a href="/"${active === 'home' ? ' class="on" aria-current="page"' : ''}>Trang chủ</a><a href="/tin-tuc"${active === 'news' ? ' class="on" aria-current="page"' : ''}>Tin tức</a></nav>
-${THEME_BUTTON}<span class="btn btn-fire" role="button" tabindex="0">Tải game</span>
-</div></header>`;
+<nav class="nav" aria-label="Menu chính">${items}</nav>
+<div class="h-acts">${THEME_BUTTON}<span class="btn btn-fire" role="button" tabindex="0">Tải game</span></div>
+</header>`;
 }
 
 export const siteFooter = () => `<footer class="site-f"><div class="wrap"><span>© 2026 3Q Đại Chiến</span><span>Trang tin chính thức</span></div></footer>`;
@@ -241,7 +284,7 @@ ${head}
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="${FONTS}">
 <style>${NEWS_CSS}</style>
-</head><body>
+</head><body class="has-site-h">
 ${siteHeader(active)}
 ${main}
 ${siteFooter()}
