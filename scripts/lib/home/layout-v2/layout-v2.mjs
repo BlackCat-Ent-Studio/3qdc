@@ -38,7 +38,7 @@ const DL_ART = [
   { href: null, src: '/3qdc-vi/home/nut-tai-google-play.png', label: 'Tải trên Google Play' },
   { href: null, src: '/3qdc-vi/home/nut-dang-ky-nhanh.png', label: 'Đăng ký nhanh' },
 ];
-const DL_TOPUP = '/3qdc-vi/home/nut-nap-the.png';
+const DL_TOPUP = '/3qdc-vi/home/nut-nap-the.webp';
 // sidebar collapse arrow (omg3q floating-bar artwork, 86x58 strip): ">" (collapse) at 0 0, "<" (expand) at -44px 0
 const SB_TOGGLE = '/3qdc-vi/home/sidebar-toggle.png';
 

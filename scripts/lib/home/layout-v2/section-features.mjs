@@ -6,15 +6,16 @@
 // The banners are Vietnamese versions of the ones the /dac-sac accordion shows (the umi bundle
 // hardcodes those in pcConfig.versionImg[].banner, mqaf*.png), served from overrides/home at
 // 1211x680 in the same order. Only the home page uses these; /dac-sac keeps the originals.
-// Banners 2, 4 and 5 are the artist's PNG files as delivered (no re-encoding), the others WEBP.
+// All five are WEBP; 2, 4 and 5 are encoded at quality 0.95 from the artist's PNG files (1.4–1.6MB each ->
+// 250–310KB), which stay next to them in overrides/home.
 
 const BANNER_DIR = '/3qdc-vi/home/';
 const BANNERS = [
   'tinh-nang-1-vi.webp',
-  'tinh-nang-2-vi.png',
+  'tinh-nang-2-vi.webp',
   'tinh-nang-3-vi.webp',
-  'tinh-nang-4-vi.png',
-  'tinh-nang-5-vi.png',
+  'tinh-nang-4-vi.webp',
+  'tinh-nang-5-vi.webp',
 ].map((f) => BANNER_DIR + f);
 
 // centre slide width as a fraction of the track; the track height follows the banner ratio
