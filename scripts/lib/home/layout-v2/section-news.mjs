@@ -5,6 +5,11 @@
 // Left: autoplaying slider of the cover pictures of those same articles (the rows of the selected tab, in the same
 // order); a slide opens its article. When the tab has no article with a cover, the Vietnamese banner shows alone.
 
+// Compact layout (COMPACT_MQ): slider on top and tabs + list under it in one column, the slider follows a sideways swipe,
+// tabs and rows are finger-sized and titles take up to two lines.
+
+import { COMPACT_MQ } from './compact.mjs';
+
 // tab label and news category id; the first tab is selected by default
 const TABS = [
   ['Thông báo', 'thong-bao'],
@@ -45,6 +50,20 @@ export const NEWS_CSS = `
 #hv2-news .hv2-more{display:block;margin-top:16px;padding:10px;text-align:center;border:1px solid rgba(214,176,106,.6);
   border-radius:8px;color:#f3dfa6;text-decoration:none;cursor:pointer}
 #hv2-news .hv2-more:hover{background:rgba(214,176,106,.14)}
+@media ${COMPACT_MQ}{
+  #hv2-news .hv2-news{grid-template-columns:minmax(0,1fr);gap:16px;padding:12px;border-radius:12px}
+  #hv2-news .hv2-slider{touch-action:pan-y pinch-zoom;border-radius:8px}
+  /* dots keep their look; the invisible ring around each makes a finger-sized target */
+  #hv2-news .hv2-dots{gap:18px;bottom:12px}
+  #hv2-news .hv2-dot{position:relative}
+  #hv2-news .hv2-dot:before{content:"";position:absolute;inset:-12px}
+  #hv2-news .hv2-tabs{gap:4px;margin-bottom:6px}
+  #hv2-news .hv2-tab{flex:1 1 0;min-width:0;min-height:44px;padding:8px 4px;font-size:15px;white-space:nowrap}
+  #hv2-news .hv2-list{min-height:0}
+  #hv2-news .hv2-row{min-height:56px;padding:8px 2px}
+  #hv2-news .hv2-row-title{white-space:normal;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-height:1.35}
+  #hv2-news .hv2-more{display:flex;align-items:center;justify-content:center;min-height:44px;box-sizing:border-box;margin-top:12px}
+}
 `;
 
 export const NEWS_JS = `(function(){
@@ -108,8 +127,13 @@ export const NEWS_JS = `(function(){
     // pause only for a real mouse hover (touch taps would otherwise stop autoplay for good)
     slider.addEventListener('pointerenter', function(e){ if (e.pointerType === 'mouse') hovering = true; });
     slider.addEventListener('pointerleave', function(){ hovering = false; });
+    // a swipe also holds autoplay for one full interval, so the slide just chosen is not replaced right away
+    var heldUntil = 0;
+    if (api.swipe) api.swipe(slider,
+      function(){ if (items.length > 1){ heldUntil = Date.now() + 4500; show((current + 1) % items.length); } },
+      function(){ if (items.length > 1){ heldUntil = Date.now() + 4500; show((current - 1 + items.length) % items.length); } });
     setInterval(function(){
-      if (hovering || items.length < 2 || !document.documentElement.classList.contains('hv2')) return;
+      if (hovering || Date.now() < heldUntil || items.length < 2 || !document.documentElement.classList.contains('hv2')) return;
       show((current + 1) % items.length);
     }, 4500);
 

@@ -16,11 +16,21 @@ const MIN_FRAME_H = 560;
 // frame off and on again uses location.replace for the same reason. Otherwise the back button only steps the hidden frame.
 const FRAME_URL = '/tuong#/main/person?rowId=0&tbId=454680400827016707';
 
+// Compact layout (COMPACT_MQ): the frame is not shown and never loaded (the hero page is laid out for a wide screen and
+// brings a whole app plus a background video); section-heroes-mobile.mjs shows its own hero block instead. Widening the
+// window past the compact width loads the frame as usual; narrowing it again stops the frame.
+
+import { COMPACT_MQ } from './compact.mjs';
+
 export const HEROES_CSS = `
 #home-v2 #hv2-heroes.hv2-section{max-width:none;padding:72px 0 64px}
 #hv2-heroes .hv2-heroes-stage{background:#dfe6f3}
 #hv2-heroes .hv2-heroes-frame{display:block;margin:0 auto;width:100%;height:calc(100vh - ${HEADER_H}px);min-height:${MIN_FRAME_H}px;
   border:0;background:#dfe6f3}
+@media ${COMPACT_MQ}{
+  #home-v2 #hv2-heroes.hv2-section{max-width:720px;padding:40px max(16px,env(safe-area-inset-left)) 36px}
+  #hv2-heroes .hv2-heroes-stage{display:none}
+}
 `;
 
 export const HEROES_JS = `(function(){
@@ -55,14 +65,25 @@ export const HEROES_JS = `(function(){
       if (!started){ started = true; frame.src = url; return; }
       try { frame.contentWindow.location.replace(url); } catch (e) { frame.src = url; }
     }
-    function load(){ wanted = true; if (!showing){ showing = true; go(${JSON.stringify(FRAME_URL)}); } }
+    var compact = api.compact || function(){ return false; };
+    function load(){ wanted = true; if (!showing && !compact()){ showing = true; go(${JSON.stringify(FRAME_URL)}); } }
+    function stopFrame(){ if (showing){ showing = false; go('about:blank'); } }
     // leaving the home route without a reload hides the layout: stop the embedded app, its background
     // video and any CV audio, and bring the hero page back when the home route returns
     window.addEventListener('hashchange', function(){
       if (!wanted) return;
       if (document.documentElement.classList.contains('hv2')){ size(); load(); }
-      else if (showing){ showing = false; go('about:blank'); }
+      else stopFrame();
     });
+    // compact width: no frame; back to a wide window: the frame loads if the block was already reached
+    if (api.compactQuery){
+      var onCompact = function(){
+        if (compact()) stopFrame();
+        else if (wanted && document.documentElement.classList.contains('hv2')){ size(); load(); }
+      };
+      if (api.compactQuery.addEventListener) api.compactQuery.addEventListener('change', onCompact);
+      else if (api.compactQuery.addListener) api.compactQuery.addListener(onCompact);
+    }
     if (!('IntersectionObserver' in window)){ load(); return; }
     var io = new IntersectionObserver(function(entries){
       if (!entries.some(function(e){ return e.isIntersecting; })) return;

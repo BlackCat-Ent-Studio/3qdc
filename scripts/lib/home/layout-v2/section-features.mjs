@@ -9,6 +9,11 @@
 // All five are WEBP; 2, 4 and 5 are encoded at quality 0.95 from the artist's PNG files (1.4–1.6MB each ->
 // 250–310KB), which stay next to them in overrides/home.
 
+// Compact layout (COMPACT_MQ): one banner across the whole width at a time, sliding in from the side; a sideways swipe,
+// the arrows (on the banner's edges) or a dot change it.
+
+import { COMPACT_MQ } from './compact.mjs';
+
 const BANNER_DIR = '/3qdc-vi/home/';
 const BANNERS = [
   'tinh-nang-1-vi.webp',
@@ -49,6 +54,20 @@ export const FEATURES_CSS = `
 #hv2-features .hv2-feat-dot{width:12px;height:12px;padding:0;border-radius:6px;border:1px solid #f3dfa6;background:transparent;
   cursor:pointer;transition:width .3s ease,background .3s ease}
 #hv2-features .hv2-feat-dot.is-on{width:30px;background:#f3dfa6}
+@media ${COMPACT_MQ}{
+  #hv2-features .hv2-feat-track{aspect-ratio:1211/680;touch-action:pan-y pinch-zoom;border-radius:10px}
+  #hv2-features .hv2-feat-slide{width:100%;border-radius:10px}
+  #hv2-features .hv2-feat-slide.is-active{transform:translateX(-50%)}
+  #hv2-features .hv2-feat-slide.is-prev,#hv2-features .hv2-feat-slide.is-far-prev{transform:translateX(-150%);opacity:1;filter:none;pointer-events:none}
+  #hv2-features .hv2-feat-slide.is-next,#hv2-features .hv2-feat-slide.is-far-next{transform:translateX(50%);opacity:1;filter:none;pointer-events:none}
+  #hv2-features .hv2-feat-slide.is-far-prev,#hv2-features .hv2-feat-slide.is-far-next{opacity:0}
+  #hv2-features .hv2-feat-nav{top:calc(50% - 22px);width:44px;height:44px;font-size:28px;background:rgba(8,10,22,.6)}
+  #hv2-features .hv2-feat-nav.is-left{left:6px}
+  #hv2-features .hv2-feat-nav.is-right{right:6px}
+  #hv2-features .hv2-feat-dots{gap:18px;height:44px;align-items:center}
+  #hv2-features .hv2-feat-dot{position:relative}
+  #hv2-features .hv2-feat-dot:before{content:"";position:absolute;inset:-14px -6px}
+}
 @media (prefers-reduced-motion:reduce){
   #hv2-features .hv2-feat-slide,#hv2-features .hv2-feat-dot{transition:none}
 }
@@ -97,6 +116,7 @@ export const FEATURES_JS = `(function(){
     wrap.addEventListener('focusin', function(){ focused = true; });
     wrap.addEventListener('focusout', function(e){ if (!wrap.contains(e.relatedTarget)){ focused = false; restart(); } });
     document.addEventListener('visibilitychange', function(){ if (!document.hidden) restart(); });
+    if (api.swipe) api.swipe(track, function(){ go(cur + 1); }, function(){ go(cur - 1); });
     host.appendChild(wrap);
 
     function render(){

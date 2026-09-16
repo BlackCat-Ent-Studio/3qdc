@@ -45,6 +45,8 @@ import { handleNews } from './scripts/lib/news/news-routes.mjs';
 import { SITE_ORIGIN } from './scripts/lib/news/news-config.mjs';
 // Vietnamese title / description / share tags for the mirrored build-B entry page
 import { viHead } from './scripts/lib/site-head.mjs';
+// the route wrapper of the umi bundle, sent without its phone / tablet redirect to unmirrored /m/ pages
+import { WRAPPERS_PATH, patchWrappers } from './scripts/lib/home/mobile-no-redirect.mjs';
 
 const ROOT = join(process.cwd(), 'mirror');
 const ENTRY_B = join(ROOT, 'index.html');          // build B entry (umi.62525e29)
@@ -76,7 +78,8 @@ const SHELL_HTML = `<!DOCTYPE html><html lang="vi"><head>
 </body></html>`;
 
 // Force build-B app off its default (#/fab, unmirrored here) onto its real route.
-const RF = (route) => `<script>(function(){var h=location.hash;if(!h||h==='#'||h==='#/'||h.indexOf('#/fab')===0){location.hash='${route}';}})();</script>`;
+// (an address on the app's mobile pages, #/m/..., is also sent to the section: those pages are not mirrored)
+const RF = (route) => `<script>(function(){var h=location.hash;if(!h||h==='#'||h==='#/'||h.indexOf('#/fab')===0||h.indexOf('#/m/')===0){location.hash='${route}';}})();</script>`;
 
 // Clean sitemap: each path → one section (build B), so /tuong → Tướng, /huong-dan → wiki, etc.
 // /tin-tuc is the site's own news page now; the old news section stays reachable at /__internal/tin-tuc.
@@ -134,6 +137,20 @@ async function send(res, file, type, req) {
   h['Content-Length'] = st.size;
   res.writeHead(200, h);
   createReadStream(file).pipe(res);
+}
+// The route wrapper file with the mobile redirect switched off, cached per file change. When the file is not the expected
+// build (the redirect test is not found exactly once) it is sent unchanged and the problem is logged once.
+let wrappersCache = null;
+async function sendWrappers(res, file) {
+  const st = await stat(file);
+  if (!wrappersCache || wrappersCache.mtimeMs !== st.mtimeMs) {
+    const source = await readFile(file, 'utf8');
+    const patched = patchWrappers(source);
+    if (patched === null) console.error('[mobile-no-redirect] redirect test not found in ' + WRAPPERS_PATH + ': sent unchanged');
+    wrappersCache = { mtimeMs: st.mtimeMs, body: Buffer.from(patched === null ? source : patched, 'utf8') };
+  }
+  res.writeHead(200, { 'Content-Type': MIME['.js'], 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-store', 'Content-Length': wrappersCache.body.length });
+  res.end(wrappersCache.body);
 }
 function sendHtml(res, html) {
   res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-cache' });
@@ -243,6 +260,7 @@ export function startServer(port = 8080) {
       const safe = normalize(pathname).replace(/^(\.\.[/\\])+/, '');
       const file = join(ROOT, safe);
       const s = await stat(file).catch(() => null);
+      if (s && s.isFile() && pathname === WRAPPERS_PATH) return await sendWrappers(res, file);
       if (s && s.isFile()) return await send(res, file, MIME[extname(file).toLowerCase()] || 'application/octet-stream', req);
 
       // --- API snapshot (same-origin; POST keyed by sha1(body)) ---

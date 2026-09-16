@@ -16,10 +16,17 @@ import { HEROES_CSS, HEROES_JS } from './section-heroes.mjs';
 import { FEATURES_CSS, FEATURES_JS } from './section-features.mjs';
 import { TREASURE_CSS, TREASURE_JS } from './section-treasure.mjs';
 import { HERO_SKILLS_CSS, HERO_SKILLS_JS } from './embed-hero-skills.mjs';
+import { HEROES_MOBILE_CSS, HEROES_MOBILE_JS } from './section-heroes-mobile.mjs';
+import { COMPACT_MQ, COMPACT_HEADER_H } from './compact.mjs';
 
 const HEADER_H = 88;
 // the blurred header background runs this far down, fading out below the 88px bar
 const HEADER_FADE = HEADER_H + 36;
+
+// Phones, touch tablets and narrow windows (COMPACT_MQ, see compact.mjs) get the compact layout: a 56px header
+// with the logo and a menu button, the whole key art at its own ratio under the header, the download panel below it, the
+// sections in one column and the social icons as a row at the end of the page. Every compact rule sits inside COMPACT_MQ,
+// so wider windows keep the desktop layout exactly as it is.
 
 // Key-visual background: the Vietnamese artwork served from overrides/home (KV_IMAGE), replacing the original
 // page_642a4eb04023f80ab7f3fb17/mqaggnekipux19ptb5s.jpg; cover-scaled, top-aligned. Natural size and the bottom
@@ -247,6 +254,74 @@ html.hv2 #home-v2{display:block;position:relative;z-index:1;background:#0b0d18;c
 #home-v2 .hv2-section:last-of-type{min-height:calc(100vh - ${HEADER_H}px - 136px)}
 #home-v2 .hv2-title{margin:0 0 36px;text-align:center;font-size:40px;font-weight:800;letter-spacing:.06em;
   text-transform:uppercase;color:#f3dfa6;text-shadow:0 2px 0 #6b3a14,0 0 22px rgba(243,197,106,.35)}
+#hv2-menu-btn{display:none}
+
+/* ---- compact layout (phones, touch tablets, narrow windows): see compact.mjs ---- */
+@media ${COMPACT_MQ}{
+  html.hv2,html.hv2 body{overflow-x:hidden;overflow-x:clip}
+  /* header: a 56px bar (one blur layer, darker so the page never shows through the logo and menu button) */
+  html.hv2 #hv2-header-bg{height:${COMPACT_HEADER_H}px;background:rgba(6,8,18,.82);
+    -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid rgba(214,176,106,.25)}
+  #hv2-header-bg .hv2-hb{display:none}
+  html.hv2 .star-site-index-logo{top:${COMPACT_HEADER_H / 2}px!important;left:max(12px,env(safe-area-inset-left))!important;height:44px!important}
+  html.hv2 #hv2-menu-btn{display:flex;align-items:center;justify-content:center;position:fixed;z-index:13;
+    top:${(COMPACT_HEADER_H - 44) / 2}px;right:max(8px,env(safe-area-inset-right));width:44px;height:44px;padding:0;
+    border:1px solid rgba(214,176,106,.6);border-radius:10px;background:rgba(20,22,40,.9);cursor:pointer}
+  #hv2-menu-btn span,#hv2-menu-btn span:before,#hv2-menu-btn span:after{display:block;position:relative;width:20px;height:2px;
+    border-radius:1px;background:#f3dfa6;transition:transform .2s ease,background .2s ease}
+  #hv2-menu-btn span:before,#hv2-menu-btn span:after{content:"";position:absolute;left:0}
+  #hv2-menu-btn span:before{top:-6px}
+  #hv2-menu-btn span:after{top:6px}
+  html.hv2-menu-open #hv2-menu-btn span{background:transparent}
+  html.hv2-menu-open #hv2-menu-btn span:before{transform:translateY(6px) rotate(45deg)}
+  html.hv2-menu-open #hv2-menu-btn span:after{transform:translateY(-6px) rotate(-45deg)}
+  /* the image menu becomes a drop-down list under the bar, opened by the menu button */
+  html.hv2 .star-site-index-navs{top:${COMPACT_HEADER_H}px!important;left:0!important;right:0!important;height:auto!important;
+    display:none!important;flex-direction:column!important;align-items:stretch!important;justify-content:flex-start!important;gap:0;
+    padding:6px 0 10px!important;background:#080a16!important;border-bottom:1px solid rgba(214,176,106,.35);
+    box-shadow:0 14px 30px rgba(0,0,0,.5);max-height:calc(100vh - ${COMPACT_HEADER_H}px);overflow-y:auto}
+  html.hv2.hv2-menu-open .star-site-index-navs{display:flex!important}
+  html.hv2 .star-site-index-navs__item{height:64px!important;padding:0 max(20px,env(safe-area-inset-left))!important;
+    border-bottom:1px solid rgba(214,176,106,.12)}
+  html.hv2 .star-site-index-navs__item:last-child{border-bottom:0}
+  html.hv2 .star-site-index-navs__item > a{width:100%}
+  html.hv2 .star-site-index-navs__item-img{height:56px!important}
+  html.hv2 .star-site-index-navs__item:hover .star-site-index-navs__item-img{visibility:visible}
+  html.hv2 .star-site-index-navs__item-img_hover,html.hv2 .star-site-index-navs__item:hover .star-site-index-navs__item-img_hover{display:none!important}
+
+  /* key art: the whole picture at its own ratio under the bar (the slogan printed in it stays whole); the app's
+     decorations of the full-screen desktop art are not used */
+  html.hv2 .star-site-index{height:calc(${COMPACT_HEADER_H}px + 100vw * ${KV.height} / ${KV.width})!important;min-height:0!important}
+  html.hv2 .star-site-index .star-site-imgBg{top:${COMPACT_HEADER_H}px!important;bottom:auto!important;height:calc(100vw * ${KV.height} / ${KV.width})!important;
+    background-size:100% 100%!important;background-position:center top!important}
+  html.hv2 .star-site-index-decorate,html.hv2 .star-site-index-slogan{display:none!important}
+
+  /* download panel: full width under the key art, the four buttons in two columns; no QR (a phone cannot scan its own screen) */
+  html.hv2 #hv2-dlpanel{left:max(12px,calc(50% - 280px));right:max(12px,calc(50% - 280px));transform:none;display:block;padding:12px;border-radius:14px}
+  #hv2-dlpanel .hv2-dl-qr{display:none}
+  #hv2-dlpanel .hv2-dl-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;max-width:520px;margin:0 auto}
+  #hv2-dlpanel .hv2-dl-grid a{display:flex;justify-content:center}
+  #hv2-dlpanel .hv2-dl-grid img{width:100%!important;height:auto!important;max-width:240px;aspect-ratio:197/60}
+  html.hv2 #hv2-sidebar{display:none!important}
+  /* 320px phones: tighter panel so each button stays about 42px tall */
+  @media (max-width:359px){
+    html.hv2 #hv2-dlpanel{left:8px;right:8px;padding:8px}
+    #hv2-dlpanel .hv2-dl-grid{gap:8px}
+  }
+
+  /* social icons: a row at the end of the page instead of the floating bar */
+  html.hv2 #hv2-social{position:static;flex-direction:row;flex-wrap:wrap;justify-content:center;gap:14px;width:auto;
+    transform:none!important;padding:22px 16px calc(22px + env(safe-area-inset-bottom));border:0;border-top:1px solid rgba(214,176,106,.3);
+    border-radius:0;box-shadow:none;background:#0b0d18}
+  #hv2-social .hv2-soc-toggle{display:none}
+
+  /* sections: one column with phone-sized spacing and titles */
+  #home-v2 .hv2-section{padding:40px max(16px,env(safe-area-inset-left)) 36px;max-width:720px}
+  /* as on desktop, the last block is at least a window tall below the bar (76px = its top + bottom padding), so the menu can
+     still bring it up to the bar */
+  #home-v2 .hv2-section:last-of-type{min-height:calc(100vh - ${COMPACT_HEADER_H}px - 76px)}
+  #home-v2 .hv2-title{margin:0 0 20px;font-size:clamp(24px,6.4vw,32px);letter-spacing:.04em}
+}
 `;
 
 const JS = `(function(){
@@ -269,6 +344,10 @@ const JS = `(function(){
   var sidebarTimer = null;
   var active = false;
   var panelBottom = 0; // document y of the download panel's bottom edge; the sidebar waits until it is scrolled past
+  // compact layout (COMPACT_MQ): phones and tablets held upright
+  var COMPACT = window.matchMedia ? window.matchMedia(${JSON.stringify(COMPACT_MQ)}) : null;
+  function compact(){ return !!(COMPACT && COMPACT.matches); }
+  function headerH(){ return compact() ? ${COMPACT_HEADER_H} : ${HEADER_H}; }
 
   function isHome(){
     if (EMBED) return false;
@@ -428,6 +507,8 @@ const JS = `(function(){
     var grid = el('div', { 'class': 'hv2-dl-grid' });
     platforms.forEach(function(a){ grid.appendChild(a); });
     var panel = el('div', { id: 'hv2-dlpanel', 'data-home-v2': '' }, [qr, grid]);
+    // in the compact layout the buttons set the panel height only once their images arrive: place the panel again then
+    platforms.forEach(function(a){ var img = a.querySelector('img'); if (img) img.addEventListener('load', onResize); });
     var store = dl.querySelector('a.star-site-index-store');
     if (store && SHOW_TOPUP) panel.appendChild(topupBox(store));
     document.body.appendChild(panel);
@@ -443,10 +524,21 @@ const JS = `(function(){
     var ph = panel ? panel.offsetHeight : 0;
     if (!ph) return false;
     var vh = window.innerHeight;
-    var scale = Math.max(window.innerWidth / KV.width, vh / KV.height);
-    var top = Math.max(${HEADER_H} + 8, Math.round(KV.eventFrameBottom * scale) + 6);
+    var top, push;
+    if (compact()){
+      // compact: the key art block (bar + whole picture) ends where the app's index element ends; the panel follows it
+      var index = document.querySelector('.star-site-index');
+      var artBottom = index ? Math.round(index.getBoundingClientRect().bottom + window.scrollY)
+        : ${COMPACT_HEADER_H} + Math.round(window.innerWidth * KV.height / KV.width);
+      top = artBottom + 12;
+      push = Math.max(0, top + ph + 12 - artBottom);
+    } else {
+      var scale = Math.max(window.innerWidth / KV.width, vh / KV.height);
+      top = Math.max(${HEADER_H} + 8, Math.round(KV.eventFrameBottom * scale) + 6);
+      push = Math.max(0, top + ph + 24 - vh);
+    }
     html.style.setProperty('--hv2-dl-top', top + 'px');
-    html.style.setProperty('--hv2-dl-push', Math.max(0, top + ph + 24 - vh) + 'px');
+    html.style.setProperty('--hv2-dl-push', push + 'px');
     panelBottom = top + ph;
     onScroll();
     html.classList.add('hv2-dl-ready');
@@ -472,10 +564,40 @@ const JS = `(function(){
     renderers.forEach(function(fn){ try { fn(api); } catch (e) { console.error('[hv2]', e); } });
   }
 
+  // compact header menu: the button opens the image menu as a drop-down list; picking an item, tapping elsewhere,
+  // Escape or leaving the compact width closes it
+  function setMenuOpen(on){
+    var html = document.documentElement;
+    html.classList.toggle('hv2-menu-open', on);
+    var b = document.getElementById('hv2-menu-btn');
+    if (b){ b.setAttribute('aria-expanded', on ? 'true' : 'false'); b.setAttribute('aria-label', on ? 'Đóng menu' : 'Mở menu'); }
+  }
+  function buildMenuButton(){
+    if (document.getElementById('hv2-menu-btn')) return;
+    var b = el('button', { type: 'button', id: 'hv2-menu-btn', 'data-home-v2': '', 'aria-expanded': 'false', 'aria-label': 'Mở menu' }, [el('span')]);
+    b.addEventListener('click', function(){ setMenuOpen(!document.documentElement.classList.contains('hv2-menu-open')); });
+    // first in the page, so the keyboard reaches it before the menu items it opens
+    document.body.insertBefore(b, document.body.firstChild);
+    // pointerdown (not click): iOS Safari sends no click for a tap on plain content, so the menu would stay open
+    document.addEventListener('pointerdown', function(e){
+      if (!document.documentElement.classList.contains('hv2-menu-open') || !e.target.closest) return;
+      if (!e.target.closest('#hv2-menu-btn') && !e.target.closest('.star-site-index-navs')) setMenuOpen(false);
+    }, true);
+    document.addEventListener('keydown', function(e){
+      if (e.key === 'Escape' && document.documentElement.classList.contains('hv2-menu-open')){ setMenuOpen(false); b.focus(); }
+    });
+    if (COMPACT){
+      // switching layouts (a tablet turned, a window resized): close the menu and place the download panel again
+      var onChange = function(){ setMenuOpen(false); if (active) placePanel(); };
+      if (COMPACT.addEventListener) COMPACT.addEventListener('change', onChange); else if (COMPACT.addListener) COMPACT.addListener(onChange);
+    }
+  }
+
   function apply(){
     active = true;
     document.documentElement.classList.add('hv2');
     buildContainer();
+    buildMenuButton();
     buildSocialBar();
     runRenderers();
     onScroll();
@@ -491,6 +613,7 @@ const JS = `(function(){
   }
   function teardown(){
     active = false;
+    setMenuOpen(false);
     document.documentElement.classList.remove('hv2', 'hv2-scrolled');
   }
   // The main site is served at /: the app only renders the home page on #/index (set before it starts), but the address
@@ -507,9 +630,10 @@ const JS = `(function(){
   function sync(){
     if (!document.body) return;
     var h = location.hash;
-    // back at / without a hash (the back button) or sent to the unmirrored #/fab: put #/index back in place without an
-    // event, before the router reads the address (this hashchange listener is registered before the router's)
-    if (ROOT_HOME && (!h || h === '#' || h === '#/' || h.indexOf('#/fab') === 0)) {
+    // back at / without a hash (the back button), sent to the unmirrored #/fab, or opened on the app's mobile address
+    // (#/m/..., not mirrored either): put #/index back in place without an event, before the router reads the address
+    // (this hashchange listener is registered before the router's)
+    if (ROOT_HOME && (!h || h === '#' || h === '#/' || h.indexOf('#/fab') === 0 || h.indexOf('#/m/') === 0)) {
       history.replaceState(history.state, '', location.pathname + location.search + '#/index');
     }
     if (isHome()) { apply(); setTimeout(stripIndexHash, 0); } else teardown();
@@ -551,7 +675,7 @@ const JS = `(function(){
     var s = section(entry[1]);
     // a section still waiting for its data is display:none and has no position yet
     if (!s || !s.hasAttribute('data-ready')) return null;
-    return Math.max(0, Math.round(s.getBoundingClientRect().top + window.scrollY - ${HEADER_H}));
+    return Math.max(0, Math.round(s.getBoundingClientRect().top + window.scrollY - headerH()));
   }
   function onNavClick(e){
     if (!active || !e.target.closest) return;
@@ -562,6 +686,7 @@ const JS = `(function(){
     // ctrl / cmd / shift click: the browser opens the link as usual, this page stays where it is
     if (e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
     e.preventDefault();
+    setMenuOpen(false);
     var top = navTarget(entry);
     if (top === null) return;
     window.scrollTo({ top: top, behavior: 'smooth' });
@@ -577,10 +702,59 @@ const JS = `(function(){
     clearTimeout(navFix);
     window.addEventListener('scrollend', fix);
     navFix = setTimeout(fix, 900);
+    if (compact()) keepLanding(entry);
+  }
+  // compact layout: the blocks above the target fill in (hero data, pictures) while or after the page scrolls there, so for a
+  // few seconds each change of the content height moves the page back onto the target, until the visitor scrolls or swipes
+  var landingStop = null;
+  function keepLanding(entry){
+    if (landingStop) landingStop();
+    var home = document.getElementById('home-v2');
+    if (!home || !window.ResizeObserver) return;
+    var ro = new ResizeObserver(function(){
+      var t = navTarget(entry);
+      if (t !== null && Math.abs(t - window.scrollY) > 2) window.scrollTo({ top: t, behavior: 'auto' });
+    });
+    var timer = null;
+    var stop = function(){
+      ro.disconnect(); clearTimeout(timer);
+      window.removeEventListener('touchstart', stop); window.removeEventListener('wheel', stop);
+      if (landingStop === stop) landingStop = null;
+    };
+    landingStop = stop;
+    // the smooth scroll runs first; the observer only corrects once it has ended (scrollend or the 900ms fallback)
+    setTimeout(function(){ if (landingStop === stop) ro.observe(home); }, 950);
+    timer = setTimeout(stop, 4000);
+    window.addEventListener('touchstart', stop, { passive: true });
+    window.addEventListener('wheel', stop, { passive: true });
+  }
+
+  // horizontal swipe on a touch screen (a mouse keeps its own clicks and drags): a finger move of more than 40px that is
+  // mostly sideways calls onNext (to the left) or onPrev (to the right), and the click it may end with is dropped. The
+  // node needs touch-action:pan-y pinch-zoom so an upward or downward swipe over it still scrolls the page (that cancels the
+  // swipe) and two fingers still zoom.
+  function swipe(node, onNext, onPrev){
+    var x0 = null, y0 = 0, pid = null, swiped = false;
+    node.addEventListener('pointerdown', function(e){
+      if (e.pointerType === 'mouse') return;
+      x0 = e.clientX; y0 = e.clientY; pid = e.pointerId; swiped = false;
+    });
+    node.addEventListener('pointerup', function(e){
+      if (x0 === null || e.pointerId !== pid) return;
+      var dx = e.clientX - x0, dy = e.clientY - y0;
+      x0 = null;
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.2){
+        swiped = true;
+        setTimeout(function(){ swiped = false; }, 400);
+        if (dx < 0) onNext(); else onPrev();
+      }
+    });
+    node.addEventListener('pointercancel', function(){ x0 = null; });
+    node.addEventListener('click', function(e){ if (swiped){ swiped = false; e.preventDefault(); e.stopPropagation(); } }, true);
   }
 
   var api = {
-    el: el, local: local, snap: snap, section: section, ready: ready,
+    el: el, local: local, snap: snap, section: section, ready: ready, compact: compact, compactQuery: COMPACT, swipe: swipe,
     onMount: function(fn){ renderers.push(fn); if (mounted) { try { fn(api); } catch (e) { console.error('[hv2]', e); } } }
   };
   window.__hv2 = api;
@@ -600,10 +774,11 @@ const JS = `(function(){
 // Section scripts come after the layout script so window.__hv2 exists when they register; the hero skill icons
 // script needs the html.hv2-embed flag the layout script sets inside the home hero iframe.
 export const LAYOUT_V2_HTML =
-  `<style data-home-v2>${CSS}${NEWS_CSS}${HEROES_CSS}${FEATURES_CSS}${HERO_SKILLS_CSS}${SHOW_TREASURE ? TREASURE_CSS : TREASURE_OFF_CSS}</style>` +
+  `<style data-home-v2>${CSS}${NEWS_CSS}${HEROES_CSS}${HEROES_MOBILE_CSS}${FEATURES_CSS}${HERO_SKILLS_CSS}${SHOW_TREASURE ? TREASURE_CSS : TREASURE_OFF_CSS}</style>` +
   `<script data-home-v2>${JS}</script>` +
   `<script data-home-v2>${HERO_SKILLS_JS}</script>` +
   `<script data-home-v2>${NEWS_JS}</script>` +
   `<script data-home-v2>${HEROES_JS}</script>` +
+  `<script data-home-v2>${HEROES_MOBILE_JS}</script>` +
   `<script data-home-v2>${FEATURES_JS}</script>` +
   (SHOW_TREASURE ? `<script data-home-v2>${TREASURE_JS}</script>` : '');
