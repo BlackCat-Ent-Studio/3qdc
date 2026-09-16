@@ -42,6 +42,9 @@ import { NEUTER_HTML as WIKI_NEUTER } from './scripts/lib/wiki/neuter-links.mjs'
 import { NAV_SYNC_HTML } from './scripts/lib/nav-sync.mjs';
 // the site's own news pages
 import { handleNews } from './scripts/lib/news/news-routes.mjs';
+import { SITE_ORIGIN } from './scripts/lib/news/news-config.mjs';
+// Vietnamese title / description / share tags for the mirrored build-B entry page
+import { viHead } from './scripts/lib/site-head.mjs';
 
 const ROOT = join(process.cwd(), 'mirror');
 const ENTRY_B = join(ROOT, 'index.html');          // build B entry (umi.62525e29)
@@ -147,8 +150,11 @@ async function fabEntry(withUaSpoof) {
   const inject = (withUaSpoof ? SHIM_HTML : '') + FAB_I18N + FAB_HIDE + FAB_NEUTER + NAVFX_HTML + FAB_NAV;
   return html.replace('<head>', '<head>' + inject);
 }
-async function buildBEntry(route) {
-  const html = await readFile(ENTRY_B, 'utf8');
+// route: the section hash; path: the clean address it is served at (for the share tags)
+async function buildBEntry(route, path) {
+  const html = viHead(await readFile(ENTRY_B, 'utf8'), {
+    title: `${BUILDB_TITLES[route] || BUILDB_TITLES['#/index']} | ${BRAND}`, origin: SITE_ORIGIN, path,
+  });
   // index + main share build B → native hash nav handles #/index ↔ #/main/* in-app.
   // nav-sync wires the top menu to clean paths + sets the tab title per section.
   // layout-v2 is injected on every build-B entry but only activates while the hash is #/index.
@@ -209,7 +215,7 @@ export function startServer(port = 8080) {
 
       // --- section entries (real-path → native build entry) ---
       // The home page (layout-v2) is the main site at /, for every device (it replaced the old fab landing).
-      if (pathname === '/' || pathname === '') return sendHtml(res, await buildBEntry('#/index'));
+      if (pathname === '/' || pathname === '') return sendHtml(res, await buildBEntry('#/index', '/'));
       if (pathname === '/__internal/pc' || pathname === '/__internal/pc/') return sendHtml(res, await fabEntry(false));
       if (pathname === '/__internal/m' || pathname === '/__internal/m/') return sendHtml(res, await fabEntry(true));
       const cleanPath = pathname.length > 1 ? pathname.replace(/\/$/, '') : pathname;
@@ -221,7 +227,7 @@ export function startServer(port = 8080) {
       }
       // the site's own news pages (/tin-tuc, /tin-tuc/<slug>, /api/tin-tuc)
       if (await handleNews(req, res, cleanPath, u)) return;
-      if (BUILDB_PATHS[cleanPath]) return sendHtml(res, await buildBEntry(BUILDB_PATHS[cleanPath]));
+      if (BUILDB_PATHS[cleanPath]) return sendHtml(res, await buildBEntry(BUILDB_PATHS[cleanPath], cleanPath));
       if (cleanPath === '/huong-dan' || cleanPath === '/wiki') return sendHtml(res, await wikiEntry());
 
       // --- localised artwork from overrides/ (never resolves outside that folder) ---
