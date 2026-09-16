@@ -1,10 +1,9 @@
 // section-news.mjs — "Tin Tức Sự Kiện" block for the home layout-v2 overlay.
-// Left: autoplaying slider of the static planning banners already in the mirror (no link).
 // Right: three tabs — Thông báo, Sự kiện, Cẩm nang — with the newest articles of the site's own news pages
 // (/api/tin-tuc, published articles only). Each row opens its article at /tin-tuc/<slug>; "Xem thêm" opens the
 // news page on the selected tab. A tab without articles shows "Chưa có bài viết".
-
-const STATIC = '/cdn-cn.lingxigames.com/wukongbuild/star-gw/1.0.0/prod/views/static/';
+// Left: autoplaying slider of the cover pictures of those same articles (the rows of the selected tab, in the same
+// order); a slide opens its article. When the tab has no article with a cover, the Vietnamese banner shows alone.
 
 // tab label and news category id; the first tab is selected by default
 const TABS = [
@@ -13,19 +12,21 @@ const TABS = [
   ['Cẩm nang', 'cam-nang'],
 ];
 
-// banners belong to the planning page (official comics / hero side stories); the first one is the
-// Vietnamese artwork served from overrides/home (same 808x316 size), the others are still the originals
-const BANNERS = ['/3qdc-vi/home/tin-tuc-banner-1-vi.webp']
-  .concat(['banner2.50e6c137.jpg', 'banner3.8050d575.jpg', 'banner4.7d8e2d36.jpg'].map((f) => STATIC + f));
+// shown when the selected tab has no article with a cover: the Vietnamese key art ("Tinh Hà Rực Sáng", 1756x896, close
+// to the 16:9 frame so its lettering is not cut; already loaded as the page background)
+const FALLBACK = '/3qdc-vi/home/anh-nen-slogan-vi.webp';
 
 export const NEWS_CSS = `
 #hv2-news .hv2-news{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:28px;padding:24px;
   background:rgba(18,21,38,.92);border:1px solid rgba(214,176,106,.35);border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.35)}
-#hv2-news .hv2-slider{position:relative;aspect-ratio:808/316;border-radius:10px;overflow:hidden;background:#000}
+#hv2-news .hv2-slider{position:relative;aspect-ratio:16/9;border-radius:10px;overflow:hidden;background:#000}
 #hv2-news .hv2-slider-link{position:absolute;inset:0;display:block;cursor:pointer}
+#hv2-news .hv2-slide-item{position:absolute;inset:0;display:block;pointer-events:none}
+#hv2-news .hv2-slide-item.is-on{pointer-events:auto;z-index:1}
 #hv2-news .hv2-slide{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .6s ease}
 #hv2-news .hv2-slide.is-on{opacity:1}
-#hv2-news .hv2-dots{position:absolute;left:0;right:0;bottom:10px;display:flex;justify-content:center;gap:8px;pointer-events:none}
+#hv2-news .hv2-dots{position:absolute;left:0;right:0;bottom:10px;z-index:2;display:flex;justify-content:center;gap:8px;pointer-events:none}
+#hv2-news .hv2-dots[hidden]{display:none}
 #hv2-news .hv2-dot{width:10px;height:10px;padding:0;border-radius:50%;border:1px solid #f3dfa6;background:transparent;
   cursor:pointer;pointer-events:auto}
 #hv2-news .hv2-dot.is-on{background:#f3dfa6}
@@ -49,38 +50,67 @@ export const NEWS_CSS = `
 export const NEWS_JS = `(function(){
   if (!window.__hv2) return;
   var TABS = ${JSON.stringify(TABS)};
-  var BANNERS = ${JSON.stringify(BANNERS)};
+  var FALLBACK = ${JSON.stringify(FALLBACK)};
+  // a cover the news pages accept: the site's own artwork or an uploaded picture (same rule as the editor)
+  var COVER_RE = /^\\/(?:3qdc-vi|tin-tuc-anh)(?:\\/[A-Za-z0-9_-][A-Za-z0-9._-]*)+$/;
   window.__hv2.onMount(function(api){
     var host = api.section('hv2-news');
     if (!host) return;
     var el = api.el;
 
-    // slider: the image layer (no link) and the dots as siblings
+    // slider: the slide layer and the dots as siblings; slides are rebuilt for the selected tab
     var slider = el('div', { 'class': 'hv2-slider' });
-    var link = el('div', { 'class': 'hv2-slider-link' });
+    var layer = el('div', { 'class': 'hv2-slider-link' });
     var dots = el('div', { 'class': 'hv2-dots' });
-    var slides = BANNERS.map(function(src, i){
-      var img = el('img', { 'class': 'hv2-slide' + (i === 0 ? ' is-on' : ''), src: src, alt: '', loading: 'lazy' });
-      link.appendChild(img);
-      var dot = el('button', { type: 'button', 'class': 'hv2-dot' + (i === 0 ? ' is-on' : ''), 'aria-label': 'Banner ' + (i + 1) });
-      dot.addEventListener('click', function(){ show(i); });
-      dots.appendChild(dot);
-      return img;
-    });
-    slider.appendChild(link);
+    slider.appendChild(layer);
     slider.appendChild(dots);
-    var current = 0, hovering = false;
+    var items = [], current = 0, hovering = false, shownKey = null;
+    function mark(i, on){
+      var item = items[i];
+      item.classList.toggle('is-on', on);
+      item.firstChild.classList.toggle('is-on', on);
+      if (dots.children[i]) dots.children[i].classList.toggle('is-on', on);
+      // only the visible slide can be reached with the keyboard or a screen reader
+      if (on){ item.removeAttribute('tabindex'); item.removeAttribute('aria-hidden'); }
+      else { item.setAttribute('tabindex', '-1'); item.setAttribute('aria-hidden', 'true'); }
+    }
     function show(i){
-      slides[current].classList.remove('is-on'); dots.children[current].classList.remove('is-on');
+      if (i === current || !items[i]) return;
+      mark(current, false);
       current = i;
-      slides[current].classList.add('is-on'); dots.children[current].classList.add('is-on');
+      mark(current, true);
+    }
+    function setSlides(articles){
+      var pics = articles.filter(function(a){ return a && a.slug && COVER_RE.test(String(a.cover || '')); }).slice(0, 4);
+      var key = JSON.stringify(pics.map(function(a){ return [a.slug, a.cover]; }));
+      if (key === shownKey) return;
+      shownKey = key;
+      layer.textContent = '';
+      dots.textContent = '';
+      current = 0;
+      var list = pics.length ? pics : [null];
+      items = list.map(function(a, i){
+        var img = el('img', { 'class': 'hv2-slide', src: a ? a.cover : FALLBACK, alt: a ? String(a.title || '') : '', loading: 'lazy' });
+        var item = a
+          ? el('a', { 'class': 'hv2-slide-item', href: '/tin-tuc/' + encodeURIComponent(a.slug) }, [img])
+          : el('span', { 'class': 'hv2-slide-item' }, [img]);
+        layer.appendChild(item);
+        if (list.length > 1){
+          var dot = el('button', { type: 'button', 'class': 'hv2-dot', 'aria-label': 'Ảnh ' + (i + 1) });
+          dot.addEventListener('click', function(){ show(i); });
+          dots.appendChild(dot);
+        }
+        return item;
+      });
+      dots.hidden = list.length < 2;
+      items.forEach(function(it, i){ mark(i, i === 0); });
     }
     // pause only for a real mouse hover (touch taps would otherwise stop autoplay for good)
     slider.addEventListener('pointerenter', function(e){ if (e.pointerType === 'mouse') hovering = true; });
     slider.addEventListener('pointerleave', function(){ hovering = false; });
     setInterval(function(){
-      if (hovering || !document.documentElement.classList.contains('hv2')) return;
-      show((current + 1) % slides.length);
+      if (hovering || items.length < 2 || !document.documentElement.classList.contains('hv2')) return;
+      show((current + 1) % items.length);
     }, 4500);
 
     // tabs + list
@@ -89,10 +119,10 @@ export const NEWS_JS = `(function(){
     var more = el('a', { 'class': 'hv2-more', href: '/tin-tuc?muc=' + TABS[0][1], text: 'Xem thêm +' });
     var cache = {};   // category -> promise of articles (shared by concurrent clicks)
     var selected = 0;
-    function renderList(items){
+    function renderList(articles){
       list.textContent = '';
-      if (!items.length){ list.appendChild(el('li', { 'class': 'hv2-empty', text: 'Chưa có bài viết' })); return; }
-      items.slice(0, 4).forEach(function(it){
+      if (!articles.length){ list.appendChild(el('li', { 'class': 'hv2-empty', text: 'Chưa có bài viết' })); return; }
+      articles.slice(0, 4).forEach(function(it){
         var t = String(it.publishAt || '');
         var date = el('span', { 'class': 'hv2-date' }, [t.slice(8, 10) || '--', el('small', { text: t.slice(5, 7) ? t.slice(5, 7) + '/' + t.slice(0, 4) : '' })]);
         var row = el('a', { 'class': 'hv2-row', href: '/tin-tuc/' + encodeURIComponent(it.slug) }, [date, el('span', { 'class': 'hv2-row-title', text: it.title || '' })]);
@@ -118,8 +148,13 @@ export const NEWS_JS = `(function(){
         tabsBar.children[k].setAttribute('aria-selected', k === i ? 'true' : 'false');
       }
       more.setAttribute('href', '/tin-tuc?muc=' + TABS[i][1]);
-      // a slower earlier response must not overwrite the list of the tab now selected
-      return load(TABS[i][1]).then(function(items){ if (selected === i) renderList(items); });
+      // a slower earlier response must not overwrite the list or slides of the tab now selected
+      return load(TABS[i][1]).then(function(articles){
+        if (selected !== i) return;
+        var shown = articles.slice(0, 4);
+        renderList(shown);
+        setSlides(shown);
+      });
     }
     TABS.forEach(function(tab, i){
       var b = el('button', { type: 'button', 'class': 'hv2-tab', role: 'tab', 'aria-selected': 'false', text: tab[0] });
