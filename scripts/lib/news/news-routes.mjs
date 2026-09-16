@@ -1,7 +1,9 @@
-// news-routes.mjs — answers /tin-tuc, /tin-tuc/<slug> and /api/tin-tuc; returns false for every other request.
+// news-routes.mjs — answers /tin-tuc, /tin-tuc/<slug>, /api/tin-tuc and the editor pages under /quan-tri;
+// returns false for every other request.
 import { CATS, SLUG_RE, SLUG_MAX, isCat } from './news-config.mjs';
 import { visiblePosts } from './news-store.mjs';
 import { renderListPage, renderDetailPage, renderNotFound } from './news-pages.mjs';
+import { handleAdmin } from './admin-page.mjs';
 
 function sendPage(req, res, status, html) {
   res.writeHead(status, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache', 'X-Content-Type-Options': 'nosniff' });
@@ -15,6 +17,8 @@ function sendJson(req, res, status, data) {
 
 // cleanPath = decoded path without a trailing slash (as server.mjs computes it); u = the parsed request URL
 export async function handleNews(req, res, cleanPath, u) {
+  // editor pages and their API (sign-in, articles) — every method, checked there
+  if (await handleAdmin(req, res, cleanPath)) return true;
   if (req.method !== 'GET' && req.method !== 'HEAD') return false;
 
   if (cleanPath === '/tin-tuc') {

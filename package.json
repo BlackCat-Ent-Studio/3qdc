@@ -12,5 +12,8 @@
   },
   "devDependencies": {
     "playwright": "^1.49.0"
+  },
+  "dependencies": {
+    "sanitize-html": "2.17.7"
   }
 }
