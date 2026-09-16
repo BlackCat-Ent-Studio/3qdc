@@ -22,6 +22,9 @@ import { COMPACT_MQ, COMPACT_HEADER_H } from './compact.mjs';
 const HEADER_H = 88;
 // the blurred header background runs this far down, fading out below the 88px bar
 const HEADER_FADE = HEADER_H + 36;
+// vertical centre of the header logo: the centre of the painted menu art row (the logo overhangs the 88px bar a little,
+// inside the blurred background)
+const LOGO_CENTER = 56;
 
 // Phones, touch tablets and narrow windows (COMPACT_MQ, see compact.mjs) get the compact layout: a 56px header
 // with the logo and a menu button, the whole key art at its own ratio under the header, the download panel below it, the
@@ -128,8 +131,9 @@ html.hv2 #hv2-header-bg{display:block;position:fixed;top:0;left:0;right:0;height
 #hv2-header-bg .hv2-hb-4{-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
   -webkit-mask-image:linear-gradient(180deg,#000 20px,transparent 64px);mask-image:linear-gradient(180deg,#000 20px,transparent 64px)}
 
-/* logo, badge and nav scale with viewport width so the row fits 1366px laptops */
-html.hv2 .star-site-index-logo{position:fixed!important;top:${HEADER_H / 2}px!important;left:24px!important;
+/* logo, badge and nav scale with viewport width so the row fits 1366px laptops. The logo is centred on the painted menu
+   row (diamond + title + subtitle, centre 55–57px at 1920–1366), not on the 88px bar, so it does not hug the top edge */
+html.hv2 .star-site-index-logo{position:fixed!important;top:${LOGO_CENTER}px!important;left:24px!important;
   width:auto!important;height:clamp(56px,4vw,76px)!important;transform:translateY(-50%);z-index:11!important}
 /* the "App Store 精选推荐 / TapTap 热门榜第一" badge (one image) is not shown on the home header */
 html.hv2 .star-site-index-beishu{display:none!important}

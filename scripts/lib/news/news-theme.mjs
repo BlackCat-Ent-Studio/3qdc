@@ -52,7 +52,7 @@ img{max-width:100%}
 .site-h-bg i:nth-child(2){-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);-webkit-mask-image:linear-gradient(180deg,#000 76px,transparent 108px);mask-image:linear-gradient(180deg,#000 76px,transparent 108px)}
 .site-h-bg i:nth-child(3){-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);-webkit-mask-image:linear-gradient(180deg,#000 48px,transparent 88px);mask-image:linear-gradient(180deg,#000 48px,transparent 88px)}
 .site-h-bg i:nth-child(4){-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);-webkit-mask-image:linear-gradient(180deg,#000 20px,transparent 64px);mask-image:linear-gradient(180deg,#000 20px,transparent 64px)}
-.site-h .logo{position:absolute;top:44px;left:24px;transform:translateY(-50%)}
+.site-h .logo{position:absolute;top:56px;left:24px;transform:translateY(-50%)}
 .site-h .logo img{height:clamp(56px,4vw,76px);width:auto;display:block}
 /* menu art: the normal image stays in flow (stable width), the hover art (brush stroke) is laid over it on hover;
    the row is as tall as the faded background so the hover art is not cut, but only the links take clicks */
