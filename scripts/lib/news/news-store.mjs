@@ -2,8 +2,9 @@
 // A visitor sees an article only when it is published and its publish time has passed, so a scheduled article
 // appears by itself at its time without any timer.
 // Changes go through change(): one at a time, so checking an article and writing it can never interleave with another
-// save. Each saved version is also kept in revisions/<id>/ (newest 20); a deleted article moves to trash/.
-import { readdir, readFile, mkdir, rename, rm } from 'node:fs/promises';
+// save. Each saved version is also kept in revisions/<id>/ (newest 20); a deleted article moves to trash/ and can be
+// restored from there as a draft.
+import { readdir, readFile, mkdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { DATA_DIR, SLUG_RE, SLUG_MAX, isCat } from './news-config.mjs';
 import { writeJsonAtomic, siteNow } from './news-files.mjs';
@@ -92,7 +93,7 @@ export async function visiblePosts(now = Date.now()) {
 let queue = Promise.resolve();
 // Runs fn(tools) after every earlier change has finished; its result (or error) is returned to the caller.
 export function change(fn) {
-  const run = queue.then(async () => fn({ posts: await allPosts(), save, remove, nextId }));
+  const run = queue.then(async () => fn({ posts: await allPosts(), save, remove, restore, nextId }));
   queue = run.catch(() => {});
   return run;
 }
@@ -134,12 +135,51 @@ async function keepRevision(post, { action, actor }) {
 }
 
 // Moves an article file to trash/ (only inside change()) and drops it from the list. Its revisions stay.
-async function remove(post) {
+// The trash copy also records who deleted it and when (trash/<id>-<yyyyMMddHHmmss>.json).
+async function remove(post, actor = '') {
   await mkdir(trashDir(), { recursive: true });
-  await rename(join(postsDir(), `${post.id}.json`), join(trashDir(), `${post.id}-${siteNow().replace(/[^0-9]/g, '').slice(0, 14)}.json`));
+  const now = siteNow();
+  await writeJsonAtomic(join(trashDir(), `${post.id}-${now.replace(/[^0-9]/g, '').slice(0, 14)}.json`), { ...post, deletedBy: actor, deletedAt: now });
+  await rm(join(postsDir(), `${post.id}.json`));
   const posts = await allPosts();
   const i = posts.findIndex((p) => p.id === post.id);
   if (i >= 0) posts.splice(i, 1);
+}
+
+export const TRASH_NAME_RE = /^([1-9]\d{0,8})-(\d{14})\.json$/;
+
+// Deleted articles, newest deletion first: [{ file, id, title, category, status, author, deletedBy, deletedAt }]
+export async function listTrash() {
+  const names = (await readdir(trashDir()).catch(() => [])).filter((n) => TRASH_NAME_RE.test(n));
+  const out = [];
+  for (const n of names) {
+    try {
+      const p = JSON.parse(await readFile(join(trashDir(), n), 'utf8'));
+      out.push({ file: n, id: p.id, title: p.title, category: p.category, status: p.status, author: p.author || '', slug: p.slug, cover: p.cover || '', deletedBy: p.deletedBy || '', deletedAt: p.deletedAt || '' });
+    } catch { /* an unreadable copy is left alone */ }
+  }
+  return out.sort((a, b) => b.file.slice(-19).localeCompare(a.file.slice(-19)));
+}
+
+// Brings a deleted article back as a draft (only inside change()). Returns { post } or { status, error }.
+async function restore(file, actor, nowText) {
+  if (!TRASH_NAME_RE.test(file)) return { status: 404, error: 'Không tìm thấy bài trong thùng rác.' };
+  let p;
+  try {
+    p = JSON.parse(await readFile(join(trashDir(), file), 'utf8'));
+  } catch {
+    return { status: 404, error: 'Không tìm thấy bài trong thùng rác.' };
+  }
+  const posts = await allPosts();
+  if (posts.some((x) => x.id === p.id)) return { status: 409, error: 'Đã có bài mang cùng mã này (có thể đã được khôi phục).' };
+  const clash = posts.find((x) => x.slug === p.slug);
+  if (clash) return { status: 409, error: `Đường dẫn “${p.slug}” đang được bài “${clash.title}” dùng. Hãy đổi đường dẫn bài kia trước.` };
+  const { deletedBy, deletedAt, ...rest } = p;
+  const post = { ...rest, status: 'draft', publishAt: null, pinned: false, reviewNote: '', updatedBy: actor, updatedAt: nowText };
+  if (!isValid(post)) return { status: 400, error: 'Bản trong thùng rác bị hỏng, không khôi phục được.' };
+  await save(post, { action: 'khoi-phuc', actor });
+  await rm(join(trashDir(), file));
+  return { post };
 }
 
 // Saved versions of an article, newest first: [{ rev, savedAt, action, actor }]

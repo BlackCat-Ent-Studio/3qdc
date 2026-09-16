@@ -127,6 +127,14 @@ table.posts{border-collapse:collapse;width:100%;min-width:860px}
 .s-locked{color:var(--danger)}
 table.users{min-width:760px}
 .users .acts{align-items:center;flex-wrap:nowrap}
+.pop-pics{flex-direction:column;align-items:stretch}
+.pop-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.pop-row .lbl{margin-top:4px}
+.upl{display:flex;flex-direction:column;align-items:flex-start;gap:6px;margin-top:12px}
+.upl-btn{position:relative;overflow:hidden;margin-left:auto;text-transform:none;letter-spacing:0;font-size:13.5px;font-weight:600;color:var(--text)}
+.upl .upl-btn{margin-left:0}
+.upl-btn input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.ce td img,.ce th img{display:inline-block;width:auto;max-height:56px;vertical-align:middle;border-radius:4px;margin:2px 6px 2px 0}
 `;
 
 const PREVIEW_CSS = `.preview-flag{background:rgba(233,185,73,.14);border:1px solid rgba(233,185,73,.5);color:#e9b949;border-radius:8px;padding:10px 14px;margin-top:20px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center}`;

@@ -4,6 +4,7 @@ import { CATS, SLUG_RE, SLUG_MAX, isCat } from './news-config.mjs';
 import { visiblePosts } from './news-store.mjs';
 import { renderListPage, renderDetailPage, renderNotFound } from './news-pages.mjs';
 import { handleAdmin } from './admin-page.mjs';
+import { serveUpload } from './news-uploads.mjs';
 
 function sendPage(req, res, status, html) {
   res.writeHead(status, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache', 'X-Content-Type-Options': 'nosniff' });
@@ -19,6 +20,8 @@ function sendJson(req, res, status, data) {
 export async function handleNews(req, res, cleanPath, u) {
   // editor pages and their API (sign-in, articles) — every method, checked there
   if (await handleAdmin(req, res, cleanPath)) return true;
+  // pictures uploaded for articles (/tin-tuc-anh/YYYY/MM/<name>)
+  if (await serveUpload(req, res, cleanPath)) return true;
   if (req.method !== 'GET' && req.method !== 'HEAD') return false;
 
   if (cleanPath === '/tin-tuc') {

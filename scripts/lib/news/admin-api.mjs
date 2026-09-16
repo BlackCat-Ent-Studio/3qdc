@@ -2,7 +2,8 @@
 // Every change (POST) must: come from the site's own page (Origin), be JSON, be at most 1 MB, and — apart from signing
 // in and setting a password — belong to a signed-in account allowed to make it (news-workflow.mjs decides).
 import { signIn, endSession, setPassword, currentUser, sameOrigin, sessionCookie, clearedCookie, clientIp } from './admin-auth.mjs';
-import { change, allPosts, listRevisions, readRevision, stampAfter, isVisible } from './news-store.mjs';
+import { change, allPosts, listRevisions, readRevision, stampAfter, isVisible, listTrash, TRASH_NAME_RE } from './news-store.mjs';
+import { saveUpload, recentUploads } from './news-uploads.mjs';
 import { decide, mayDelete, summaryOf } from './news-workflow.mjs';
 import { register, listUsers, manageUser } from './admin-users.mjs';
 import { USERNAME_RE } from './admin-auth.mjs';
@@ -45,6 +46,21 @@ function refuseTooBig(req, res) {
   res.end(JSON.stringify({ error: 'Dữ liệu gửi lên quá lớn.' }), () => req.destroy());
 }
 
+// Answers and closes the connection (used when an upload body may still be arriving).
+function sendAndClose(req, res, status, data) {
+  res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', Connection: 'close' });
+  res.end(JSON.stringify(data), () => req.destroy());
+}
+
+async function uploadPicture(req, res) {
+  const user = await currentUser(req);
+  if (!user) return sendAndClose(req, res, 401, { error: 'Phiên đăng nhập đã hết. Hãy đăng nhập lại.' });
+  const r = await saveUpload(req);
+  if (r.error) return sendAndClose(req, res, r.status, { error: r.error });
+  console.log(`[news] ${siteNow()} ${user.username} uploaded ${r.url} (${r.bytes} bytes)`);
+  return send(res, 201, { url: r.url, bytes: r.bytes });
+}
+
 // Someone else's current hold on an article, or null.
 function otherLock(id, user) {
   const l = locks.get(id);
@@ -73,6 +89,8 @@ async function route(req, res, path) {
       console.warn(`[news-auth] ${siteNow()} refused POST ${path} origin=${JSON.stringify(req.headers.origin || '')} ip=${clientIp(req)}`);
       return oops(res, 403, 'Yêu cầu không đến từ trang quản trị.');
     }
+    // a picture upload: raw image body, so the session is checked before a single byte is read
+    if (path === '/anh') return uploadPicture(req, res);
     if (!/^application\/json(\s*;|$)/i.test(String(req.headers['content-type'] || ''))) return oops(res, 415, 'Chỉ nhận dữ liệu JSON.');
     const got = await readBody(req);
     if (got.tooBig) return refuseTooBig(req, res);
@@ -111,6 +129,23 @@ async function route(req, res, path) {
   if (!user) return oops(res, 401, 'Phiên đăng nhập đã hết. Hãy đăng nhập lại.');
 
   if (method === 'GET' && path === '/toi') return send(res, 200, { user: { username: user.username, name: user.name, role: user.role } });
+
+  // pictures uploaded recently (both roles: editors write articles with pictures too)
+  if (method === 'GET' && path === '/anh') return send(res, 200, { items: await recentUploads(40) });
+
+  // trash (managers only): list deleted articles, bring one back as a draft
+  if (path === '/thung-rac' || path.startsWith('/thung-rac/')) {
+    if (user.role !== 'manager') return oops(res, 403, 'Chỉ Quản lý mới xem được thùng rác.');
+    if (method === 'GET' && path === '/thung-rac') return send(res, 200, { items: await listTrash() });
+    const tm = path.match(/^\/thung-rac\/([^/]+)\/khoi-phuc$/);
+    if (method === 'POST' && tm && TRASH_NAME_RE.test(tm[1])) {
+      const r = await change(({ restore }) => restore(tm[1], user.name, stampAfter(null)));
+      if (r.error) return oops(res, r.status, r.error);
+      console.log(`[news] ${siteNow()} ${user.username} restored article ${r.post.id} from ${tm[1]} (as draft)`);
+      return send(res, 200, { post: r.post, items: await listTrash() });
+    }
+    return oops(res, 404, 'Không có địa chỉ này.');
+  }
 
   // accounts page (managers only)
   if (path === '/nguoi-dung' || path.startsWith('/nguoi-dung/')) {
@@ -192,7 +227,7 @@ async function route(req, res, path) {
       const cur = posts.find((p) => p.id === id);
       if (!cur) return { status: 404, error: 'Không tìm thấy bài (có thể đã bị xoá).' };
       if (body.baseUpdatedAt !== cur.updatedAt) return { status: 409, error: 'Bài vừa được sửa. Tải lại trước khi xoá.' };
-      await remove(cur);
+      await remove(cur, user.name);
       return { ok: true };
     });
     if (r.error) return oops(res, r.status, r.error);

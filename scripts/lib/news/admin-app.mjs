@@ -64,7 +64,8 @@ export function adminApp() {
 
   function header(active) {
     const nav = me.role === 'manager'
-      ? `<nav class="adm-nav" aria-label="Mục quản trị"><a href="#/"${active === 'users' ? '' : ' class="on" aria-current="page"'}>Bài viết</a><a href="#/nguoi-dung"${active === 'users' ? ' class="on" aria-current="page"' : ''}>Người dùng</a></nav>`
+      ? `<nav class="adm-nav" aria-label="Mục quản trị">${[['posts', '#/', 'Bài viết'], ['trash', '#/thung-rac', 'Thùng rác'], ['users', '#/nguoi-dung', 'Người dùng']]
+        .map(([key, href, label]) => `<a href="${href}"${(active || 'posts') === key ? ' class="on" aria-current="page"' : ''}>${label}</a>`).join('')}</nav>`
       : '';
     return `<header class="adm-h"><div class="wrap"><a href="#/" class="adm-logo"><img src="${esc(LOGO)}" alt="3Q Đại Chiến"></a><span class="ttl">Quản trị tin tức</span>${nav}
 <div class="who">${avatar(me.name)}<span><b>${esc(me.name)}</b> · ${esc(ROLES[me.role] || me.role)}</span>
@@ -276,12 +277,36 @@ ${rows.map((p) => {
 <td><span class="pill s-${st}">${STATE[st]}</span>${st === 'scheduled' || st === 'published' ? `<div class="meta" style="margin-top:4px">${fmtTime(p.publishAt)}</div>` : ''}</td>
 <td><div class="person">${avatar(p.author)}${esc(p.author)}</div></td>
 <td class="meta">${fmtTime(p.updatedAt)}<br>bởi ${esc(p.updatedBy)}</td>
-<td><div class="acts"><a class="btn btn-ghost btn-sm" href="#/sua/${p.id}">${canEdit ? 'Sửa' : 'Mở'}</a><a class="btn btn-ghost btn-sm" href="/quan-tri/xem-truoc/${p.id}" target="_blank">Xem</a></div></td></tr>`;
+<td><div class="acts"><a class="btn btn-ghost btn-sm" href="#/sua/${p.id}">${canEdit ? 'Sửa' : 'Mở'}</a><a class="btn btn-ghost btn-sm" href="/quan-tri/xem-truoc/${p.id}" target="_blank">Xem</a>${me.role === 'manager' ? `<button type="button" class="btn btn-danger btn-sm" data-del="${p.id}">Xoá</button>` : ''}</div></td></tr>`;
   }).join('')}
 ${rows.length ? '' : `<tr><td colspan="6" class="meta" style="text-align:center;padding:30px">${posts.length ? 'Không có bài nào khớp bộ lọc.' : 'Chưa có bài nào. Bấm “Viết bài mới” để bắt đầu.'}</td></tr>`}
 </tbody></table></div>`;
       $$('[data-st]').forEach((b) => b.addEventListener('click', () => { listView.state = b.getAttribute('data-st'); draw(); }));
       $('#fcat').addEventListener('change', (e) => { listView.cat = e.target.value; draw(); });
+      // managers delete straight from the list: first click asks, second click (within 4 s) moves it to the trash
+      $$('[data-del]').forEach((b) => b.addEventListener('click', async () => {
+        const id = +b.getAttribute('data-del');
+        if (!(b.dataset.armed > Date.now() - 4000)) {
+          b.dataset.armed = Date.now();
+          b.textContent = 'Bấm lần nữa';
+          setTimeout(() => { if (b.isConnected) b.textContent = 'Xoá'; }, 4000);
+          return;
+        }
+        const post = posts.find((x) => x.id === id);
+        b.disabled = true;
+        const r = await api('POST', `/bai/${id}/xoa`, { baseUpdatedAt: post.updatedAt });
+        if (mine !== screen) return;
+        if (!r.ok) {
+          if (r.status === 401) return;
+          b.disabled = false; b.textContent = 'Xoá';
+          $('main').insertAdjacentHTML('afterbegin', `<div class="err" style="margin-top:16px">${esc(r.data.error || 'Không xoá được.')}${r.status === 409 ? ' <a href="#/" class="btn btn-ghost btn-xs" id="list-reload">Tải lại danh sách</a>' : ''}</div>`);
+          const rl = $('#list-reload'); if (rl) rl.addEventListener('click', (e) => { e.preventDefault(); renderList(); });
+          return;
+        }
+        posts.splice(posts.indexOf(post), 1);
+        toast(`Đã chuyển “${post.title}” vào thùng rác`);
+        draw();
+      }));
     };
     draw();
     // managers: point at registrations waiting for approval
@@ -291,6 +316,63 @@ ${rows.length ? '' : `<tr><td colspan="6" class="meta" style="text-align:center;
       const waiting = u.data.users.filter((x) => x.role === 'pending').length;
       if (waiting) { pendingBar = `<div class="warnbar" id="pending-users"><b>${waiting}</b> tài khoản đăng ký đang chờ duyệt. <a href="#/nguoi-dung">Xem và duyệt →</a></div>`; draw(); }
     }
+  }
+
+  // ---------- trash (managers) ----------
+  async function renderTrash() {
+    cleanupEditor();
+    const mine = screen;
+    app.innerHTML = `${header('trash')}<main class="wrap"><p class="meta" style="padding:40px 0">Đang tải thùng rác…</p></main>`;
+    bindHeader();
+    const r = await api('GET', '/thung-rac');
+    if (mine !== screen || !me) return;
+    if (!r.ok) { if (r.status !== 401) $('main').innerHTML = `<div class="err" style="margin:40px 0">${esc(r.data.error)}</div>`; return; }
+    const draw = (items, notice) => {
+      $('main').innerHTML = `<div class="adm-top"><div><h1>Thùng rác</h1><p>Bài đã xoá nằm ở đây. <b>Khôi phục</b> đưa bài về <b>Nháp</b> — người chơi chưa thấy cho tới khi đăng lại.</p></div></div>
+<div class="err" id="t-err" role="alert"${notice ? '' : ' hidden'}>${esc(notice || '')}</div>
+<div class="tbl-wrap"><table class="posts"><thead><tr><th>Bài viết</th><th>Mục</th><th>Lúc xoá</th><th>Người viết</th><th>Xoá bởi</th><th></th></tr></thead><tbody>
+${items.map((t) => `<tr data-file="${esc(t.file)}">
+<td><div class="p-title">${t.cover ? `<img class="cover" src="${esc(t.cover)}" alt="" loading="lazy">` : '<div class="cover"></div>'}<div><b>${esc(t.title)}</b><small>/tin-tuc/${esc(t.slug)} · trước khi xoá: ${esc(STATE[t.status] || t.status)}</small></div></div></td>
+<td><span class="chip c-${esc(t.category)}">${esc(catName(t.category))}</span></td>
+<td class="meta">${fmtTime(t.deletedAt)}</td>
+<td><div class="person">${avatar(t.author)}${esc(t.author)}</div></td>
+<td class="meta">${esc(t.deletedBy || '—')}</td>
+<td><div class="acts"><button type="button" class="btn btn-ghost btn-sm" data-restore="${esc(t.file)}">Khôi phục</button></div></td></tr>`).join('')}
+${items.length ? '' : '<tr><td colspan="6" class="meta" style="text-align:center;padding:30px">Thùng rác trống.</td></tr>'}
+</tbody></table></div>`;
+      $$('[data-restore]').forEach((b) => b.addEventListener('click', async () => {
+        $$('[data-restore]').forEach((x) => { x.disabled = true; });
+        const mine2 = screen;
+        const res = await api('POST', `/thung-rac/${encodeURIComponent(b.getAttribute('data-restore'))}/khoi-phuc`, {});
+        if (mine2 !== screen) return;
+        if (!res.ok) { if (res.status !== 401) draw(items, res.data.error || 'Không khôi phục được.'); return; }
+        toast(`Đã khôi phục “${res.data.post.title}” về Nháp`);
+        draw(res.data.items, '');
+      }));
+    };
+    draw(r.data.items, '');
+  }
+
+  // ---------- picture upload (cover, pictures in the text) ----------
+  const UPLOAD_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+  // Sends one picture file; resolves its /tin-tuc-anh/… address, or null after showing why it failed.
+  async function uploadPicture(file, say) {
+    if (!file) return null;
+    if (!UPLOAD_TYPES.includes(file.type)) { say('Chỉ nhận ảnh JPG, PNG hoặc WEBP.'); return null; }
+    if (file.size > 5 * 1024 * 1024) { say(`Ảnh nặng ${(file.size / 1048576).toFixed(1)} MB, quá giới hạn 5 MB. Hãy giảm kích thước (khuyên dùng 1200×675) rồi tải lại.`); return null; }
+    if (file.size > 2 * 1024 * 1024) toast(`Ảnh nặng ${(file.size / 1048576).toFixed(1)} MB — trang sẽ tải chậm hơn. Nên nén xuống dưới 1 MB nếu được.`);
+    let res;
+    try {
+      res = await fetch('/quan-tri/api/anh', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': file.type }, body: file });
+    } catch (e) {
+      say('Không tải được ảnh lên (mất kết nối). Thử lại.');
+      return null;
+    }
+    let data = {};
+    try { data = await res.json(); } catch (e) { data = { error: 'Máy chủ trả lời lạ (' + res.status + ').' }; }
+    if (res.status === 401) { me = null; renderLogin(data.error); return null; }
+    if (!res.ok) { say(data.error || 'Không tải được ảnh lên.'); return null; }
+    return data.url;
   }
 
   // ---------- editor ----------
@@ -384,7 +466,8 @@ ${reviewBox}
 <div class="box"><h3>Ảnh bìa</h3>
 <img class="cover" id="e-cover" src="${esc(p.cover)}" alt=""${p.cover ? '' : ' hidden'}>
 ${editable ? `<div class="lib">${LIB.map((src) => `<img src="${esc(src)}" data-cover="${esc(src)}" class="${p.cover === src ? 'on' : ''}" alt="Ảnh thư viện" tabindex="0" loading="lazy">`).join('')}</div>
-<p class="meta small" style="margin:8px 0 0">Tải ảnh riêng lên: sắp có. Tạm thời chọn ảnh trong thư viện.</p>` : ''}
+<div class="upl"><label class="btn btn-ghost btn-sm upl-btn">Tải ảnh bìa từ máy<input type="file" id="e-file" accept="image/jpeg,image/png,image/webp"></label>
+<span class="hint">JPG, PNG, WEBP · tối đa 5 MB · khuyên dùng 1200×675</span></div>` : ''}
 </div>
 <div class="box"><h3>Khi chia sẻ lên Facebook</h3><div class="fb" id="e-fb"></div></div>
 ${historyBox}
@@ -442,6 +525,18 @@ ${dangerBox}
       x.addEventListener('click', () => setCover(x.getAttribute('data-cover')));
       x.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setCover(x.getAttribute('data-cover')); } });
     });
+    if ($('#e-file')) {
+      $('#e-file').addEventListener('change', async (e) => {
+        const input = e.target;
+        err.hidden = true;
+        input.disabled = true;
+        const mine = screen;
+        const url = await uploadPicture(input.files[0], showErr);
+        if (mine !== screen) return;
+        input.disabled = false; input.value = '';
+        if (url) { setCover(url); toast('Đã tải ảnh bìa lên'); }
+      });
+    }
 
     // formatting: execCommand on the remembered selection
     try { document.execCommand('defaultParagraphSeparator', false, 'p'); } catch (e) { /* older browsers */ }
@@ -480,6 +575,52 @@ ${dangerBox}
     $$('[data-ins]').forEach((b) => { noSteal(b); b.addEventListener('click', () => insertBlock(SNIP[b.getAttribute('data-ins')])); });
     const pop = $('#e-pop');
     const closePop = () => { pop.innerHTML = ''; pop.removeAttribute('data-kind'); };
+    // The table cell holding the caret, if any: a picture put there stays inline (item icons in a rewards table).
+    const caretCell = () => {
+      let n = range ? range.startContainer : null;
+      while (n && n !== body) { if (n.nodeName === 'TD' || n.nodeName === 'TH') return n; n = n.parentNode; }
+      return null;
+    };
+    const putPicture = (src) => {
+      const cell = caretCell();
+      if (cell) {
+        restore();
+        const img = document.createElement('img');
+        img.src = src; img.alt = '';
+        const sel = getSelection();
+        const r = sel.rangeCount && cell.contains(sel.getRangeAt(0).startContainer) ? sel.getRangeAt(0) : null;
+        if (r) { r.deleteContents(); r.insertNode(img); r.setStartAfter(img); r.collapse(true); sel.removeAllRanges(); sel.addRange(r); } else cell.prepend(img);
+        keep();
+      } else {
+        insertBlock(`<figure><img src="${esc(src)}" alt=""><figcaption>Chú thích ảnh…</figcaption></figure>`);
+      }
+      closePop();
+    };
+    async function openPicturePop() {
+      const inCell = !!caretCell();
+      const draw = (uploads, note) => {
+        const thumbs = (list) => list.map((src) => `<img src="${esc(src)}" data-put="${esc(src)}" alt="" loading="lazy">`).join('');
+        pop.innerHTML = `<div class="pop pop-pics">
+<div class="pop-row"><span class="meta">${inCell ? 'Con trỏ đang ở <b>ô bảng</b>: ảnh chèn gọn trong ô (hợp cho icon vật phẩm).' : 'Bấm ảnh để chèn vào vị trí con trỏ.'}</span>
+<label class="btn btn-ghost btn-sm upl-btn">Tải ảnh từ máy<input type="file" id="e-pic-file" accept="image/jpeg,image/png,image/webp"></label></div>
+${note ? `<div class="meta">${esc(note)}</div>` : ''}
+${uploads.length ? `<div class="pop-row"><span class="lbl">Ảnh đã tải lên</span></div><div class="pop-row">${thumbs(uploads)}</div>` : ''}
+<div class="pop-row"><span class="lbl">Ảnh trang chủ</span></div><div class="pop-row">${thumbs(LIB)}</div></div>`;
+        $$('[data-put]', pop).forEach((x) => { noSteal(x); x.addEventListener('click', () => putPicture(x.getAttribute('data-put'))); });
+        $('#e-pic-file').addEventListener('change', async (e) => {
+          const mine = screen;
+          e.target.disabled = true;
+          const url = await uploadPicture(e.target.files[0], (msg) => toast(msg));
+          if (mine !== screen || pop.getAttribute('data-kind') !== 'image') return;
+          if (url) putPicture(url); else { e.target.disabled = false; e.target.value = ''; }
+        });
+      };
+      draw([], 'Đang tải danh sách ảnh đã tải lên…');
+      const mine = screen;
+      const r = await api('GET', '/anh');
+      if (mine !== screen || pop.getAttribute('data-kind') !== 'image') return;
+      draw(r.ok ? r.data.items.map((x) => x.url) : [], r.ok ? '' : (r.data.error || ''));
+    }
     $$('[data-pop]').forEach((b) => {
       noSteal(b);
       b.addEventListener('click', () => {
@@ -494,11 +635,7 @@ ${dangerBox}
             if (/^https:\/\/\S+$/.test(u)) { run('createLink', u); closePop(); } else toast('Liên kết cần bắt đầu bằng https://');
           });
         } else {
-          pop.innerHTML = `<div class="pop"><span class="meta">Bấm ảnh để chèn vào vị trí con trỏ:</span>${LIB.map((src) => `<img src="${esc(src)}" data-put="${esc(src)}" alt="" loading="lazy">`).join('')}</div>`;
-          $$('[data-put]', pop).forEach((x) => {
-            noSteal(x);
-            x.addEventListener('click', () => { insertBlock(`<figure><img src="${esc(x.getAttribute('data-put'))}" alt=""><figcaption>Chú thích ảnh…</figcaption></figure>`); closePop(); });
-          });
+          openPicturePop();
         }
       });
     });
@@ -613,6 +750,7 @@ ${dangerBox}
     if (h === '/viet-bai') renderEditor(null);
     else if ((m = h.match(/^\/sua\/(\d+)$/))) renderEditor(+m[1]);
     else if (h === '/nguoi-dung' && me.role === 'manager') renderUsers();
+    else if (h === '/thung-rac' && me.role === 'manager') renderTrash();
     else renderList();
     lastHash = location.hash;
     window.scrollTo(0, 0);

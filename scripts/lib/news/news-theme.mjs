@@ -105,6 +105,7 @@ img{max-width:100%}
 .prose table{border-collapse:collapse;width:100%;font-size:15px;min-width:420px}
 .prose th{background:rgba(214,176,106,.14);color:var(--gold-hi);text-align:left;font-weight:600;padding:10px 14px;border-bottom:1px solid var(--line)}
 .prose td{padding:10px 14px;border-bottom:1px solid var(--line-soft);font-variant-numeric:tabular-nums}
+.prose td img,.prose th img{display:inline-block;width:auto;max-height:56px;vertical-align:middle;border-radius:4px;margin:2px 6px 2px 0}
 .prose tr:last-child td{border-bottom:0}
 .prose .gift{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;border:1px solid var(--gold);background:linear-gradient(135deg,rgba(214,176,106,.14),rgba(185,98,28,.12));border-radius:10px;padding:16px 18px;margin:22px 0}
 .prose .gift small{display:block;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em}
