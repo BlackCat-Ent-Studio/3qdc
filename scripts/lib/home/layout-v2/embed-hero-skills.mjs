@@ -1,13 +1,16 @@
 // embed-hero-skills.mjs — skill icons for the "Hệ Thống Tướng" block of the home page.
 // Only inside the home page's hero iframe (html.hv2-embed, set by layout-v2.mjs): the skill / bond / guide
-// tabs (技绊略) and the skill description panel are hidden, and the current hero's Nộ công, Bị động and
-// Giác tỉnh icons are shown where the tabs were, as gold-ringed round icons with the skill name on hover.
+// tabs (技绊略) and the skill description panel are hidden, and the current hero's three in-game skills (Thường, Kỹ,
+// Nộ, from the game's own icon pack) are shown where the tabs were, as gold-ringed round icons with the in-game skill
+// name on hover. The page's own skill list (Phổ công / Nộ công / Bị động / Giác tỉnh) does not match the game's slots.
 // The biography row (type ribbon, quality badge, biography text) is removed from the layout, so the icon row
-// sits right under the red name band; the icons are 72px (the Nộ công / Bị động artwork is 80px), and 64px
+// sits right under the red name band; the icons are 72px (the artwork is 80px), and 64px
 // in a hero frame of 1200px or less, where the home sidebar's collapse arrow would otherwise cover the last icon.
 // Next to the big hero name, the CV block (voice button, "cv", dot, voice actor) is hidden; the name stays put.
 // The faction tabs (魏吴蜀群, normal and selected) show the Vietnamese artwork from overrides/home instead of the
 // bundle's base64 PNGs, which are told apart by a chunk of base64 unique to each of the eight images.
+
+import { HERO_SKILLS } from './hero-skills-data.mjs';
 
 const FACTION_TABS = [
   ['LS3od1jOVT/AHgzAHgzAHgyfLSylKCOf', '/3qdc-vi/home/phe-1-nguy-hover-dang-chon.png'],
@@ -19,8 +22,8 @@ const FACTION_TABS = [
   ['LS3lc1beaU7AHgzAHgzAHgyfLS2fLS2r', '/3qdc-vi/home/phe-4-quan-hover-dang-chon.png'],
   ['LS1dGBvAHgxLFBeeLCyfLS1wICExEBJp', '/3qdc-vi/home/phe-4-quan-thuong.png'],
 ];
-// Icons and names are read from the skill list the hero page keeps rendering (hidden), so they follow every
-// hero change and the i18n overlay's translation. The standalone /tuong page is not affected.
+// The icon row follows the hero name the page shows (after translation), looked up in HERO_SKILLS, so it follows
+// every hero change. The standalone /tuong page is not affected.
 
 export const HERO_SKILLS_CSS = `
 html.hv2-embed .star-site-person-advance-wrapper,
@@ -51,33 +54,29 @@ html.hv2-embed .hv2-sk-item:hover::after,html.hv2-embed .hv2-sk-item:focus-visib
 
 export const HERO_SKILLS_JS = `(function(){
   if (!document.documentElement.classList.contains('hv2-embed')) return;
-  // skill list order from the API: 0 Phổ công, 1 Nộ công, 2 Bị động, 3 Giác tỉnh; the basic attack is left out
-  var FIRST = 1, COUNT = 3;
-
-  // "Nộ công – Xích Bích Tai Viêm Bạo"; the star-level prefix of passives ("Tam tinh-") is dropped, and when the
-  // description has no proper skill name (e.g. "Giác tỉnh+1: …") only the skill type is shown
-  function label(li){
-    var type = ((li.querySelector('.star-site-person-advance-skills-name') || {}).textContent || '').trim();
-    var desc = (li.querySelector('.star-site-person-advance-skills-describe') || {}).textContent || '';
-    var name = desc.split(/[:：]/)[0].replace(/^[^-–:]{0,12}tinh *[-–] */i, '').trim();
-    if (!name || !type || name.indexOf(type) === 0 || name.length > 40 || name === desc.trim()) return type || name;
-    return type + ' – ' + name;
-  }
+  // hero name as shown -> [game hero id, Thường name, Kỹ name, Nộ name]; icons in the same slot order
+  var SKILLS = ${JSON.stringify(HERO_SKILLS)};
+  var SLOTS = ['thuong', 'ky', 'no'];
+  var ICON_DIR = '/3qdc-vi/home/hero-skills/';
+  var warned = {};
 
   function sync(){
     var box = document.querySelector('.star-site-person-advance-box');
     if (!box) return;
-    // a skill without an icon is left out rather than shown as an empty ring
-    var lis = [].slice.call(document.querySelectorAll('.star-site-person-advance-skills > li'), FIRST, FIRST + COUNT)
-      .filter(function(li){ var im = li.querySelector('img'); return im && im.getAttribute('src'); });
+    var nameEl = document.querySelector('.star-site-person-cv-general_name');
+    var name = ((nameEl && nameEl.textContent) || '').trim();
+    var entry = Object.prototype.hasOwnProperty.call(SKILLS, name) ? SKILLS[name] : null;
+    // a hero missing from the table shows no icons (never another hero's); a name not yet translated is skipped quietly
+    if (!entry && /[A-Za-z]/.test(name) && !warned[name]){ warned[name] = 1; console.warn('hero skills: no in-game skills for', name); }
+    var want = entry ? SLOTS.length : 0;
     var row = box.querySelector('.hv2-sk');
     if (!row){
       row = document.createElement('div');
       row.className = 'hv2-sk';
       box.insertBefore(row, box.firstChild);
     }
-    while (row.children.length > lis.length) row.removeChild(row.lastChild);
-    while (row.children.length < lis.length){
+    while (row.children.length > want) row.removeChild(row.lastChild);
+    while (row.children.length < want){
       var item = document.createElement('span');
       item.className = 'hv2-sk-item';
       item.tabIndex = 0;
@@ -88,11 +87,11 @@ export const HERO_SKILLS_JS = `(function(){
       row.appendChild(item);
     }
     // write only what changed, so this observer's own mutations settle immediately
-    lis.forEach(function(li, i){
+    if (!entry) return;
+    SLOTS.forEach(function(slot, i){
       var item = row.children[i], img = item.firstChild;
-      var icon = li.querySelector('img');
-      var src = (icon && icon.getAttribute('src')) || '';
-      var text = label(li);
+      var src = ICON_DIR + entry[0] + '/' + slot + '.png';
+      var text = entry[i + 1] || 'Đang cập nhật';
       if (img.getAttribute('src') !== src) img.setAttribute('src', src);
       if (item.getAttribute('data-name') !== text){ item.setAttribute('data-name', text); item.setAttribute('aria-label', text); }
     });
