@@ -3,7 +3,7 @@
 // These pages are never indexed, never framed, and run only scripts carrying this response's nonce.
 import { randomBytes } from 'node:crypto';
 import { CATS, IMAGE_LIBRARY, LOGO, SITE_ORIGIN } from './news-config.mjs';
-import { NEWS_CSS, esc } from './news-theme.mjs';
+import { NEWS_CSS, THEME_BUTTON, THEME_HEAD_JS, THEME_JS, esc } from './news-theme.mjs';
 import { handleAdminApi } from './admin-api.mjs';
 import { currentUser } from './admin-auth.mjs';
 import { allPosts, visiblePosts } from './news-store.mjs';
@@ -15,6 +15,7 @@ const FONTS = 'https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;
 
 const ADMIN_CSS = `
 :root{--panel-2:#1b2140;--ok:#72c28f;--warn:#e9b949;--draft:#9aa3c9;--danger:#e36b5b;--review:#8fb8ff}
+html[data-theme="light"]{--panel-2:#efe4cc;--ok:#2a7046;--warn:#875a00;--draft:#56607f;--danger:#b3372a;--review:#2e5ca8}
 textarea,select{font:inherit;color:inherit}
 .small{font-size:13px}
 .adm-h{background:var(--ink-2);border-bottom:1px solid var(--line-soft);position:sticky;top:env(safe-area-inset-top,0px);z-index:20}
@@ -23,7 +24,7 @@ textarea,select{font:inherit;color:inherit}
 .adm-h .ttl{font-weight:600;color:var(--gold-hi)}
 .who{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:13.5px;color:var(--muted);flex-wrap:wrap}
 .who b{color:var(--text);font-weight:600}
-.av{width:30px;height:30px;flex:none;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:12.5px;color:#1a1405;background:var(--gold)}
+.av{width:30px;height:30px;flex:none;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:12.5px;color:var(--on-gold);background:var(--gold)}
 .person{display:flex;gap:8px;align-items:center}
 .adm-top{display:flex;justify-content:space-between;align-items:end;gap:14px;flex-wrap:wrap;padding-block:30px 16px}
 .adm-top h1{font-family:var(--display);font-size:40px;margin:0;color:var(--gold-hi);line-height:1}
@@ -37,7 +38,7 @@ table.posts{border-collapse:collapse;width:100%;min-width:860px}
 .posts td{padding:12px 16px;border-bottom:1px solid var(--line-soft);vertical-align:middle;font-size:14px}
 .posts td:not(:first-child){white-space:nowrap}
 .posts tr:last-child td{border-bottom:0}
-.posts tr:hover td{background:rgba(214,176,106,.04)}
+.posts tr:hover td{background:var(--tint-row)}
 .p-title{display:grid;grid-template-columns:72px 1fr;gap:12px;align-items:center}
 .p-title .cover{border-radius:5px}
 .p-title b{font-weight:600;display:block;line-height:1.35}
@@ -67,8 +68,8 @@ table.posts{border-collapse:collapse;width:100%;min-width:860px}
 .editor{border:1px solid var(--line);border-radius:var(--r);background:var(--ink-2)}
 .tb{display:flex;flex-wrap:wrap;gap:2px;padding:6px;border-bottom:1px solid var(--line);position:sticky;top:60px;background:var(--ink-2);z-index:5;border-radius:var(--r) var(--r) 0 0}
 .tb[hidden]{display:none}
-.tb button{background:transparent;border:1px solid transparent;border-radius:6px;padding:5px 9px;cursor:pointer;color:#d9d1bc;font-size:13.5px}
-.tb button:hover{border-color:var(--line);background:rgba(214,176,106,.08)}
+.tb button{background:transparent;border:1px solid transparent;border-radius:6px;padding:5px 9px;cursor:pointer;color:var(--nav);font-size:13.5px}
+.tb button:hover{border-color:var(--line);background:var(--tint)}
 .tb .sep{width:1px;background:var(--line);margin:4px}
 .pop{padding:10px;border-bottom:1px solid var(--line);display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:var(--panel)}
 .pop img{width:92px;aspect-ratio:16/9;object-fit:cover;border-radius:5px;cursor:pointer;border:2px solid transparent}
@@ -89,6 +90,7 @@ table.posts{border-collapse:collapse;width:100%;min-width:860px}
 .cats input{position:absolute;opacity:0;pointer-events:none}
 .cats span{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:13.5px}
 .cats input:checked+span{border-color:var(--c);color:var(--c);background:rgba(255,255,255,.04)}
+html[data-theme="light"] .cats input:checked+span{background:rgba(0,0,0,.04)}
 .cats input:focus-visible+span{outline:2px solid var(--gold-hi);outline-offset:2px}
 .chk{display:flex;gap:8px;align-items:center;font-size:14px;margin-top:12px;cursor:pointer}
 .btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
@@ -109,6 +111,7 @@ table.posts{border-collapse:collapse;width:100%;min-width:860px}
 .hist .av{width:26px;height:26px;font-size:11px}
 .hist small{display:block;color:var(--faint)}
 .warnbar{background:rgba(233,185,73,.1);border:1px solid rgba(233,185,73,.45);color:var(--warn);border-radius:8px;padding:9px 14px;font-size:13.5px;margin-top:18px}
+html[data-theme="light"] .warnbar{background:rgba(135,90,0,.08);border-color:rgba(135,90,0,.4)}
 .auth{min-height:100vh;display:grid;place-items:center;padding:24px 16px}
 .auth-box{width:100%;max-width:400px;border:1px solid var(--line);border-radius:14px;background:var(--panel);padding:30px 28px}
 .auth-logo{height:64px;width:auto;display:block;margin-bottom:14px}
@@ -120,7 +123,7 @@ table.posts{border-collapse:collapse;width:100%;min-width:860px}
 .hint{font-size:12.5px;color:var(--faint)}
 .auth-box{margin-block:24px}
 .adm-nav{display:flex;gap:4px;margin-left:12px}
-.adm-nav a{text-decoration:none;padding:6px 12px;border-radius:6px;color:#d9d1bc;font-weight:500;font-size:14px}
+.adm-nav a{text-decoration:none;padding:6px 12px;border-radius:6px;color:var(--nav);font-weight:500;font-size:14px}
 .adm-nav a:hover{color:var(--gold-hi)}
 .adm-nav a.on{color:var(--gold-hi);box-shadow:inset 0 -2px 0 var(--ember)}
 .sel{background:var(--ink-2);border:1px solid var(--line);border-radius:6px;padding:4px 8px;font-size:13.5px}
@@ -135,9 +138,15 @@ table.users{min-width:760px}
 .upl .upl-btn{margin-left:0}
 .upl-btn input{position:absolute;inset:0;opacity:0;cursor:pointer}
 .ce td img,.ce th img{display:inline-block;width:auto;max-height:56px;vertical-align:middle;border-radius:4px;margin:2px 6px 2px 0}
+.who .theme-btn{width:32px;height:32px}
+.theme-float{position:fixed;top:14px;right:16px;z-index:30}
+@media (max-width:600px){.auth{padding-top:64px}}
+html[data-theme="light"] .btn-danger{border-color:rgba(179,55,42,.5)}
+html[data-theme="light"] .btn-danger:hover{background:rgba(179,55,42,.08)}
 `;
 
-const PREVIEW_CSS = `.preview-flag{background:rgba(233,185,73,.14);border:1px solid rgba(233,185,73,.5);color:#e9b949;border-radius:8px;padding:10px 14px;margin-top:20px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center}`;
+const PREVIEW_CSS = `.preview-flag{background:rgba(233,185,73,.14);border:1px solid rgba(233,185,73,.5);color:#e9b949;border-radius:8px;padding:10px 14px;margin-top:20px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center}
+html[data-theme="light"] .preview-flag{color:#875a00;background:rgba(135,90,0,.08);border-color:rgba(135,90,0,.4)}`;
 
 const STATE_WORDS = { draft: 'Nháp', pending: 'Chờ duyệt', published: 'Đã đăng' };
 
@@ -169,10 +178,11 @@ function sendHtml(req, res, status, html, nonce) {
 }
 
 function appPage(nonce) {
-  const data = { cats: CATS, library: IMAGE_LIBRARY, host: SITE_ORIGIN.replace(/^https?:\/\//, ''), logo: LOGO, roles: ROLES };
+  const data = { cats: CATS, library: IMAGE_LIBRARY, host: SITE_ORIGIN.replace(/^https?:\/\//, ''), logo: LOGO, roles: ROLES, themeButton: THEME_BUTTON };
   return `<!doctype html><html lang="vi"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
+<script nonce="${nonce}">${THEME_HEAD_JS}</script>
 <title>Quản trị tin tức | 3Q Đại Chiến</title>
 <link rel="icon" href="${LOGO}">
 <link rel="stylesheet" href="${FONTS}">
@@ -182,6 +192,7 @@ function appPage(nonce) {
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <noscript><p style="padding:20px">Trang quản trị cần bật JavaScript.</p></noscript>
 <script type="application/json" id="adm-data" nonce="${nonce}">${JSON.stringify(data).replace(/</g, '\\u003c')}</script>
+<script nonce="${nonce}">${THEME_JS}</script>
 <script nonce="${nonce}">(${adminApp.toString()})();</script>
 </body></html>`;
 }

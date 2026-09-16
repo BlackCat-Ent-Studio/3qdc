@@ -5,7 +5,7 @@
 
 export function adminApp() {
   const DATA = JSON.parse(document.getElementById('adm-data').textContent);
-  const CATS = DATA.cats, LIB = DATA.library, HOST = DATA.host, LOGO = DATA.logo, ROLES = DATA.roles;
+  const CATS = DATA.cats, LIB = DATA.library, HOST = DATA.host, LOGO = DATA.logo, ROLES = DATA.roles, THEME_BUTTON = DATA.themeButton;
   const app = document.getElementById('app');
   const $ = (s, r) => (r || document).querySelector(s);
   const $$ = (s, r) => Array.prototype.slice.call((r || document).querySelectorAll(s));
@@ -68,7 +68,7 @@ export function adminApp() {
         .map(([key, href, label]) => `<a href="${href}"${(active || 'posts') === key ? ' class="on" aria-current="page"' : ''}>${label}</a>`).join('')}</nav>`
       : '';
     return `<header class="adm-h"><div class="wrap"><a href="#/" class="adm-logo"><img src="${esc(LOGO)}" alt="3Q Đại Chiến"></a><span class="ttl">Quản trị tin tức</span>${nav}
-<div class="who">${avatar(me.name)}<span><b>${esc(me.name)}</b> · ${esc(ROLES[me.role] || me.role)}</span>
+<div class="who">${THEME_BUTTON}${avatar(me.name)}<span><b>${esc(me.name)}</b> · ${esc(ROLES[me.role] || me.role)}</span>
 <a class="btn btn-ghost btn-sm" href="/tin-tuc" target="_blank" rel="noopener">Xem trang tin</a><button type="button" class="btn btn-ghost btn-sm" id="logout">Đăng xuất</button></div></div></header>`;
   }
   function bindHeader() {
@@ -84,7 +84,7 @@ export function adminApp() {
   // ---------- sign in / set password ----------
   function authShell(inner) {
     cleanupEditor();
-    app.innerHTML = `<main class="auth"><div class="auth-box"><img src="${esc(LOGO)}" alt="3Q Đại Chiến" class="auth-logo">${inner}</div></main>`;
+    app.innerHTML = `<main class="auth"><div class="theme-float">${THEME_BUTTON}</div><div class="auth-box"><img src="${esc(LOGO)}" alt="3Q Đại Chiến" class="auth-logo">${inner}</div></main>`;
   }
 
   function renderLogin(notice) {
