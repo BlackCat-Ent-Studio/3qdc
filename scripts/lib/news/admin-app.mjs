@@ -62,8 +62,11 @@ export function adminApp() {
   const STATE = { published: 'Đã đăng', scheduled: 'Hẹn giờ', pending: 'Chờ duyệt', draft: 'Nháp' };
   const ACTION_WORDS = { luu: 'lưu', 'gui-duyet': 'gửi duyệt', 'rut-ve': 'rút về nháp', 'dang-ngay': 'đăng', 'hen-gio': 'hẹn giờ đăng', 'tra-lai': 'trả lại cho người viết', 'go-bai': 'gỡ bài', 'bo-ghim': 'bỏ ghim' };
 
-  function header() {
-    return `<header class="adm-h"><div class="wrap"><a href="#/" class="adm-logo"><img src="${esc(LOGO)}" alt="3Q Đại Chiến"></a><span class="ttl">Quản trị tin tức</span>
+  function header(active) {
+    const nav = me.role === 'manager'
+      ? `<nav class="adm-nav" aria-label="Mục quản trị"><a href="#/"${active === 'users' ? '' : ' class="on" aria-current="page"'}>Bài viết</a><a href="#/nguoi-dung"${active === 'users' ? ' class="on" aria-current="page"' : ''}>Người dùng</a></nav>`
+      : '';
+    return `<header class="adm-h"><div class="wrap"><a href="#/" class="adm-logo"><img src="${esc(LOGO)}" alt="3Q Đại Chiến"></a><span class="ttl">Quản trị tin tức</span>${nav}
 <div class="who">${avatar(me.name)}<span><b>${esc(me.name)}</b> · ${esc(ROLES[me.role] || me.role)}</span>
 <a class="btn btn-ghost btn-sm" href="/tin-tuc" target="_blank" rel="noopener">Xem trang tin</a><button type="button" class="btn btn-ghost btn-sm" id="logout">Đăng xuất</button></div></div></header>`;
   }
@@ -90,7 +93,8 @@ export function adminApp() {
 <div class="field"><label for="l-pass">Mật khẩu</label><input class="inp" id="l-pass" name="password" type="password" autocomplete="current-password" required></div>
 <div class="err" id="l-err" role="alert"${notice ? '' : ' hidden'}>${esc(notice || '')}</div>
 <button class="btn btn-fire auth-btn" type="submit">Đăng nhập</button>
-<p class="meta small">Quên mật khẩu: nhờ người quản trị máy chủ cấp link đặt lại.</p>
+<p class="auth-alt">Chưa có tài khoản? <a href="/quan-tri/dang-ky">Đăng ký</a></p>
+<p class="meta small">Quên mật khẩu: liên hệ Quản lý để được cấp link đặt lại.</p>
 </form>`);
     $('#l-user').focus();
     $('#login').addEventListener('submit', async (e) => {
@@ -132,6 +136,113 @@ export function adminApp() {
     });
   }
 
+  // Registration: the account waits for a manager's approval before it can sign in.
+  function renderRegister() {
+    authShell(`<h1>Đăng ký</h1><p class="meta">Tài khoản mới cần <b>Quản lý duyệt</b> trước khi đăng nhập được.</p>
+<form id="reg" novalidate>
+<div class="field"><label for="r-user">Tên đăng nhập</label><input class="inp" id="r-user" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="32" required>
+<span class="hint">3–32 ký tự: chữ thường không dấu, số, dấu chấm, gạch ngang, gạch dưới.</span></div>
+<div class="field"><label for="r-name">Tên hiển thị</label><input class="inp" id="r-name" autocomplete="name" maxlength="60" required>
+<span class="hint">Hiện dưới bài viết: “Đăng bởi …”.</span></div>
+<div class="field"><label for="r-pass">Mật khẩu</label><input class="inp" id="r-pass" type="password" autocomplete="new-password" minlength="10" required>
+<span class="hint">Ít nhất 10 ký tự — nên là một câu dễ nhớ.</span></div>
+<div class="field"><label for="r-pass2">Nhập lại mật khẩu</label><input class="inp" id="r-pass2" type="password" autocomplete="new-password" minlength="10" required></div>
+<div class="err" id="r-err" role="alert" hidden></div>
+<button class="btn btn-fire auth-btn" type="submit">Đăng ký</button>
+<p class="auth-alt">Đã có tài khoản? <a href="/quan-tri">Đăng nhập</a></p>
+</form>`);
+    $('#r-user').focus();
+    $('#r-user').addEventListener('change', (e) => { e.target.value = e.target.value.trim().toLowerCase(); });
+    $('#reg').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const err = $('#r-err');
+      const btn = e.target.querySelector('button[type=submit]');
+      const username = $('#r-user').value.trim().toLowerCase();
+      const name = $('#r-name').value.trim();
+      const a = $('#r-pass').value, b = $('#r-pass2').value;
+      err.hidden = true;
+      const say = (msg) => { err.textContent = msg; err.hidden = false; };
+      if (!/^[a-z0-9][a-z0-9._-]{2,31}$/.test(username)) return say('Tên đăng nhập 3–32 ký tự: chữ thường không dấu, số, dấu chấm, gạch ngang, gạch dưới; bắt đầu bằng chữ hoặc số.');
+      if (!name) return say('Nhập tên hiển thị.');
+      if (a.length < 10) return say('Mật khẩu cần ít nhất 10 ký tự.');
+      if (a !== b) return say('Hai lần nhập mật khẩu không giống nhau.');
+      btn.disabled = true;
+      const r = await api('POST', '/dang-ky', { username, name, password: a });
+      btn.disabled = false;
+      if (!r.ok) return say(r.data.error || 'Không đăng ký được.');
+      authShell(`<h1>Đã gửi đăng ký</h1><p>Tài khoản <b>${esc(r.data.user.username)}</b> (${esc(r.data.user.name)}) đang <b>chờ Quản lý duyệt</b>.</p>
+<p class="meta">Khi được duyệt, bạn đăng nhập bằng tên đăng nhập và mật khẩu vừa tạo. Hãy báo Quản lý tên đăng nhập của bạn để được duyệt nhanh.</p>
+<a class="btn btn-fire auth-btn" href="/quan-tri">Về trang đăng nhập</a>`);
+    });
+  }
+
+  // ---------- accounts (managers) ----------
+  const ROLE_PILL = { manager: ['Quản lý', 's-published'], editor: ['Biên tập', 's-draft'], pending: ['Chờ duyệt', 's-pending'] };
+
+  async function renderUsers() {
+    cleanupEditor();
+    const mine = screen;
+    app.innerHTML = `${header('users')}<main class="wrap"><p class="meta" style="padding:40px 0">Đang tải danh sách người dùng…</p></main>`;
+    bindHeader();
+    const r = await api('GET', '/nguoi-dung');
+    if (mine !== screen || !me) return;
+    if (!r.ok) { if (r.status !== 401) $('main').innerHTML = `<div class="err" style="margin:40px 0">${esc(r.data.error)}</div>`; return; }
+    drawUsers(r.data.users, r.data.me, '');
+  }
+
+  function drawUsers(users, myName, notice) {
+    const order = { pending: 0, manager: 1, editor: 2 };
+    const rows = users.slice().sort((a, b) => (order[a.role] ?? 3) - (order[b.role] ?? 3) || String(b.createdAt).localeCompare(String(a.createdAt)));
+    const waiting = users.filter((u) => u.role === 'pending').length;
+    const roleSelect = (u, id) => `<select class="sel" id="${id}" aria-label="Vai trò của ${esc(u.username)}"><option value="editor"${u.role === 'editor' ? ' selected' : ''}>Biên tập</option><option value="manager"${u.role === 'manager' ? ' selected' : ''}>Quản lý</option></select>`;
+    $('main').innerHTML = `<div class="adm-top"><div><h1>Người dùng</h1><p>${waiting ? `<b>${waiting}</b> tài khoản đăng ký đang chờ duyệt. Chỉ duyệt người bạn biết — Biên tập viết bài, Quản lý đăng bài và quản lý người dùng.` : 'Không có tài khoản nào chờ duyệt. Người mới đăng ký tại trang Đăng ký và sẽ hiện ở đây.'}</p></div></div>
+<div class="err" id="u-err" role="alert"${notice ? '' : ' hidden'}>${esc(notice)}</div>
+<div class="tbl-wrap"><table class="posts users"><thead><tr><th>Người dùng</th><th>Tên đăng nhập</th><th>Vai trò</th><th>Ngày tạo</th><th>Thao tác</th></tr></thead><tbody>
+${rows.map((u) => {
+    const [label, cls] = u.disabled ? ['Đã khoá', 's-locked'] : (ROLE_PILL[u.role] || [u.role, 's-draft']);
+    const self = u.username === myName;
+    let acts;
+    if (self) acts = '<span class="meta">Tài khoản của bạn</span>';
+    else if (u.role === 'pending') {
+      acts = `${roleSelect({ role: 'editor', username: u.username }, 'role-' + esc(u.username))}<button type="button" class="btn btn-fire btn-sm" data-act="duyet" data-user="${esc(u.username)}">Duyệt</button><button type="button" class="btn btn-danger btn-sm" data-act="tu-choi" data-user="${esc(u.username)}">Từ chối</button>`;
+    } else {
+      acts = `${roleSelect(u, 'role-' + esc(u.username))}<button type="button" class="btn btn-ghost btn-sm" data-act="vai-tro" data-user="${esc(u.username)}">Đổi vai trò</button>${u.disabled
+        ? `<button type="button" class="btn btn-ghost btn-sm" data-act="mo-khoa" data-user="${esc(u.username)}">Mở khoá</button>`
+        : `<button type="button" class="btn btn-danger btn-sm" data-act="khoa" data-user="${esc(u.username)}">Khoá</button>`}`;
+    }
+    return `<tr data-user="${esc(u.username)}"><td><div class="person">${avatar(u.name)}<b>${esc(u.name)}</b></div></td><td class="meta">${esc(u.username)}</td>
+<td><span class="pill ${cls}">${label}</span></td><td class="meta">${fmtTime(u.createdAt)}</td><td><div class="acts">${acts}</div></td></tr>`;
+  }).join('')}
+</tbody></table></div>`;
+    const armed = {};
+    $$('[data-act]').forEach((b) => b.addEventListener('click', async () => {
+      const action = b.getAttribute('data-act');
+      const username = b.getAttribute('data-user');
+      // refusing and locking ask for a second click
+      if ((action === 'tu-choi' || action === 'khoa') && !(armed[username + action] > Date.now() - 4000)) {
+        armed[username + action] = Date.now();
+        const was = b.textContent;
+        b.textContent = 'Bấm lần nữa';
+        setTimeout(() => { if (b.isConnected) b.textContent = was; }, 4000);
+        return;
+      }
+      const sel = document.getElementById('role-' + username);
+      const role = sel ? sel.value : undefined;
+      $$('[data-act]').forEach((x) => { x.disabled = true; });
+      const mine = screen;
+      const r = await api('POST', '/nguoi-dung/' + encodeURIComponent(username), { action, role });
+      if (mine !== screen) return;
+      if (!r.ok) {
+        if (r.status === 401) return;
+        $$('[data-act]').forEach((x) => { x.disabled = false; });
+        const e = $('#u-err'); e.textContent = r.data.error || 'Không thực hiện được.'; e.hidden = false;
+        return;
+      }
+      toast({ duyet: `Đã duyệt ${username}`, 'tu-choi': `Đã từ chối ${username}`, khoa: `Đã khoá ${username}`, 'mo-khoa': `Đã mở khoá ${username}`, 'vai-tro': `Đã đổi vai trò ${username}` }[action]);
+      drawUsers(r.data.users, r.data.me, '');
+    }));
+  }
+
   // ---------- article list ----------
   const listView = { state: 'all', cat: 'all' };
 
@@ -144,6 +255,7 @@ export function adminApp() {
     if (mine !== screen || !me) return;
     if (!r.ok) { if (r.status !== 401) $('main').innerHTML = `<div class="err" style="margin:40px 0">${esc(r.data.error)}</div>`; return; }
     const posts = r.data.items;
+    let pendingBar = '';
     const draw = () => {
       const rows = posts.filter((p) => (listView.state === 'all' || stateOf(p) === listView.state) && (listView.cat === 'all' || p.category === listView.cat))
         .sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)));
@@ -151,7 +263,7 @@ export function adminApp() {
       const hint = me.role === 'manager'
         ? 'Bài Biên tập gửi lên nằm ở mục <b>Chờ duyệt</b>: mở bài, đăng hoặc trả lại kèm ghi chú.'
         : 'Viết xong bấm <b>Gửi duyệt</b> — Quản lý sẽ xem và đăng. Bài đã gửi thì rút về nháp mới sửa được.';
-      $('main').innerHTML = `<div class="adm-top"><div><h1>Bài viết</h1><p>${hint}</p></div><a class="btn btn-fire" href="#/viet-bai">+ Viết bài mới</a></div>
+      $('main').innerHTML = `${pendingBar}<div class="adm-top"><div><h1>Bài viết</h1><p>${hint}</p></div><a class="btn btn-fire" href="#/viet-bai">+ Viết bài mới</a></div>
 <div class="filters">${['all', 'published', 'scheduled', 'pending', 'draft'].map((s) => `<button type="button" class="tab${listView.state === s ? ' on' : ''}" data-st="${s}">${s === 'all' ? 'Tất cả' : STATE[s]}<small>${n(s)}</small></button>`).join('')}
 <select id="fcat" aria-label="Lọc theo mục"><option value="all">Mọi mục</option>${CATS.map((c) => `<option value="${c.id}"${listView.cat === c.id ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select></div>
 <div class="tbl-wrap"><table class="posts"><thead><tr><th>Bài viết</th><th>Mục</th><th>Trạng thái</th><th>Người viết</th><th>Sửa lần cuối</th><th></th></tr></thead><tbody>
@@ -172,6 +284,13 @@ ${rows.length ? '' : `<tr><td colspan="6" class="meta" style="text-align:center;
       $('#fcat').addEventListener('change', (e) => { listView.cat = e.target.value; draw(); });
     };
     draw();
+    // managers: point at registrations waiting for approval
+    if (me.role === 'manager') {
+      const u = await api('GET', '/nguoi-dung');
+      if (mine !== screen || !u.ok) return;
+      const waiting = u.data.users.filter((x) => x.role === 'pending').length;
+      if (waiting) { pendingBar = `<div class="warnbar" id="pending-users"><b>${waiting}</b> tài khoản đăng ký đang chờ duyệt. <a href="#/nguoi-dung">Xem và duyệt →</a></div>`; draw(); }
+    }
   }
 
   // ---------- editor ----------
@@ -493,6 +612,7 @@ ${dangerBox}
     let m;
     if (h === '/viet-bai') renderEditor(null);
     else if ((m = h.match(/^\/sua\/(\d+)$/))) renderEditor(+m[1]);
+    else if (h === '/nguoi-dung' && me.role === 'manager') renderUsers();
     else renderList();
     lastHash = location.hash;
     window.scrollTo(0, 0);
@@ -511,6 +631,7 @@ ${dangerBox}
 
   (async function boot() {
     if (location.pathname.replace(/\/+$/, '') === '/quan-tri/dat-mat-khau') return renderSetPassword();
+    if (location.pathname.replace(/\/+$/, '') === '/quan-tri/dang-ky') return renderRegister();
     const r = await api('GET', '/toi');
     if (r.ok) { me = r.data.user; route(); } else if (r.status !== 401) renderLogin(r.data.error);
   })();

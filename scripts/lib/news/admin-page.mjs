@@ -1,4 +1,4 @@
-// admin-page.mjs — everything under /quan-tri: the editor app page, the one-time "set password" page, the preview of
+// admin-page.mjs — everything under /quan-tri: the editor app page, the registration and one-time "set password" pages, the preview of
 // an article (any state, signed-in accounts only) and the JSON API (admin-api.mjs).
 // These pages are never indexed, never framed, and run only scripts carrying this response's nonce.
 import { randomBytes } from 'node:crypto';
@@ -115,6 +115,18 @@ table.posts{border-collapse:collapse;width:100%;min-width:860px}
 .auth h1{font-family:var(--display);font-size:36px;margin:0 0 4px;color:var(--gold-hi);line-height:1.1}
 .auth .field{margin-top:16px;margin-bottom:0}
 .auth-btn{width:100%;margin-top:20px}
+.auth-alt{margin:16px 0 6px;text-align:center;font-size:14px;color:var(--muted)}
+.auth-alt a,.warnbar a{color:var(--gold-hi);font-weight:600}
+.hint{font-size:12.5px;color:var(--faint)}
+.auth-box{margin-block:24px}
+.adm-nav{display:flex;gap:4px;margin-left:12px}
+.adm-nav a{text-decoration:none;padding:6px 12px;border-radius:6px;color:#d9d1bc;font-weight:500;font-size:14px}
+.adm-nav a:hover{color:var(--gold-hi)}
+.adm-nav a.on{color:var(--gold-hi);box-shadow:inset 0 -2px 0 var(--ember)}
+.sel{background:var(--ink-2);border:1px solid var(--line);border-radius:6px;padding:4px 8px;font-size:13.5px}
+.s-locked{color:var(--danger)}
+table.users{min-width:760px}
+.users .acts{align-items:center;flex-wrap:nowrap}
 `;
 
 const PREVIEW_CSS = `.preview-flag{background:rgba(233,185,73,.14);border:1px solid rgba(233,185,73,.5);color:#e9b949;border-radius:8px;padding:10px 14px;margin-top:20px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center}`;
@@ -195,7 +207,7 @@ export async function handleAdmin(req, res, cleanPath) {
     res.end('405');
     return true;
   }
-  if (cleanPath === '/quan-tri' || cleanPath === '/quan-tri/dat-mat-khau') {
+  if (cleanPath === '/quan-tri' || cleanPath === '/quan-tri/dat-mat-khau' || cleanPath === '/quan-tri/dang-ky') {
     sendHtml(req, res, 200, appPage(nonce), nonce);
     return true;
   }

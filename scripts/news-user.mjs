@@ -2,6 +2,8 @@
 //   node scripts/news-user.mjs add <username> "<Tên hiển thị>" manager|editor   → prints a one-time "set password" link
 //   node scripts/news-user.mjs reset <username>                                  → new link (old password stops working)
 //   node scripts/news-user.mjs disable <username> | enable <username> | remove <username>
+//   node scripts/news-user.mjs approve <username> manager|editor   → a registration from /quan-tri/dang-ky may sign in
+//   node scripts/news-user.mjs reject <username>                    → removes a registration still waiting
 //   node scripts/news-user.mjs role <username> manager|editor
 //   node scripts/news-user.mjs list
 // Links last 30 minutes and work once. Add --origin <https://address> to print a link for another address.
@@ -67,6 +69,25 @@ switch (cmd) {
     console.log(`${username} removed (articles keep the name they were written under)`);
     break;
   }
+  case 'approve': {
+    const user = find();
+    if (user.role !== 'pending') die(`${username} is not waiting for approval (role ${user.role})`);
+    if (!ROLE_NAMES[a3]) die('role: manager or editor');
+    user.role = a3;
+    user.approvedBy = 'news-user.mjs';
+    user.approvedAt = siteNow();
+    await writeUsers(users);
+    console.log(`${username} (${user.name}) approved as ${ROLE_NAMES[a3]} — they can sign in now`);
+    break;
+  }
+  case 'reject': {
+    const user = find();
+    if (user.role !== 'pending') die(`${username} is not waiting for approval (use disable)`);
+    users.splice(users.indexOf(user), 1);
+    await writeUsers(users);
+    console.log(`${username} registration removed`);
+    break;
+  }
   case 'role': {
     const user = find();
     if (!ROLE_NAMES[a3]) die('role: manager or editor');
@@ -78,10 +99,10 @@ switch (cmd) {
   case 'list':
     if (!users.length) console.log('no accounts');
     for (const u of users) {
-      const state = u.disabled ? 'disabled' : u.hash ? 'active' : u.resetExp > Date.now() ? 'waiting for password' : 'no password (link expired)';
+      const state = u.role === 'pending' ? 'registered, waiting for approval' : u.disabled ? 'disabled' : u.hash ? 'active' : u.resetExp > Date.now() ? 'waiting for password' : 'no password (link expired)';
       console.log(`${u.username.padEnd(20)} ${ROLE_NAMES[u.role] || u.role}\t${u.name}\t${state}`);
     }
     break;
   default:
-    die('usage: add <username> "<name>" manager|editor | reset <username> | disable|enable|remove <username> | role <username> manager|editor | list  [--origin URL]');
+    die('usage: add <username> "<name>" manager|editor | reset <username> | approve <username> manager|editor | reject <username> | disable|enable|remove <username> | role <username> manager|editor | list  [--origin URL]');
 }

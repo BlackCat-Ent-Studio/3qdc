@@ -8,6 +8,8 @@
 //              are counted before the password is checked, so a burst of parallel requests cannot slip past the limit,
 //              and at most 8 password checks run at once (scrypt shares Node's small thread pool with file serving)
 //   sign-out   disabling or resetting an account (account command) or setting its password ends its older sessions
+//   register   anyone may register at /quan-tri/dang-ky (admin-users.mjs); the account waits as role "pending" and cannot
+//              sign in until a manager approves it with a role
 import { scrypt as scryptCb, randomBytes, timingSafeEqual, createHash } from 'node:crypto';
 import { promisify } from 'node:util';
 import { join } from 'node:path';
@@ -35,6 +37,24 @@ export async function writeUsers(list) {
   await mkdir(DATA_DIR, { recursive: true });
   await writeJsonAtomic(usersFile(), list);
 }
+
+// Account changes made by the server (registration, setting a password, a manager's decisions) run one at a time:
+// fn(users) edits the list read at its turn; returning { save: true, ... } writes it. (The account command runs in its
+// own process and is not queued — it is used rarely and by hand.)
+let usersQueue = Promise.resolve();
+export function changeUsers(fn) {
+  const run = usersQueue.then(async () => {
+    const users = await readUsers();
+    const r = await fn(users);
+    if (r && r.save) await writeUsers(users);
+    return r;
+  });
+  usersQueue = run.catch(() => {});
+  return run;
+}
+
+// Roles an account can hold; "pending" = registered on the site, waiting for a manager (cannot sign in yet).
+export const ACTIVE_ROLES = ['manager', 'editor'];
 
 export async function hashPassword(password) {
   const salt = randomBytes(16).toString('hex');
@@ -110,7 +130,8 @@ export async function currentUser(req, { touch = true } = {}) {
     return null;
   }
   if (touch) s.seen = now;
-  return publicUser(user);
+  // sessionCreated lets queued account decisions re-check the session against sessionsValidAfter
+  return { ...publicUser(user), sessionCreated: s.created };
 }
 
 // ---------- sign-in limits ----------
@@ -187,6 +208,9 @@ export async function signIn(req, username, password) {
     return { status: 401, error: 'Sai tên đăng nhập hoặc mật khẩu.' };
   }
   failures.delete(keyName);
+  // the right password on an account still waiting for approval: say so (only its owner knows the password)
+  if (user.role === 'pending') return { status: 403, error: 'Tài khoản đang chờ Quản lý duyệt. Khi được duyệt, bạn đăng nhập bằng tên và mật khẩu này.' };
+  if (!ACTIVE_ROLES.includes(user.role)) return { status: 401, error: 'Sai tên đăng nhập hoặc mật khẩu.' };
   console.log(`[news-auth] ${siteNow()} signed in ${name} ip=${ip}`);
   return { token: startSession(user.username), user: publicUser(user) };
 }
@@ -196,21 +220,22 @@ export async function setPassword(token, password) {
   if (typeof password !== 'string' || password.length < PASSWORD_MIN) return { status: 400, error: `Mật khẩu cần ít nhất ${PASSWORD_MIN} ký tự.` };
   if (password.length > 200) return { status: 400, error: 'Mật khẩu dài quá 200 ký tự.' };
   if (typeof token !== 'string' || !/^[A-Za-z0-9_-]{40,60}$/.test(token)) return { status: 400, error: 'Link đặt mật khẩu không hợp lệ hoặc đã hết hạn. Hãy xin link mới.' };
-  const users = await readUsers();
   const want = Buffer.from(sha256(token), 'hex');
-  const user = users.find((u) => u.resetHash && Buffer.from(u.resetHash, 'hex').length === want.length && timingSafeEqual(Buffer.from(u.resetHash, 'hex'), want));
-  if (!user || !(user.resetExp > Date.now()) || user.disabled) {
-    return { status: 400, error: 'Link đặt mật khẩu không hợp lệ hoặc đã hết hạn. Hãy xin link mới.' };
-  }
-  Object.assign(user, await hashPassword(password));
-  delete user.resetHash;
-  delete user.resetExp;
-  user.passwordSetAt = siteNow();
-  user.sessionsValidAfter = Date.now();
-  await writeUsers(users);
-  endSessionsOf(user.username);
-  console.log(`[news-auth] ${siteNow()} password set for ${user.username}`);
-  return { user: publicUser(user) };
+  const fresh = await hashPassword(password); // hashed outside the queue: other account changes are not held up
+  return changeUsers((users) => {
+    const user = users.find((u) => u.resetHash && Buffer.from(u.resetHash, 'hex').length === want.length && timingSafeEqual(Buffer.from(u.resetHash, 'hex'), want));
+    if (!user || !(user.resetExp > Date.now()) || user.disabled) {
+      return { status: 400, error: 'Link đặt mật khẩu không hợp lệ hoặc đã hết hạn. Hãy xin link mới.' };
+    }
+    Object.assign(user, fresh);
+    delete user.resetHash;
+    delete user.resetExp;
+    user.passwordSetAt = siteNow();
+    user.sessionsValidAfter = Date.now();
+    endSessionsOf(user.username);
+    console.log(`[news-auth] ${siteNow()} password set for ${user.username}`);
+    return { save: true, user: publicUser(user) };
+  });
 }
 
 // ---------- request checks ----------

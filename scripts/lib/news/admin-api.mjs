@@ -4,6 +4,8 @@
 import { signIn, endSession, setPassword, currentUser, sameOrigin, sessionCookie, clearedCookie, clientIp } from './admin-auth.mjs';
 import { change, allPosts, listRevisions, readRevision, stampAfter, isVisible } from './news-store.mjs';
 import { decide, mayDelete, summaryOf } from './news-workflow.mjs';
+import { register, listUsers, manageUser } from './admin-users.mjs';
+import { USERNAME_RE } from './admin-auth.mjs';
 import { siteNow, siteNowSeconds } from './news-files.mjs';
 
 const BODY_MAX = 1_000_000;
@@ -93,6 +95,11 @@ async function route(req, res, path) {
     if (r.error) return oops(res, r.status, r.error);
     return send(res, 200, { user: r.user });
   }
+  if (method === 'POST' && path === '/dang-ky') {
+    const r = await register(req, body);
+    if (r.error) return oops(res, r.status, r.error);
+    return send(res, 201, { user: r.user });
+  }
   if (method === 'POST' && path === '/dang-xuat') {
     endSession(req);
     return send(res, 200, { ok: true }, { 'Set-Cookie': clearedCookie() });
@@ -103,7 +110,20 @@ async function route(req, res, path) {
   const user = await currentUser(req, { touch: !path.endsWith('/khoa') });
   if (!user) return oops(res, 401, 'Phiên đăng nhập đã hết. Hãy đăng nhập lại.');
 
-  if (method === 'GET' && path === '/toi') return send(res, 200, { user });
+  if (method === 'GET' && path === '/toi') return send(res, 200, { user: { username: user.username, name: user.name, role: user.role } });
+
+  // accounts page (managers only)
+  if (path === '/nguoi-dung' || path.startsWith('/nguoi-dung/')) {
+    if (user.role !== 'manager') return oops(res, 403, 'Chỉ Quản lý mới quản lý người dùng.');
+    if (method === 'GET' && path === '/nguoi-dung') return send(res, 200, { users: await listUsers(), me: user.username });
+    const name = path.slice('/nguoi-dung/'.length);
+    if (method === 'POST' && USERNAME_RE.test(name)) {
+      const r = await manageUser(user, name, { action: body.action, role: body.role });
+      if (r.error) return oops(res, r.status, r.error);
+      return send(res, 200, { users: r.users, me: user.username });
+    }
+    return oops(res, 404, 'Không có địa chỉ này.');
+  }
 
   if (method === 'GET' && path === '/bai') {
     const posts = await allPosts();
