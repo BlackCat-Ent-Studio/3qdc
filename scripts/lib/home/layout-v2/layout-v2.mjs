@@ -39,6 +39,9 @@ const DL_ART = [
   { href: null, src: '/3qdc-vi/home/nut-dang-ky-nhanh.png', label: 'Đăng ký nhanh' },
 ];
 const DL_TOPUP = '/3qdc-vi/home/nut-nap-the.webp';
+// the site's own download QR (200x200, decorated; links to the download-links article through q.me-qr.com), shown in the
+// download panel and the right sidebar instead of the original Chinese QR
+const QR_IMAGE = '/3qdc-vi/home/qr-3qdc.png';
 // The "NẠP THẺ" top-up box of the download panel and the right sidebar is switched off for now (2026-09-16): while
 // false neither box is built, so the panel is narrower and the sidebar (~390px instead of ~528px) stays full size and
 // centred down to laptop-height windows. To bring the box back: set this to true and restart the service.
@@ -315,6 +318,12 @@ const JS = `(function(){
       return el('a', attrs, [el('img', { src: art.src, alt: art.label })]);
     });
   }
+  // the QR keeps the app's element (sizes come from the panel / sidebar CSS) with the site's own QR picture
+  function qrClone(img){
+    var q = img.cloneNode(true);
+    q.setAttribute('src', '${QR_IMAGE}'); q.removeAttribute('srcset'); q.setAttribute('alt', 'Mã QR tải game 3Q Đại Chiến');
+    return q;
+  }
   // the top-up box keeps the app's element (its artwork is a CSS background) without the original shop link
   function topupBox(store){
     var box = store.cloneNode(true);
@@ -340,7 +349,7 @@ const JS = `(function(){
     var qrImg = document.querySelector('.star-site-index-download-qrcode_box img');
     if (!dl || !qrImg) return false;
     var bar = el('div', { id: 'hv2-sidebar', 'data-home-v2': '' });
-    var qr = el('div', { 'class': 'hv2-qr' }); qr.appendChild(qrImg.cloneNode(true));
+    var qr = el('div', { 'class': 'hv2-qr' }); qr.appendChild(qrClone(qrImg));
     bar.appendChild(qr);
     var desc = document.querySelector('.star-site-index-download-qrcode_box p');
     bar.appendChild(el('div', { 'class': 'hv2-qr-text', text: desc ? desc.textContent : '' }));
@@ -413,7 +422,7 @@ const JS = `(function(){
     var qrImg = document.querySelector('.star-site-index-download-qrcode_box img');
     if (!dl || !qrImg) return false;
     var platforms = dlLinks();
-    var qr = el('div', { 'class': 'hv2-dl-qr' }, [el('div', { 'class': 'hv2-dl-qr-img' }, [qrImg.cloneNode(true)])]);
+    var qr = el('div', { 'class': 'hv2-dl-qr' }, [el('div', { 'class': 'hv2-dl-qr-img' }, [qrClone(qrImg)])]);
     var desc = document.querySelector('.star-site-index-download-qrcode_box p');
     if (desc && desc.textContent) qr.appendChild(el('div', { 'class': 'hv2-dl-qr-text', text: desc.textContent }));
     var grid = el('div', { 'class': 'hv2-dl-grid' });
