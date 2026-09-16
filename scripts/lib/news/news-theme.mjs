@@ -1,5 +1,5 @@
 // news-theme.mjs — look shared by the news pages: the home page's dark navy + gold world (tokens, header, footer),
-// plus a light ivory theme the reader can switch to (html[data-theme="light"], remembered in this browser).
+// plus a light white theme the reader can switch to (html[data-theme="light"], remembered in this browser).
 import { LOGO } from './news-config.mjs';
 
 export const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -20,7 +20,7 @@ export const NEWS_CSS = `
   --display:"Cormorant Garamond","Noto Serif",Georgia,serif;
   --body:"Be Vietnam Pro","Segoe UI",system-ui,sans-serif;--r:10px}
 html[data-theme="light"]{color-scheme:light;
-  --ink:#f3ead7;--ink-2:#ebdfc6;--panel:#fbf6ea;
+  --ink:#ffffff;--ink-2:#f6f6f6;--panel:#ffffff;
   --line:rgba(120,82,30,.3);--line-soft:rgba(120,82,30,.15);
   --gold:#9a6b1f;--gold-hi:#7a4a10;--ember:#a84a0c;--ember-dk:#86390a;
   --text:#2a2014;--muted:#5e4f39;--faint:#6f6044;

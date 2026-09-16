@@ -15,7 +15,7 @@ const FONTS = 'https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;
 
 const ADMIN_CSS = `
 :root{--panel-2:#1b2140;--ok:#72c28f;--warn:#e9b949;--draft:#9aa3c9;--danger:#e36b5b;--review:#8fb8ff}
-html[data-theme="light"]{--panel-2:#efe4cc;--ok:#2a7046;--warn:#875a00;--draft:#56607f;--danger:#b3372a;--review:#2e5ca8}
+html[data-theme="light"]{--panel-2:#f2f2f2;--ok:#2a7046;--warn:#875a00;--draft:#56607f;--danger:#b3372a;--review:#2e5ca8}
 textarea,select{font:inherit;color:inherit}
 .small{font-size:13px}
 .adm-h{background:var(--ink-2);border-bottom:1px solid var(--line-soft);position:sticky;top:env(safe-area-inset-top,0px);z-index:20}
