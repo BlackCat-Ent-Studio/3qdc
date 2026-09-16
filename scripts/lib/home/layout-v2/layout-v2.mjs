@@ -53,11 +53,12 @@ const DL_TOPUP = '/3qdc-vi/home/nut-nap-the.webp';
 // download panel and the right sidebar instead of the original Chinese QR
 const QR_IMAGE = '/3qdc-vi/home/qr-3qdc.png';
 // The "NẠP THẺ" top-up box of the download panel and the right sidebar is switched off for now (2026-09-16): while
-// false neither box is built, so the panel is narrower and the sidebar (~390px instead of ~528px) stays full size and
+// false neither box is built, so the panel is narrower and the sidebar (~435px instead of ~576px) stays full size and
 // centred down to laptop-height windows. To bring the box back: set this to true and restart the service.
 const SHOW_TOPUP = false;
-// below this window height the sidebar uses its compact form (anchored under the header) so it never covers the header
-const SIDEBAR_COMPACT_H = SHOW_TOPUP ? 720 : 580;
+// below this window height the sidebar uses its compact form (anchored under the header) so it never covers the header:
+// full size inside the cloud frame is ~435px (~576px with the top-up box), plus the 88px header above and below
+const SIDEBAR_COMPACT_H = SHOW_TOPUP ? 760 : 620;
 // sidebar collapse arrow (omg3q floating-bar artwork, 86x58 strip): ">" (collapse) at 0 0, "<" (expand) at -44px 0
 const SB_TOGGLE = '/3qdc-vi/home/sidebar-toggle.png';
 
@@ -75,7 +76,10 @@ const SOCIAL = [
 const SOCIAL_BADGE = '/3qdc-vi/home/mxh-huy-hieu.webp';
 // the bar sits in the owner's navy frame with gold cloud corners (overrides/home/khung-mxh-may.webp, 320x937), drawn as a
 // 9-slice border image: the four cloud corners (the clouds reach 118px in) keep their shape, only the straight edges and
-// the navy middle stretch with the bar's height. Shown 88px wide = 0.275x, so the slices are 122/124 x 0.275
+// the navy middle stretch with the bar's height. Chrome leaves a faint dark hairline where the slices meet, so each bar
+// also gets a plain navy background of the frame's colour (rounded wider than the frame's ~21px corner, so it stays inside the gold line) that hides it. Drawn at 0.275x
+// (122/124 x 0.275) on both the 88px social bar and the right download sidebar, so the two bars have the same clouds and
+// gold line
 const SOCIAL_FRAME = '/3qdc-vi/home/khung-mxh-may.webp';
 const socialSvg = (d) => `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="#fff3d6" d="${d}"/></svg>`)}")`;
 
@@ -197,12 +201,15 @@ html.hv2 #hv2-dlpanel{display:flex;align-items:center;gap:clamp(14px,1.3vw,24px)
 #hv2-dlpanel a,#hv2-sidebar a,#home-v2 a{cursor:pointer}
 #hv2-dlpanel a:hover,#hv2-sidebar a:hover{filter:brightness(1.1)}
 
-/* right sidebar (cloned QR, Vietnamese download buttons, top-up box): slides in once the key visual (and its download panel) is scrolled past */
+/* right sidebar (cloned QR, Vietnamese download buttons, top-up box): slides in once the key visual (and its download panel)
+   is scrolled past; drawn in the cloud frame (SOCIAL_FRAME) like the left social bar, padded clear of the corner clouds */
 #hv2-sidebar{display:none}
 html.hv2 #hv2-sidebar{display:flex;flex-direction:column;align-items:center;gap:8px;position:fixed;right:14px;top:50%;
   transform:translate(calc(100% + 24px),-50%);opacity:0;pointer-events:none;transition:transform .3s ease,opacity .3s ease;
-  z-index:12;width:148px;padding:12px 10px;border-radius:12px;
-  background:rgba(8,10,22,.82);border:1px solid rgba(214,176,106,.55);box-shadow:0 8px 28px rgba(0,0,0,.45)}
+  z-index:12;width:152px;padding:36px 12px;box-sizing:border-box;
+  border:0 solid transparent;border-image:url("${SOCIAL_FRAME}") 122 124 122 fill / 33.5px 34px 33.5px stretch;
+  border-radius:24px;background:#16273b;
+  filter:drop-shadow(0 8px 18px rgba(0,0,0,.55))}
 html.hv2.hv2-scrolled #hv2-sidebar{transform:translate(0,-50%);opacity:1;pointer-events:auto}
 #hv2-sidebar .hv2-qr{width:112px;height:112px;background:#fff;border-radius:6px;padding:4px;box-sizing:border-box}
 #hv2-sidebar .hv2-qr img{width:100%!important;height:100%!important;display:block}
@@ -214,10 +221,10 @@ html.hv2.hv2-scrolled #hv2-sidebar{transform:translate(0,-50%);opacity:1;pointer
 #hv2-sidebar .hv2-top{margin-top:2px;width:128px;height:30px;border:1px solid rgba(214,176,106,.7);border-radius:6px;
   background:transparent;color:#e9d9b0;font-size:13px;cursor:pointer}
 #hv2-sidebar .hv2-top:hover{background:rgba(214,176,106,.18)}
-/* short windows: the centred full-size sidebar (~528px with the top-up box, ~390px without) would run over the fixed
-   header, so use a compact sidebar (~421px / ~312px) anchored just below the header instead (see SIDEBAR_COMPACT_H) */
+/* short windows: the centred full-size sidebar (~576px with the top-up box, ~435px without) would run over the fixed
+   header, so use a compact sidebar (~470px / ~366px) anchored just below the header instead (see SIDEBAR_COMPACT_H) */
 @media (max-height:${SIDEBAR_COMPACT_H}px){
-  html.hv2 #hv2-sidebar{top:96px;gap:6px;padding:8px 10px;transform:translate(calc(100% + 24px),0)}
+  html.hv2 #hv2-sidebar{top:96px;gap:6px;padding:36px 12px;transform:translate(calc(100% + 24px),0)}
   html.hv2.hv2-scrolled #hv2-sidebar{transform:translate(0,0)}
   #hv2-sidebar .hv2-qr{width:88px;height:88px}
   #hv2-sidebar a img{width:104px!important}
@@ -243,6 +250,7 @@ html.hv2.hv2-scrolled.hv2-sb-collapsed #hv2-sidebar{transform:translate(calc(100
 html.hv2 #hv2-social{display:flex;flex-direction:column;align-items:center;gap:10px;position:fixed;left:14px;top:50%;
   transform:translateY(-50%);z-index:12;width:88px;padding:36px 0;box-sizing:border-box;transition:transform .3s ease;
   border:0 solid transparent;border-image:url("${SOCIAL_FRAME}") 122 124 122 fill / 33.5px 34px 33.5px stretch;
+  border-radius:24px;background:#16273b;
   filter:drop-shadow(0 8px 18px rgba(0,0,0,.55))}
 #hv2-social .hv2-soc-i{display:block;width:56px;height:59px;box-sizing:border-box;
   background-repeat:no-repeat;background-size:22px 22px,100% 100%;background-position:17px 20px,0 0;
