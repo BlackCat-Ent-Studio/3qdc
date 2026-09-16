@@ -277,7 +277,7 @@ ${rows.map((p) => {
 <td><span class="pill s-${st}">${STATE[st]}</span>${st === 'scheduled' || st === 'published' ? `<div class="meta" style="margin-top:4px">${fmtTime(p.publishAt)}</div>` : ''}</td>
 <td><div class="person">${avatar(p.author)}${esc(p.author)}</div></td>
 <td class="meta">${fmtTime(p.updatedAt)}<br>bởi ${esc(p.updatedBy)}</td>
-<td><div class="acts"><a class="btn btn-ghost btn-sm" href="#/sua/${p.id}">${canEdit ? 'Sửa' : 'Mở'}</a><a class="btn btn-ghost btn-sm" href="/quan-tri/xem-truoc/${p.id}" target="_blank">Xem</a>${me.role === 'manager' ? `<button type="button" class="btn btn-danger btn-sm" data-del="${p.id}">Xoá</button>` : ''}</div></td></tr>`;
+<td><div class="acts"><a class="btn btn-ghost btn-sm" href="#/sua/${p.id}">${canEdit ? 'Sửa' : 'Mở'}</a><a class="btn btn-ghost btn-sm" href="/quan-tri/xem-truoc/${p.id}">Xem</a>${me.role === 'manager' ? `<button type="button" class="btn btn-danger btn-sm" data-del="${p.id}">Xoá</button>` : ''}</div></td></tr>`;
   }).join('')}
 ${rows.length ? '' : `<tr><td colspan="6" class="meta" style="text-align:center;padding:30px">${posts.length ? 'Không có bài nào khớp bộ lọc.' : 'Chưa có bài nào. Bấm “Viết bài mới” để bắt đầu.'}</td></tr>`}
 </tbody></table></div>`;
@@ -694,21 +694,19 @@ ${uploads.length ? `<div class="pop-row"><span class="lbl">Ảnh đã tải lên
         location.hash = '#/';
       });
     }
-    // preview: the saved article on its real page; unsaved changes are saved first unless that would change the live site
+    // preview: the saved article on its real page, opened in this tab (its "Về trang sửa bài" link comes back here).
+    // Unsaved changes are saved first — except on a published or scheduled article, where saving would change the live
+    // site and leaving would lose them: the editor stays and asks for a save first.
     $('#e-prev').addEventListener('click', async () => {
       err.hidden = true;
       if (!title.value.trim()) return showErr('Nhập tiêu đề để xem trước.');
-      const win = window.open('', '_blank');
       let target = post;
       if (!post || dirty()) {
-        if (live || st === 'scheduled') {
-          toast('Đang xem bản đã lưu — thay đổi chưa lưu không có trong bản xem trước');
-        } else {
-          target = await act('luu');
-        }
+        if (live || st === 'scheduled') return showErr('Bài có thay đổi chưa lưu. Lưu thay đổi trước rồi mới bấm Xem trước (bài đã đăng / hẹn giờ nên không tự lưu).');
+        target = await act('luu');
       }
-      if (!target) { if (win) win.close(); return; }
-      if (win) win.location.href = '/quan-tri/xem-truoc/' + target.id; else location.href = '/quan-tri/xem-truoc/' + target.id;
+      if (!target) return;
+      location.href = '/quan-tri/xem-truoc/' + target.id;
     });
     // bring back an older version into the form (saved only when the user saves)
     $$('[data-rev]').forEach((b) => b.addEventListener('click', async () => {
