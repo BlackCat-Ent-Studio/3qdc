@@ -28,6 +28,11 @@ html.hv2-embed .star-site-person-advance-skills__wrapper,
 html.hv2-embed .star-site-person-advance-restrain{display:none!important}
 html.hv2-embed .star-site-person-introduction{display:none!important}
 html.hv2-embed .star-site-person-cv-wrapper{display:none!important}
+/* the big hero name is the only text using the bundle's 12.5MB SourceHanSerifCN-Bold.otf (family HanSerifCNFont);
+   here it uses the same font cut down to Latin + Vietnamese (75KB, draws identically) under its own family, so the
+   full file is never downloaded. Unused outside the frame, so it loads nowhere else. */
+@font-face{font-family:"HvHeroName";src:url("/3qdc-vi/home/han-serif-viet.woff") format("woff")}
+html.hv2-embed .star-site-person-cv-general_name{font-family:"HvHeroName"!important}
 html.hv2-embed .hv2-sk{display:flex;align-items:center;gap:26px;height:80px}
 html.hv2-embed .hv2-sk-item{position:relative;display:block;flex:0 0 auto;width:80px;height:80px;outline:none}
 html.hv2-embed .hv2-sk-item img{position:absolute;left:2px;top:2px;width:72px;height:72px;border-radius:50%;object-fit:cover;
