@@ -54,14 +54,10 @@ const SOCIAL = [
 const socialSvg = (d) => `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="#e9d9b0" d="${d}"/></svg>`)}")`;
 
 // "Kho Báu" is hidden for now (2026-09-15): the feature will not be used for a long time. While false the home
-// page builds no treasure block (so no CG / wallpaper requests), drops the footer link and hides the treasure item
-// of the header image nav; server.mjs imports this flag and redirects /kho-bau to /home while it is false.
+// page builds no treasure block (so no CG / wallpaper requests) and hides the treasure item of the header image
+// nav; server.mjs imports this flag and redirects /kho-bau to /home while it is false.
 // section-treasure.mjs is kept unchanged. To bring the feature back: set this to true and restart the service.
 export const SHOW_TREASURE = false;
-
-// footer items [label, link]; no links until the site's own pages are given (null = shown, not clickable)
-const FOOTER_LINKS = [['Tin tức', null], ['Kế hoạch', null], ['Tướng', null], ['Đặc sắc', null],
-  ...(SHOW_TREASURE ? [['Kho báu', null]] : []), ['Cộng đồng', null], ['Hướng dẫn', null]];
 
 // header nav on the home page: only these items stay, drawn with the Vietnamese menu art from overrides/home
 // (normal 41px / hover 79px high, transparent right margin trimmed). Clicking scrolls to the section on this page
@@ -169,7 +165,7 @@ html.hv2 #hv2-dlpanel{display:flex;align-items:center;gap:clamp(14px,1.3vw,24px)
 #hv2-dlpanel a.star-site-index-store{display:block;margin:-18px 0 0!important;
   background-image:url("${DL_TOPUP}")!important;background-size:100% 100%!important;
   height:calc(var(--hv2-dl-btn) * 2 + 26px)!important;width:calc((var(--hv2-dl-btn) * 2 + 26px) * 0.8733)!important}
-/* buttons, top-up box and footer items look and react like real buttons even without a link yet (hand cursor, hover),
+/* buttons, top-up box and section items look and react like real buttons even without a link yet (hand cursor, hover),
    so the owner can try each one; a click leads nowhere until its link is filled in */
 #hv2-dlpanel a,#hv2-sidebar a,#home-v2 a{cursor:pointer}
 #hv2-dlpanel a:hover,#hv2-sidebar a:hover{filter:brightness(1.1)}
@@ -237,14 +233,11 @@ html.hv2 #home-v2{display:block;position:relative;z-index:1;background:#0b0d18;c
   font-family:"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
 #home-v2 .hv2-section{display:none;padding:72px 180px 64px 24px;max-width:1280px;margin:0 auto;box-sizing:content-box}
 #home-v2 .hv2-section[data-ready]{display:block}
+/* the page has no footer: the last block is at least one window tall below the header row, so the header menu can
+   still scroll it up to the header on tall windows (136px = the block's 72px top + 64px bottom padding) */
+#home-v2 .hv2-section:last-of-type{min-height:calc(100vh - ${HEADER_H}px - 136px)}
 #home-v2 .hv2-title{margin:0 0 36px;text-align:center;font-size:40px;font-weight:800;letter-spacing:.06em;
   text-transform:uppercase;color:#f3dfa6;text-shadow:0 2px 0 #6b3a14,0 0 22px rgba(243,197,106,.35)}
-#home-v2 .hv2-footer{padding:32px 24px 40px;border-top:1px solid rgba(214,176,106,.3);text-align:center;
-  color:#9b927c;font-size:13px;background:#07080f}
-#home-v2 .hv2-footer-brand{margin-bottom:14px;color:#f3dfa6;font-size:20px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
-#home-v2 .hv2-footer-nav{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 26px}
-#home-v2 .hv2-footer-nav a{color:#bfb59a;font-size:14px;text-decoration:none}
-#home-v2 .hv2-footer-nav a:hover{color:#f3c56a}
 `;
 
 const JS = `(function(){
@@ -299,13 +292,6 @@ const JS = `(function(){
     SECTIONS.forEach(function(s){
       wrap.appendChild(el('section', { id: s[0], 'class': 'hv2-section' }, [el('h2', { 'class': 'hv2-title', text: s[1] })]));
     });
-    var nav = el('nav', { 'class': 'hv2-footer-nav', 'aria-label': 'Liên kết' });
-    ${JSON.stringify(FOOTER_LINKS)}.forEach(function(l){
-      var attrs = { text: l[0] };
-      if (l[1]) attrs.href = l[1]; else { attrs.role = 'link'; attrs['aria-disabled'] = 'true'; }
-      nav.appendChild(el('a', attrs));
-    });
-    wrap.appendChild(el('footer', { 'class': 'hv2-footer' }, [el('div', { 'class': 'hv2-footer-brand', text: '3Q Đại Chiến' }), nav]));
     document.body.appendChild(wrap);
     var headerBg = el('div', { id: 'hv2-header-bg' });
     for (var i = 1; i <= 4; i++) headerBg.appendChild(el('div', { 'class': 'hv2-hb hv2-hb-' + i }));
