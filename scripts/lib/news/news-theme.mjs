@@ -67,6 +67,12 @@ img{max-width:100%}
 .h-acts{position:absolute;top:44px;right:24px;transform:translateY(-50%);display:flex;align-items:center;gap:16px}
 .site-h .theme-btn{color:#f3dfa6;border-color:rgba(214,176,106,.35)}
 .site-h .theme-btn:hover{border-color:#d6b06a;background:rgba(214,176,106,.12)}
+/* "Tải game" in the header is drawn with the owner's button art (overrides/news/nut-tai-game.webp, 468x156 = 3x the
+   156x52 shown); the label stays live text, nudged right of the red gem on the art's left end */
+.site-h .btn-fire{background:url("/3qdc-vi/news/nut-tai-game.webp") center/100% 100% no-repeat;width:156px;height:52px;
+  padding:0 0 0 10px;border-radius:0;font-size:16px;font-weight:700;letter-spacing:.02em;
+  text-shadow:0 1px 2px rgba(70,25,0,.95),0 0 8px rgba(70,25,0,.45)}
+.site-h .btn-fire:hover{filter:brightness(1.12) drop-shadow(0 0 6px rgba(243,197,106,.55))}
 @media (max-width:760px){
   .has-site-h{padding-top:64px}
   .site-h{height:64px}
