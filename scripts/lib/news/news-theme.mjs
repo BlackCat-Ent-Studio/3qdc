@@ -88,9 +88,10 @@ img{max-width:100%}
 .btn-sm{padding:6px 12px;font-size:13.5px}
 /* the artwork band starts under the fixed header, like the home page's key art, and runs 88px under the
    tab row, where its bottom edge melts into the page: the header's four blur layers mirrored upwards, then
-   a fade to the page colour painted above them (under the blur it would leave a hard bright seam). */
+   a fade to the page colour painted above them (under the blur it would leave a hard bright seam).
+   The artwork is shown at full brightness (no dark cover); the band text carries its own dark shadow instead. */
 .band{position:relative;margin-top:-88px;margin-bottom:-88px;background-color:var(--ink-2);background-size:cover;background-position:center 30%}
-.band::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(8,10,22,.94) 0%,rgba(8,10,22,.8) 45%,rgba(8,10,22,.62) 100%)}
+.band .crumb,.band h1,.band p{text-shadow:0 1px 2px rgba(0,0,0,.9),0 0 14px rgba(0,0,0,.65)}
 .band .wrap{position:relative;padding-block:132px 126px}
 .band+.wrap{position:relative}
 .band-fade{position:absolute;left:0;right:0;bottom:0;height:124px;pointer-events:none}
