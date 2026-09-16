@@ -114,7 +114,7 @@ export function renderListPage(visible, muc) {
   const main = `<section class="band" style="background-image:url('${KV}')"><div class="wrap">
 <nav class="crumb" aria-label="Đường dẫn"><a href="/">Trang chủ</a><span aria-hidden="true">›</span><span>Tin tức</span></nav>
 <h1>Tin tức</h1><p>${esc(description)}</p>
-</div></section>
+</div><div class="band-fade" aria-hidden="true"><i></i><i></i><i></i><i></i><b></b></div></section>
 <main class="wrap" id="news-app">
 <noscript><div class="empty">${visible.length ? visible.map((p) => `<p><a href="/tin-tuc/${esc(p.slug)}">${esc(p.title)}</a> — ${dmy(p.publishAt)}</p>`).join('') : 'Chưa có bài viết.'}</div></noscript>
 </main>`;

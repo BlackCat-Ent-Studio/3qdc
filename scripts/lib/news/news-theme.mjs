@@ -86,10 +86,20 @@ img{max-width:100%}
 .btn-ghost{background:transparent;border:1px solid var(--line);color:var(--text)}
 .btn-ghost:hover{border-color:var(--gold);background:var(--tint)}
 .btn-sm{padding:6px 12px;font-size:13.5px}
-/* the artwork band starts under the fixed header, like the home page's key art */
-.band{position:relative;margin-top:-88px;background-color:var(--ink-2);background-size:cover;background-position:center 30%;border-bottom:1px solid var(--line-soft)}
-.band::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(8,10,22,.94) 0%,rgba(8,10,22,.78) 45%,rgba(8,10,22,.35) 100%)}
-.band .wrap{position:relative;padding-block:132px 38px}
+/* the artwork band starts under the fixed header, like the home page's key art, and runs 88px under the
+   tab row, where its bottom edge melts into the page: the header's four blur layers mirrored upwards, then
+   a fade to the page colour painted above them (under the blur it would leave a hard bright seam). */
+.band{position:relative;margin-top:-88px;margin-bottom:-88px;background-color:var(--ink-2);background-size:cover;background-position:center 30%}
+.band::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(8,10,22,.94) 0%,rgba(8,10,22,.8) 45%,rgba(8,10,22,.62) 100%)}
+.band .wrap{position:relative;padding-block:132px 126px}
+.band+.wrap{position:relative}
+.band-fade{position:absolute;left:0;right:0;bottom:0;height:124px;pointer-events:none}
+.band-fade i,.band-fade b{position:absolute;inset:0}
+.band-fade i:nth-child(1){-webkit-backdrop-filter:blur(1.5px);backdrop-filter:blur(1.5px);-webkit-mask-image:linear-gradient(0deg,#000 100px,transparent 124px);mask-image:linear-gradient(0deg,#000 100px,transparent 124px)}
+.band-fade i:nth-child(2){-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);-webkit-mask-image:linear-gradient(0deg,#000 76px,transparent 108px);mask-image:linear-gradient(0deg,#000 76px,transparent 108px)}
+.band-fade i:nth-child(3){-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);-webkit-mask-image:linear-gradient(0deg,#000 48px,transparent 88px);mask-image:linear-gradient(0deg,#000 48px,transparent 88px)}
+.band-fade i:nth-child(4){-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);-webkit-mask-image:linear-gradient(0deg,#000 20px,transparent 64px);mask-image:linear-gradient(0deg,#000 20px,transparent 64px)}
+.band-fade b{background:linear-gradient(180deg,transparent 0,var(--ink) 84%)}
 @media (max-width:760px){.band{margin-top:-64px}.band .wrap{padding-top:108px}}
 .crumb{display:flex;gap:8px;align-items:center;color:var(--muted);font-size:13px;flex-wrap:wrap}
 .crumb a{text-decoration:none}.crumb a:hover{color:var(--gold-hi)}
