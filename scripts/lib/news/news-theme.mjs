@@ -59,7 +59,8 @@ img{max-width:100%}
 .nav{position:absolute;top:0;left:clamp(170px,13.5vw,260px);right:clamp(200px,15.6vw,300px);height:124px;
   display:flex;align-items:center;justify-content:center;gap:clamp(18px,2.4vw,46px);pointer-events:none}
 .nav a{position:relative;display:flex;align-items:center;height:124px;margin:0 clamp(2px,.3vw,8px);pointer-events:auto}
-.nav img{display:block;height:clamp(66.5px,4.9vw,94.5px);width:auto}
+/* max-width:none: the global img{max-width:100%} would squeeze the wider hover art to the link's width */
+.nav img{display:block;height:clamp(66.5px,4.9vw,94.5px);width:auto;max-width:none}
 .nav img.hv{display:none;position:absolute;left:0;top:50%;height:clamp(108.5px,8.015vw,154px);transform:translate(calc(clamp(66.5px,4.9vw,94.5px) * -0.8815),-50%)}
 .nav a:hover img.nm,.nav a:focus-visible img.nm{visibility:hidden}
 .nav a:hover img.hv,.nav a:focus-visible img.hv{display:block}
