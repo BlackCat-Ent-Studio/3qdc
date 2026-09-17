@@ -16,7 +16,7 @@
 //   (/wiki         → deferred)
 // API: same-origin snapshots (galaxias one-door body-keyed + game-ages + bbs).
 import { createServer as createHttp } from 'node:http';
-import { readFile, readdir, stat } from 'node:fs/promises';
+import { readFile, stat } from 'node:fs/promises';
 import { createReadStream } from 'node:fs';
 import { join, extname, normalize, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -47,6 +47,8 @@ import { SITE_ORIGIN } from './scripts/lib/news/news-config.mjs';
 import { viHead } from './scripts/lib/site-head.mjs';
 // the route wrapper of the umi bundle, sent without its phone / tablet redirect to unmirrored /m/ pages
 import { WRAPPERS_PATH, patchWrappers } from './scripts/lib/home/mobile-no-redirect.mjs';
+// the home player's songs (the folder overrides/home/nhac, read on every request)
+import { listSongs, publicList } from './scripts/lib/home/music-store.mjs';
 
 const ROOT = join(process.cwd(), 'mirror');
 const ENTRY_B = join(ROOT, 'index.html');          // build B entry (umi.62525e29)
@@ -116,37 +118,10 @@ const MIME = {
   '.ogg': 'audio/ogg', '.opus': 'audio/ogg', '.wav': 'audio/wav',
 };
 
-// Songs of the home page's music player: whatever audio files sit in overrides/home/nhac. The file name carries the
-// text: "Tên bài - Ca sĩ.mp3" (the part after the last " - " is the artist, and a file without it is all title); a
-// picture with the same name is that song's cover. The folder is read on every request, so songs can be added or
-// removed without restarting the service (a restart logs the editors out of /quan-tri).
+// The songs of the home page player live in overrides/home/nhac and are read on every request (see
+// scripts/lib/home/music-store.mjs), so the owner can add or remove them from /quan-tri without a restart.
 const MUSIC_URL = OVERRIDES_URL + 'api/nhac';
-const MUSIC_DIR = join(OVERRIDES, 'home', 'nhac');
-const MUSIC_EXT = ['.mp3', '.m4a', '.ogg', '.opus', '.wav'];
-const MUSIC_COVER_EXT = ['.webp', '.jpg', '.jpeg', '.png'];
-const musicUrl = (name) => OVERRIDES_URL + 'home/nhac/' + encodeURIComponent(name);
-async function musicList() {
-  const names = await readdir(MUSIC_DIR).catch(() => []);
-  const covers = new Map();
-  for (const n of names) {
-    const ext = extname(n).toLowerCase();
-    if (MUSIC_COVER_EXT.includes(ext)) covers.set(n.slice(0, -ext.length), n);
-  }
-  return names
-    .filter((n) => MUSIC_EXT.includes(extname(n).toLowerCase()))
-    .sort((a, b) => a.localeCompare(b, 'vi'))
-    .map((n) => {
-      const stem = n.slice(0, -extname(n).length);
-      const cut = stem.lastIndexOf(' - ');
-      const cover = covers.get(stem);
-      return {
-        file: musicUrl(n),
-        title: cut > 0 ? stem.slice(0, cut) : stem,
-        artist: cut > 0 ? stem.slice(cut + 3) : '',
-        cover: cover ? musicUrl(cover) : null,
-      };
-    });
-}
+
 const TRACKER_PATHS = ['/r.png', '/beacon'];
 const API_HOST_DIRS = ['galaxias-api.lingxigames.com', 'game-ages-fx.lingxigames.com', 'p10488-bbs.ejoy.com'];
 
@@ -282,7 +257,7 @@ export function startServer(port = 8080) {
 
       // --- the home page's music player asks for the song list here ---
       if (pathname === MUSIC_URL) {
-        const body = JSON.stringify(await musicList());
+        const body = JSON.stringify(publicList(await listSongs()));
         res.writeHead(200, { 'Content-Type': MIME['.json'], 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-store' });
         return res.end(body);
       }

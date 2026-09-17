@@ -4,6 +4,7 @@
 import { signIn, endSession, setPassword, currentUser, sameOrigin, sessionCookie, clearedCookie, clientIp } from './admin-auth.mjs';
 import { change, allPosts, listRevisions, readRevision, stampAfter, isVisible, listTrash, TRASH_NAME_RE } from './news-store.mjs';
 import { saveUpload, recentUploads } from './news-uploads.mjs';
+import { listSongs, saveSong, removeSong, SONG_MAX, FOLDER_MAX } from '../home/music-store.mjs';
 import { decide, mayDelete, summaryOf } from './news-workflow.mjs';
 import { register, listUsers, manageUser } from './admin-users.mjs';
 import { USERNAME_RE } from './admin-auth.mjs';
@@ -61,6 +62,20 @@ async function uploadPicture(req, res) {
   return send(res, 201, { url: r.url, bytes: r.bytes });
 }
 
+// One song of the home page's player. The file name (with its Vietnamese text) travels in a header because the body is
+// the sound itself; the store cleans it and keeps names unique.
+async function uploadSong(req, res) {
+  const user = await currentUser(req);
+  if (!user) return sendAndClose(req, res, 401, { error: 'Phiên đăng nhập đã hết. Hãy đăng nhập lại.' });
+  if (user.role !== 'manager') return sendAndClose(req, res, 403, { error: 'Chỉ Quản lý mới thêm được nhạc nền.' });
+  let raw = '';
+  try { raw = decodeURIComponent(String(req.headers['x-ten-file'] || '')); } catch { raw = ''; }
+  const r = await saveSong(req, raw);
+  if (r.error) return sendAndClose(req, res, r.status, { error: r.error });
+  console.log(`[news] ${siteNow()} ${user.username} uploaded song ${r.name} (${r.bytes} bytes)`);
+  return send(res, 201, { name: r.name, bytes: r.bytes, items: await listSongs() });
+}
+
 // Someone else's current hold on an article, or null.
 function otherLock(id, user) {
   const l = locks.get(id);
@@ -91,6 +106,8 @@ async function route(req, res, path) {
     }
     // a picture upload: raw image body, so the session is checked before a single byte is read
     if (path === '/anh') return uploadPicture(req, res);
+    // a song upload: same, raw audio body (the file name comes in a header, the body is the sound)
+    if (path === '/nhac') return uploadSong(req, res);
     if (!/^application\/json(\s*;|$)/i.test(String(req.headers['content-type'] || ''))) return oops(res, 415, 'Chỉ nhận dữ liệu JSON.');
     const got = await readBody(req);
     if (got.tooBig) return refuseTooBig(req, res);
@@ -132,6 +149,21 @@ async function route(req, res, path) {
 
   // pictures uploaded recently (both roles: editors write articles with pictures too)
   if (method === 'GET' && path === '/anh') return send(res, 200, { items: await recentUploads(40) });
+
+  // background music of the home page (managers only): the songs are plain files in overrides/home/nhac, so the list is
+  // the folder itself and a change is live at once (the player reads the same folder)
+  if (path === '/nhac' || path.startsWith('/nhac/')) {
+    if (user.role !== 'manager') return oops(res, 403, 'Chỉ Quản lý mới quản lý nhạc nền.');
+    if (method === 'GET' && path === '/nhac') return send(res, 200, { items: await listSongs(), max: SONG_MAX, total: FOLDER_MAX });
+    const nm = path.match(/^\/nhac\/([^/]+)\/xoa$/);
+    if (method === 'POST' && nm) {
+      const r = await removeSong(decodeURIComponent(nm[1]));
+      if (r.error) return oops(res, r.status, r.error);
+      console.log(`[news] ${siteNow()} ${user.username} deleted song ${decodeURIComponent(nm[1])}`);
+      return send(res, 200, { items: await listSongs() });
+    }
+    return oops(res, 404, 'Không có địa chỉ này.');
+  }
 
   // trash (managers only): list deleted articles, bring one back as a draft
   if (path === '/thung-rac' || path.startsWith('/thung-rac/')) {

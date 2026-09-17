@@ -64,7 +64,7 @@ export function adminApp() {
 
   function header(active) {
     const nav = me.role === 'manager'
-      ? `<nav class="adm-nav" aria-label="Mục quản trị">${[['posts', '#/', 'Bài viết'], ['trash', '#/thung-rac', 'Thùng rác'], ['users', '#/nguoi-dung', 'Người dùng']]
+      ? `<nav class="adm-nav" aria-label="Mục quản trị">${[['posts', '#/', 'Bài viết'], ['music', '#/nhac', 'Nhạc nền'], ['trash', '#/thung-rac', 'Thùng rác'], ['users', '#/nguoi-dung', 'Người dùng']]
         .map(([key, href, label]) => `<a href="${href}"${(active || 'posts') === key ? ' class="on" aria-current="page"' : ''}>${label}</a>`).join('')}</nav>`
       : '';
     return `<header class="adm-h"><div class="wrap"><a href="#/" class="adm-logo"><img src="${esc(LOGO)}" alt="3Q Đại Chiến"></a><span class="ttl">Quản trị tin tức</span>${nav}
@@ -347,6 +347,85 @@ ${items.length ? '' : '<tr><td colspan="6" class="meta" style="text-align:center
         if (mine2 !== screen) return;
         if (!res.ok) { if (res.status !== 401) draw(items, res.data.error || 'Không khôi phục được.'); return; }
         toast(`Đã khôi phục “${res.data.post.title}” về Nháp`);
+        draw(res.data.items, '');
+      }));
+    };
+    draw(r.data.items, '');
+  }
+
+  // ---------- background music of the home page (managers) ----------
+  // The songs are plain files in one folder on the server, so this page is that folder: upload adds a file, delete
+  // removes it, and the player on the home page follows at once (it reads the same folder on every visit).
+  const MUSIC_TYPES = ['audio/mpeg', 'audio/mp3', 'audio/mp4', 'audio/x-m4a', 'audio/ogg', 'audio/wav', 'audio/x-wav'];
+  const mb = (n) => (n / 1048576).toFixed(1) + ' MB';
+
+  async function renderMusic() {
+    cleanupEditor();
+    const mine = screen;
+    app.innerHTML = `${header('music')}<main class="wrap"><p class="meta" style="padding:40px 0">Đang tải danh sách nhạc…</p></main>`;
+    bindHeader();
+    const r = await api('GET', '/nhac');
+    if (mine !== screen || !me) return;
+    if (!r.ok) { if (r.status !== 401) $('main').innerHTML = `<div class="err" style="margin:40px 0">${esc(r.data.error)}</div>`; return; }
+    const max = r.data.max || 15728640;
+    const total = r.data.total || 314572800;
+
+    const draw = (items, notice) => {
+      const used = items.reduce((n, s) => n + (s.bytes || 0), 0);
+      $('main').innerHTML = `<div class="adm-top"><div><h1>Nhạc nền</h1>
+<p>Những bài này phát ở bàn nhạc góc dưới phải <b>trang chủ</b>. Thêm hoặc xoá là có hiệu lực ngay, không cần khởi động lại web.
+Đặt tên file kiểu <b>Tên bài - Ca sĩ.mp3</b> để bàn nhạc hiện đúng tên và ca sĩ. Mỗi bài tối đa ${mb(max)}, tất cả cộng lại tối đa ${mb(total)}.</p></div>
+<div><input type="file" id="m-file" accept="audio/*" multiple hidden><button type="button" class="btn btn-fire" id="m-add">+ Thêm bài hát</button></div></div>
+<div class="err" id="m-err" role="alert"${notice ? '' : ' hidden'}>${esc(notice || '')}</div>
+<p class="meta" id="m-used">Đang dùng ${mb(used)} / ${mb(total)} — ${items.length} bài.</p>
+<div class="tbl-wrap"><table class="posts"><thead><tr><th>Bài hát</th><th>Ca sĩ</th><th>Dung lượng</th><th>Nghe thử</th><th></th></tr></thead><tbody>
+${items.map((s) => `<tr data-name="${esc(s.name)}">
+<td><div class="p-title"><div><b>${esc(s.title)}</b><div class="meta">${esc(s.name)}</div></div></div></td>
+<td class="meta">${esc(s.artist || '—')}</td>
+<td class="meta">${mb(s.bytes || 0)}</td>
+<td><audio controls preload="none" src="${esc(s.file)}" style="height:32px;max-width:220px"></audio></td>
+<td><div class="acts"><button type="button" class="btn btn-ghost btn-sm" data-del-song="${esc(s.name)}">Xoá</button></div></td></tr>`).join('')}
+${items.length ? '' : '<tr><td colspan="5" class="meta" style="text-align:center;padding:30px">Chưa có bài hát nào. Bấm “Thêm bài hát” để tải lên.</td></tr>'}
+</tbody></table></div>`;
+
+      const err = (msg) => { const e = $('#m-err'); e.textContent = msg; e.hidden = !msg; };
+      $('#m-add').addEventListener('click', () => $('#m-file').click());
+      $('#m-file').addEventListener('change', async () => {
+        const files = [...$('#m-file').files];
+        $('#m-file').value = '';
+        if (!files.length) return;
+        const mine2 = screen;
+        let list = items;
+        for (const f of files) {
+          if (!MUSIC_TYPES.includes(f.type)) { err(`“${f.name}”: chỉ nhận MP3, M4A, OGG hoặc WAV.`); continue; }
+          if (f.size > max) { err(`“${f.name}” nặng ${mb(f.size)}, quá giới hạn ${mb(max)} mỗi bài.`); continue; }
+          $('#m-used').textContent = `Đang tải lên “${f.name}” (${mb(f.size)})…`;
+          let res;
+          try {
+            res = await fetch('/quan-tri/api/nhac', {
+              method: 'POST', credentials: 'same-origin', body: f,
+              headers: { 'Content-Type': f.type, 'X-Ten-File': encodeURIComponent(f.name) },
+            });
+          } catch (e2) { err('Mất kết nối khi tải bài hát lên. Thử lại.'); break; }
+          let data = {};
+          try { data = await res.json(); } catch (e2) { data = { error: 'Máy chủ trả lời lạ (' + res.status + ').' }; }
+          if (res.status === 401) { me = null; renderLogin(data.error); return; }
+          if (mine2 !== screen) return;
+          if (!res.ok) { err(data.error || `Không tải lên được “${f.name}”.`); continue; }
+          list = data.items;
+          toast(`Đã thêm “${data.name}”`);
+        }
+        draw(list, '');
+      });
+      $$('[data-del-song]').forEach((b) => b.addEventListener('click', async () => {
+        const name = b.getAttribute('data-del-song');
+        if (!window.confirm(`Xoá “${name}” khỏi nhạc nền? Người chơi sẽ không nghe bài này nữa.`)) return;
+        $$('[data-del-song]').forEach((x) => { x.disabled = true; });
+        const mine2 = screen;
+        const res = await api('POST', `/nhac/${encodeURIComponent(name)}/xoa`, {});
+        if (mine2 !== screen) return;
+        if (!res.ok) { if (res.status !== 401) draw(items, res.data.error || 'Không xoá được bài này.'); return; }
+        toast(`Đã xoá “${name}”`);
         draw(res.data.items, '');
       }));
     };
@@ -747,6 +826,7 @@ ${uploads.length ? `<div class="pop-row"><span class="lbl">Ảnh đã tải lên
     let m;
     if (h === '/viet-bai') renderEditor(null);
     else if ((m = h.match(/^\/sua\/(\d+)$/))) renderEditor(+m[1]);
+    else if (h === '/nhac' && me.role === 'manager') renderMusic();
     else if (h === '/nguoi-dung' && me.role === 'manager') renderUsers();
     else if (h === '/thung-rac' && me.role === 'manager') renderTrash();
     else renderList();
