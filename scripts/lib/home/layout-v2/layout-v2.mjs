@@ -150,9 +150,10 @@ html.hv2 .star-site-index-logo{position:fixed!important;top:${LOGO_CENTER}px!imp
 html.hv2 .star-site-index-beishu{display:none!important}
 
 /* image nav: vertical list -> centered horizontal row, reduced to the NAV_VI items. The row is as tall as the blurred
-   header background (not the 88px bar) so the large menu art is not cut at the top */
+   header background (not the 88px bar) so the large menu art is not cut at the top. Same inset on both sides so the
+   menu is centred on the window (the logo sits inside the left inset) */
 html.hv2 .star-site-index-navs{position:fixed!important;top:0!important;left:clamp(170px,13.5vw,260px)!important;
-  right:clamp(200px,15.6vw,300px)!important;height:${HEADER_FADE}px!important;display:flex!important;
+  right:clamp(170px,13.5vw,260px)!important;height:${HEADER_FADE}px!important;display:flex!important;
   flex-direction:row!important;align-items:center!important;justify-content:center!important;gap:clamp(18px,2.4vw,46px);
   transform:none!important;animation:none!important;filter:none!important;opacity:1!important;z-index:11!important;
   margin:0!important;padding:0!important}
@@ -270,7 +271,9 @@ html.hv2-soc-collapsed #hv2-social .hv2-soc-toggle{background-position:-44px 0}
 #home-v2{display:none}
 html.hv2 #home-v2{display:block;position:relative;z-index:1;background:#0b0d18;color:#e8e2d0;padding-top:var(--hv2-dl-push,0px);
   font-family:"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
-#home-v2 .hv2-section{display:none;padding:72px 180px 64px 24px;max-width:1280px;margin:0 auto;box-sizing:content-box}
+/* sections are centred on the window: content up to 1280px with the same side padding, at least 212px so the content
+   never runs under the fixed side bars' collapse arrows (social arrow ends 43px in, sidebar arrow starts 209px in) */
+#home-v2 .hv2-section{display:none;padding:72px max(212px,calc((100% - 1280px) / 2)) 64px;max-width:none;margin:0 auto;box-sizing:content-box}
 #home-v2 .hv2-section[data-ready]{display:block}
 /* the page has no footer: the last block is at least one window tall below the header row, so the header menu can
    still scroll it up to the header on tall windows (136px = the block's 72px top + 64px bottom padding) */

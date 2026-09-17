@@ -56,7 +56,7 @@ img{max-width:100%}
 .site-h .logo img{height:clamp(56px,4vw,76px);width:auto;display:block}
 /* menu art: the normal image stays in flow (stable width), the hover art (brush stroke) is laid over it on hover;
    the row is as tall as the faded background so the hover art is not cut, but only the links take clicks */
-.nav{position:absolute;top:0;left:clamp(170px,13.5vw,260px);right:clamp(200px,15.6vw,300px);height:124px;
+.nav{position:absolute;top:0;left:clamp(170px,13.5vw,260px);right:clamp(170px,13.5vw,260px);height:124px;
   display:flex;align-items:center;justify-content:center;gap:clamp(18px,2.4vw,46px);pointer-events:none}
 .nav a{position:relative;display:flex;align-items:center;height:124px;margin:0 clamp(2px,.3vw,8px);pointer-events:auto}
 /* max-width:none: the global img{max-width:100%} would squeeze the wider hover art to the link's width */
