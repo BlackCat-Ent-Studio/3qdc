@@ -85,7 +85,9 @@ html.hv2 #hv2-music.hv2-mu-off{transform:translateX(0)}
   background:#fff;transition:left .15s ease}
 #hv2-music .hv2-mu-sw.on{background:${BAR}}
 #hv2-music .hv2-mu-sw.on::after{left:14px}
-#hv2-music .hv2-mu-prog{position:relative;flex:1 1 auto;height:5px;border-radius:3px;background:${BAR_BG};cursor:pointer}
+#hv2-music .hv2-mu-prog{position:relative;flex:1 1 auto;height:5px;border-radius:3px;background:${BAR_BG};cursor:pointer;touch-action:none}
+/* the paint is 5px; the finger gets a 26px tall strip around it */
+#hv2-music .hv2-mu-prog::before{content:"";position:absolute;left:-6px;right:-6px;top:-11px;bottom:-11px}
 #hv2-music .hv2-mu-prog i{position:absolute;left:0;top:0;height:5px;width:0;border-radius:3px;background:${BAR}}
 #hv2-music .hv2-mu-prog b{position:absolute;top:-3px;left:0;width:11px;height:11px;margin-left:-5px;border-radius:50%;
   background:#fff;box-shadow:0 0 2px rgba(0,0,0,.45)}
@@ -183,7 +185,7 @@ export const MUSIC_JS = MUSIC.enabled ? `(function(){
   window.__hv2.onMount(function(api){
     var el = api.el;
     var songs = [], i = 0, saveAt = 0, autoOff = false;
-    var fetching = false, lastFetch = 0, badFiles = 0;
+    var fetching = false, lastFetch = 0, badFiles = 0, dragging = false;
     var REFRESH_MS = 30000;
     var box, audio, bg, disc, status, title, artist, album, time, shuffleTop, listEl;
     var prog, progFill, progKnob, swRepeat, btnShuffle, btnVol, tab;
@@ -261,11 +263,21 @@ export const MUSIC_JS = MUSIC.enabled ? `(function(){
       prog = el('div', { 'class': 'hv2-mu-prog', role: 'slider', 'aria-label': 'Vị trí bài hát' });
       progFill = el('i'); progKnob = el('b');
       prog.appendChild(progFill); prog.appendChild(progKnob);
-      prog.addEventListener('click', function(e){
-        if (!audio.duration) return;
-        var r = prog.getBoundingClientRect();
-        audio.currentTime = audio.duration * Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
+      // Seeking with a finger: a tap jumps, a drag scrubs. The bar itself is 5-6px of paint, so the touch area is the
+      // invisible strip around it (see the ::before rule); touch-action:none keeps the browser from turning the drag
+      // into a page scroll, which is why dragging did nothing before.
+      prog.addEventListener('pointerdown', function(e){
+        dragging = true;
+        try { prog.setPointerCapture(e.pointerId); } catch (e2) {}
+        seekTo(e.clientX);
+        e.preventDefault();
       });
+      prog.addEventListener('pointermove', function(e){ if (dragging) seekTo(e.clientX); });
+      prog.addEventListener('pointerup', function(e){
+        dragging = false;
+        try { prog.releasePointerCapture(e.pointerId); } catch (e2) {}
+      });
+      prog.addEventListener('pointercancel', function(){ dragging = false; });
       bottom.appendChild(prog);
       btnShuffle = button('hv2-mu-shufflebtn', SVG.shuffle, 'Phát ngẫu nhiên', toggleShuffle);
       btnShuffle.classList.toggle('on', shuffle);
@@ -330,7 +342,17 @@ export const MUSIC_JS = MUSIC.enabled ? `(function(){
       status.setAttribute('title', on ? 'Tạm dừng' : 'Phát');
       status.setAttribute('aria-label', on ? 'Tạm dừng' : 'Phát');
     }
+    // where the finger is on the bar -> where the song jumps to
+    function seekTo(clientX){
+      if (!audio.duration) return;
+      var r = prog.getBoundingClientRect();
+      var p = Math.min(1, Math.max(0, (clientX - r.left) / r.width));
+      audio.currentTime = audio.duration * p;
+      progFill.style.width = (p * 100) + '%';
+      progKnob.style.left = (p * 100) + '%';
+    }
     function onTime(){
+      if (dragging) return;   // the finger owns the knob while it is down
       var d = audio.duration || 0;
       time.textContent = mmss(audio.currentTime) + ' / ' + mmss(d);
       var p = d ? (audio.currentTime / d) : 0;
