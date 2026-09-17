@@ -62,7 +62,7 @@ html.hv2 #hv2-music.hv2-mu-off{transform:translateX(0)}
 #hv2-music.hv2-mu-play .hv2-mu-disc{animation-play-state:running}
 @keyframes hv2-mu-spin{to{transform:rotate(360deg)}}
 #hv2-music .hv2-mu-status{position:absolute;left:50%;top:64px;margin-left:-22px;width:44px;height:44px;padding:0;
-  border:0;border-radius:50%;background:rgba(70,84,115,.5);color:#fff;cursor:pointer;line-height:0}
+  border:0;border-radius:50%;background:rgba(70,84,115,.5);color:#fff;cursor:pointer;line-height:0;z-index:2}
 #hv2-music .hv2-mu-status svg{width:40px;height:40px;fill:currentColor}
 #hv2-music .hv2-mu-ctl{position:absolute;left:0;bottom:0;width:300px;height:44px}
 #hv2-music .hv2-mu-ctl button{position:absolute;top:11px;width:22px;height:22px;padding:0;border:0;background:transparent;
@@ -96,13 +96,52 @@ html.hv2 #hv2-music.hv2-mu-off{transform:translateX(0)}
 #hv2-music .hv2-mu-list li{padding:5px 12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
 #hv2-music .hv2-mu-list li:hover{background:rgba(255,255,255,.12)}
 #hv2-music .hv2-mu-list li.on{color:#ffb15e}
-/* phones and tablets: same player, narrower, sitting just above the bottom edge */
+/* Phones and tablets are a different room, not a smaller desktop: at rest the player is one round 52px disc in the
+   thumb corner and covers nothing; tapping it opens a wide, short panel whose buttons are finger-sized. The album line,
+   the lyrics item and the two 10-second seek buttons are left out there — too small to hit, and the page has little
+   room to spare. */
 @media ${COMPACT_MQ}{
-  html.hv2:not(.hv2-embed) #hv2-music{right:min(-300px,calc(-100vw + 12px));bottom:calc(12px + env(safe-area-inset-bottom));
-    width:min(300px,calc(100vw - 32px));transform:translateX(min(-300px,calc(-100vw + 12px)))}
-  html.hv2 #hv2-music.hv2-mu-off{transform:translateX(0)}
-  #hv2-music .hv2-mu-info,#hv2-music .hv2-mu-ctl,#hv2-music .hv2-mu-list{width:auto;left:5px;right:5px}
-  #hv2-music .hv2-mu-list{left:auto;right:0;width:min(300px,calc(100vw - 32px))}
+  html.hv2:not(.hv2-embed) #hv2-music{right:12px;bottom:calc(12px + env(safe-area-inset-bottom));
+    width:min(360px,calc(100vw - 24px));transform:none;transition:none;background:#28314a}
+  html.hv2 #hv2-music.hv2-mu-off{transform:none;width:auto;background:transparent;box-shadow:none}
+  #hv2-music.hv2-mu-off .hv2-mu-top,#hv2-music.hv2-mu-off .hv2-mu-bottom,#hv2-music.hv2-mu-off .hv2-mu-list{display:none}
+  /* at rest: the turning cover is the button */
+  #hv2-music .hv2-mu-tab{position:static;display:none;width:52px;height:52px;border-radius:50%;
+    border:2px solid rgba(255,255,255,.85);background:${BG} center/cover no-repeat;background-image:var(--hv2-mu-cover);
+    box-shadow:0 4px 14px rgba(0,0,0,.5)}
+  #hv2-music.hv2-mu-off .hv2-mu-tab{display:block}
+  #hv2-music.hv2-mu-off .hv2-mu-tab svg{display:none}
+  #hv2-music.hv2-mu-off.hv2-mu-play .hv2-mu-tab{animation:hv2-mu-spin 14s linear infinite}
+  /* open: a close button in the panel's corner instead of the desktop tab */
+  #hv2-music:not(.hv2-mu-off) .hv2-mu-tab{position:absolute;display:block;left:auto;top:6px;right:6px;width:32px;height:32px;
+    border:0;border-radius:50%;background:rgba(0,0,0,.35);box-shadow:none}
+  #hv2-music:not(.hv2-mu-off) .hv2-mu-tab svg{display:block;width:14px;height:14px;margin:0 auto}
+  /* open panel: cover + text on one line, then the three big controls */
+  #hv2-music .hv2-mu-top{height:auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:12px 12px 6px}
+  #hv2-music .hv2-mu-disc{position:static;order:1;width:64px;height:64px;margin:0}
+  #hv2-music .hv2-mu-status{left:14px;top:22px;margin:0;width:44px;height:44px}
+  #hv2-music .hv2-mu-status svg{width:38px;height:38px}
+  #hv2-music .hv2-mu-info{position:static;order:2;flex:1 1 0;width:auto;padding-right:30px}
+  #hv2-music .hv2-mu-row{height:auto;margin-bottom:6px}
+  #hv2-music .hv2-mu-row:last-child{display:none}
+  #hv2-music .hv2-mu-row .hv2-mu-l{max-width:none}
+  #hv2-music .hv2-mu-ctl{position:static;order:3;width:100%;height:auto;display:flex;align-items:center;
+    justify-content:center;gap:34px;padding:2px 0 6px}
+  #hv2-music .hv2-mu-ctl button{position:static;top:auto;left:auto;right:auto;width:44px;height:44px}
+  #hv2-music .hv2-mu-ctl button svg{width:26px;height:26px;margin:0 auto}
+  #hv2-music .hv2-mu-back,#hv2-music .hv2-mu-fwd{display:none}
+  /* bottom strip: taller, so every control is a real touch target */
+  #hv2-music .hv2-mu-bottom{height:40px;gap:12px;padding:0 12px}
+  #hv2-music .hv2-mu-bottom button{width:32px;height:32px;display:flex;align-items:center;justify-content:center}
+  #hv2-music .hv2-mu-bottom button svg{width:20px;height:20px}
+  #hv2-music .hv2-mu-sw{width:34px;height:18px;border-radius:9px}
+  #hv2-music .hv2-mu-sw::after{width:14px;height:14px}
+  #hv2-music .hv2-mu-sw.on::after{left:18px}
+  #hv2-music .hv2-mu-prog{height:6px}
+  #hv2-music .hv2-mu-prog b{top:-4px;width:14px;height:14px;margin-left:-7px}
+  /* the playlist fills the panel's width, one finger-sized row per song */
+  #hv2-music .hv2-mu-list{left:0;right:0;width:auto;max-height:min(50vh,260px)}
+  #hv2-music .hv2-mu-list li{padding:13px 14px}
 }
 ` : '';
 
@@ -311,6 +350,8 @@ export const MUSIC_JS = MUSIC.enabled ? `(function(){
       album.textContent = s.title;
       disc.style.backgroundImage = 'url("' + cover(s) + '")';
       bg.style.backgroundImage = 'url("' + cover(s) + '")';
+      // on phones the collapsed player IS this cover (see --hv2-mu-cover in the compact rules)
+      box.style.setProperty('--hv2-mu-cover', 'url("' + cover(s) + '")');
       markList();
       set(K.i, String(i)); set(K.t, '0');
       if (play) audio.play().catch(function(){});
@@ -348,7 +389,8 @@ export const MUSIC_JS = MUSIC.enabled ? `(function(){
           if (t < audio.duration - 2) audio.currentTime = t;
         });
       }
-      setOff(get(K.off, '0') === '1', false);
+      // phones start with just the disc so the page stays clear; on a mouse screen the panel is open
+      setOff(get(K.off, api.compact() ? '1' : '0') === '1', false);
       if (document.documentElement.classList.contains('hv2-scrolled') && !box.classList.contains('hv2-mu-off')){
         autoOff = true; setOff(true, false);
       }
