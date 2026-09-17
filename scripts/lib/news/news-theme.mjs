@@ -129,7 +129,13 @@ img{max-width:100%}
 .meta{color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
 .pin{font-size:11.5px;font-weight:600;color:var(--on-gold);background:var(--gold);padding:2px 8px;border-radius:4px}
 .cover{display:block;width:100%;max-width:100%;aspect-ratio:16/9;object-fit:cover;background:linear-gradient(135deg,#2a2350,#7a3b1d);border-radius:8px}
-.feat{display:grid;grid-template-columns:7fr 5fr;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--panel);text-decoration:none;margin-bottom:26px}
+/* featured article card in the owner's gold frame (overrides/news/khung-the-tin.webp, 2008x643: double gold trim, cloud
+   ornaments reaching 49px into each corner, outer corner radius ~34px, see-through middle). A 9-slice border image with
+   64px corner slices on a ::after layer above the cover picture (a plain border image would be painted under it); shown
+   at 0.6x (ornaments ~29px, radius 20px), 0.4x on narrow screens. The card's corner radius follows the frame's. */
+.feat{position:relative;display:grid;grid-template-columns:7fr 5fr;border-radius:20px;overflow:hidden;background:var(--panel);text-decoration:none;margin-bottom:26px}
+.feat::after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;border:0 solid transparent;
+  border-image:url("/3qdc-vi/news/khung-the-tin.webp") 64 / 38.4px stretch}
 .feat .cover{border-radius:0;height:100%}
 .feat-body{padding:28px 30px;display:flex;flex-direction:column;gap:12px;justify-content:center}
 .feat-top{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
@@ -137,7 +143,7 @@ img{max-width:100%}
 .feat p{margin:0;color:var(--text-2)}
 .feat:hover h2{color:var(--strong)}
 .read{color:var(--ember);font-weight:600}
-@media (max-width:820px){.feat{grid-template-columns:1fr}.feat .cover{aspect-ratio:16/9}}
+@media (max-width:820px){.feat{grid-template-columns:1fr;border-radius:14px}.feat::after{border-image-width:25.6px}.feat .cover{aspect-ratio:16/9}}
 .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}
 @media (max-width:980px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:600px){.grid{grid-template-columns:1fr}}
