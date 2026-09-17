@@ -28,11 +28,6 @@ const FALLBACK = '/3qdc-vi/home/anh-nen-slogan-vi.webp';
 // hides the faint hairline Chrome leaves where the slices meet.
 const NEWS_FRAME = '/3qdc-vi/home/khung-tin-tuc.webp';
 
-// "Xem thêm" button frame (overrides/home/khung-nut-xem-them-rong.webp, 1008x176): plain 15px gold trim, a gold dragon in
-// each top corner (54x62px), plain bottom corners (16px), flat #121526 inside. 9-slice 64 56 18 56 so each dragon sits
-// whole in its corner cell and only the plain trim stretches; shown at 0.4x (dragons ~22x25px, trim ~6px).
-const MORE_FRAME = '/3qdc-vi/home/khung-nut-xem-them-rong.webp';
-
 export const NEWS_CSS = `
 #hv2-news .hv2-news{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:28px;padding:40px;
   border:0 solid transparent;border-image:url("${NEWS_FRAME}") 80 fill / 40px stretch;
@@ -60,11 +55,9 @@ export const NEWS_CSS = `
 #hv2-news .hv2-date small{display:block;font-size:12px;font-weight:400;color:#9b927c}
 #hv2-news .hv2-row-title{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:15px}
 #hv2-news .hv2-empty{padding:24px 4px;color:#9b927c}
-#hv2-news .hv2-more{display:flex;align-items:center;justify-content:center;min-height:52px;box-sizing:border-box;margin-top:16px;
-  padding:10px 28px;text-align:center;border:0 solid transparent;
-  border-image:url("${MORE_FRAME}") 64 56 18 56 fill / 25.6px 22.4px 7.2px 22.4px stretch;
-  border-radius:8px;background:#121526;color:#f3dfa6;text-decoration:none;cursor:pointer}
-#hv2-news .hv2-more:hover{filter:brightness(1.18)}
+#hv2-news .hv2-more{display:block;margin-top:16px;padding:10px;text-align:center;border:1px solid rgba(214,176,106,.6);
+  border-radius:8px;color:#f3dfa6;text-decoration:none;cursor:pointer}
+#hv2-news .hv2-more:hover{background:rgba(214,176,106,.14)}
 @media ${COMPACT_MQ}{
   #hv2-news .hv2-news{grid-template-columns:minmax(0,1fr);gap:16px;padding:26px 14px;border-image-width:24px;border-radius:14px}
   #hv2-news .hv2-slider{touch-action:pan-y pinch-zoom;border-radius:8px}
@@ -77,7 +70,7 @@ export const NEWS_CSS = `
   #hv2-news .hv2-list{min-height:0}
   #hv2-news .hv2-row{min-height:56px;padding:8px 2px}
   #hv2-news .hv2-row-title{white-space:normal;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-height:1.35}
-  #hv2-news .hv2-more{min-height:48px;margin-top:12px}
+  #hv2-news .hv2-more{display:flex;align-items:center;justify-content:center;min-height:44px;box-sizing:border-box;margin-top:12px}
 }
 `;
 
