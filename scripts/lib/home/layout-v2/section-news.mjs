@@ -28,10 +28,10 @@ const FALLBACK = '/3qdc-vi/home/anh-nen-slogan-vi.webp';
 // hides the faint hairline Chrome leaves where the slices meet.
 const NEWS_FRAME = '/3qdc-vi/home/khung-tin-tuc.webp';
 
-// "Xem thêm" button frame (overrides/home/khung-nut-xem-them.png, 1008x176): a 26px gold filigree band that repeats every
-// 34px, flat #121526 inside. 9-slice with a 30px right slice so the top/bottom band between the corners is exactly
-// 28 repeats (952px) and tiles seamlessly ("round" along the width); shown at 0.346x (band ~9px).
-const MORE_FRAME = '/3qdc-vi/home/khung-nut-xem-them.png';
+// "Xem thêm" button frame (overrides/home/khung-nut-xem-them-rong.webp, 1008x176): plain 15px gold trim, a gold dragon in
+// each top corner (54x62px), plain bottom corners (16px), flat #121526 inside. 9-slice 64 56 18 56 so each dragon sits
+// whole in its corner cell and only the plain trim stretches; shown at 0.4x (dragons ~22x25px, trim ~6px).
+const MORE_FRAME = '/3qdc-vi/home/khung-nut-xem-them-rong.webp';
 
 export const NEWS_CSS = `
 #hv2-news .hv2-news{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:28px;padding:40px;
@@ -61,9 +61,9 @@ export const NEWS_CSS = `
 #hv2-news .hv2-row-title{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:15px}
 #hv2-news .hv2-empty{padding:24px 4px;color:#9b927c}
 #hv2-news .hv2-more{display:flex;align-items:center;justify-content:center;min-height:52px;box-sizing:border-box;margin-top:16px;
-  padding:10px 16px;text-align:center;border:0 solid transparent;
-  border-image:url("${MORE_FRAME}") 26 30 26 26 fill / 9px 10.4px 9px 9px round stretch;
-  border-radius:6px;background:#121526;color:#f3dfa6;text-decoration:none;cursor:pointer}
+  padding:10px 28px;text-align:center;border:0 solid transparent;
+  border-image:url("${MORE_FRAME}") 64 56 18 56 fill / 25.6px 22.4px 7.2px 22.4px stretch;
+  border-radius:8px;background:#121526;color:#f3dfa6;text-decoration:none;cursor:pointer}
 #hv2-news .hv2-more:hover{filter:brightness(1.18)}
 @media ${COMPACT_MQ}{
   #hv2-news .hv2-news{grid-template-columns:minmax(0,1fr);gap:16px;padding:26px 14px;border-image-width:24px;border-radius:14px}
