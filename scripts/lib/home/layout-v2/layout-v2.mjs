@@ -18,6 +18,7 @@ import { TREASURE_CSS, TREASURE_JS } from './section-treasure.mjs';
 import { HERO_SKILLS_CSS, HERO_SKILLS_JS } from './embed-hero-skills.mjs';
 import { HEROES_MOBILE_CSS, HEROES_MOBILE_JS } from './section-heroes-mobile.mjs';
 import { COMPACT_MQ, COMPACT_HEADER_H } from './compact.mjs';
+import { MASCOT_CSS, MASCOT_JS } from './section-mascot.mjs';
 
 const HEADER_H = 88;
 // the blurred header background runs this far down, fading out below the 88px bar
@@ -801,11 +802,12 @@ const JS = `(function(){
 // Section scripts come after the layout script so window.__hv2 exists when they register; the hero skill icons
 // script needs the html.hv2-embed flag the layout script sets inside the home hero iframe.
 export const LAYOUT_V2_HTML =
-  `<style data-home-v2>${CSS}${NEWS_CSS}${HEROES_CSS}${HEROES_MOBILE_CSS}${FEATURES_CSS}${HERO_SKILLS_CSS}${SHOW_TREASURE ? TREASURE_CSS : TREASURE_OFF_CSS}</style>` +
+  `<style data-home-v2>${CSS}${NEWS_CSS}${HEROES_CSS}${HEROES_MOBILE_CSS}${FEATURES_CSS}${HERO_SKILLS_CSS}${SHOW_TREASURE ? TREASURE_CSS : TREASURE_OFF_CSS}${MASCOT_CSS}</style>` +
   `<script data-home-v2>${JS}</script>` +
   `<script data-home-v2>${HERO_SKILLS_JS}</script>` +
   `<script data-home-v2>${NEWS_JS}</script>` +
   `<script data-home-v2>${HEROES_JS}</script>` +
   `<script data-home-v2>${HEROES_MOBILE_JS}</script>` +
   `<script data-home-v2>${FEATURES_JS}</script>` +
+  (MASCOT_JS ? `<script data-home-v2>${MASCOT_JS}</script>` : '') +
   (SHOW_TREASURE ? `<script data-home-v2>${TREASURE_JS}</script>` : '');
