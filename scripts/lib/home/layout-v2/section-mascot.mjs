@@ -1,26 +1,33 @@
 // section-mascot.mjs — talking Live2D mascot in the bottom-left corner of the home page (desktop layout only).
 // Behaviour follows the open-source live2d-widget (stevenjoezhang, GPL-3.0) the owner picked from another site: a Live2D
-// Cubism 2 model that breathes and follows the mouse, a speech bubble (greeting by hour, a line for each part of the page
-// under the mouse, a line when the mascot is clicked, idle chatter, holidays, coming back to the tab, copying text), a
-// "talk" button and a "hide" button with a small tab to bring it back. Written again here with Vietnamese lines and no
-// external requests; the widget's asteroids game, photo, hitokoto and GitHub buttons are left out.
+// model that breathes and follows the mouse, a speech bubble (greeting by hour, a line for each part of the page under the
+// mouse, a line when the mascot is clicked, idle chatter, holidays, coming back to the tab, copying text), a "talk" button
+// and a "hide" button with a small tab to bring it back. The box, bubble and buttons are written here with Vietnamese
+// lines; the widget's asteroids game, photo, hitokoto and GitHub buttons are left out.
 //
-// TEMPORARY MASCOT (2026-09-17): Tia from Potion Maker, taken from the fghrsh/live2d_api collection, whose models are
-// shared for research only (not for commercial use). The owner will replace it with the site's own mascot. To swap:
-// put the new Cubism 2 model folder (index.json + model.moc + textures + motions) in overrides/home/linh-vat/<name>/ and
-// point MASCOT.model at its index.json (restart). MASCOT.enabled = false removes the mascot. A Cubism 3/4/5 model
-// (.model3.json) needs another runtime than live2d.min.js.
+// Models are drawn by the two loaders of live2d-widgets 1.0.1 (overrides/home/linh-vat/runtime/, see waifu-tips.js
+// there): chunk/index.js with the Cubism 2 core live2d.min.js for an index.json + .moc model, chunk/index2.js with the
+// Cubism 5 core for a .model3.json model (Cubism 3, 4 or 5). The version is read from the model file, and only the
+// loader it needs is fetched. The Cubism 5 core is Live2D's own file (Live2D Proprietary Software License); publishing a
+// Cubism 3+ model on the site needs Live2D's SDK release terms checked first.
 //
-// The runtime (live2d.min.js, ~150KB) and the model (~800KB) load only after the page has finished loading, and only
-// when the desktop layout is showing and the visitor has not hidden the mascot.
+// TEMPORARY MASCOT (2026-09-17): Tia from Potion Maker (Cubism 2), taken from the fghrsh/live2d_api collection, whose
+// models are shared for research only (not for commercial use). The owner will replace it with the site's own mascot.
+// To swap: put the model folder in overrides/home/linh-vat/<name>/ and point MASCOT.model at its index.json or
+// .model3.json (restart). MASCOT.enabled = false removes the mascot.
+//
+// The loader (~160KB for Cubism 2) and the model (~800KB for Tia) load only after the page has finished loading, and
+// only when the desktop layout is showing and the visitor has not hidden the mascot. Drawing stops while the mascot is
+// hidden or the visitor is on another page of the app.
 
 import { COMPACT_MQ } from './compact.mjs';
 
 export const MASCOT = {
   enabled: true,
   name: 'Tia',
-  runtime: '/3qdc-vi/home/linh-vat/live2d.min.js',
   model: '/3qdc-vi/home/linh-vat/tia/index.json',
+  runtime: '/3qdc-vi/home/linh-vat/runtime/',
+  cubism5Core: 'https://cubism.live2d.com/sdk-web/cubismcore/live2dcubismcore.min.js',
 };
 
 // [hour from, hour to, line]: greeting when the page opens
@@ -123,7 +130,7 @@ export const MASCOT_JS = MASCOT.enabled ? `(function(){
 
   window.__hv2.onMount(function(api){
     var el = api.el;
-    var box, tips, toggle, started = false, timer = null, level = -1;
+    var box, tips, toggle, started = false, timer = null, level = -1, engine = null;
 
     function pick(a){ return Array.isArray(a) ? a[Math.floor(Math.random() * a.length)] : a; }
     function hidden(){ try { return localStorage.getItem(HIDE_KEY) === '1'; } catch (e) { return false; } }
@@ -155,7 +162,8 @@ export const MASCOT_JS = MASCOT.enabled ? `(function(){
     function build(){
       box = el('div', { id: 'hv2-mascot', 'data-home-v2': '', 'aria-label': 'Linh vật ' + CFG.MASCOT.name });
       tips = el('div', { 'class': 'hv2-m-tips', role: 'status', 'aria-live': 'polite' });
-      var canvas = el('canvas', { id: 'hv2-mascot-canvas', width: '600', height: '600' });
+      // both loaders look the canvas up by this id
+      var canvas = el('canvas', { id: 'live2d', width: '600', height: '600' });
       var tools = el('div', { 'class': 'hv2-m-tools' });
       var talk = el('button', { type: 'button', id: 'hv2-mascot-talk', title: 'Nói chuyện', 'aria-label': 'Nói chuyện' });
       var hide = el('button', { type: 'button', id: 'hv2-mascot-hide', title: 'Ẩn linh vật', 'aria-label': 'Ẩn linh vật' });
@@ -169,30 +177,60 @@ export const MASCOT_JS = MASCOT.enabled ? `(function(){
       hide.addEventListener('click', function(){
         say(CFG.MESSAGES.hide, 1500, 11);
         setHidden(true);
-        setTimeout(function(){ box.classList.add('hv2-m-off'); toggle.classList.add('on'); }, 900);
+        setTimeout(function(){ box.classList.add('hv2-m-off'); toggle.classList.add('on'); sync(); }, 900);
       });
       toggle.addEventListener('click', function(){
         setHidden(false);
         toggle.classList.remove('on');
         box.classList.remove('hv2-m-off');
         start();
+        sync();
         say(CFG.MESSAGES.show, 3000, 11);
       });
     }
 
-    // runtime + model are fetched once, the first time the mascot is actually shown
+    function script(src){
+      return new Promise(function(resolve, reject){
+        var s = document.createElement('script');
+        s.src = src; s.onload = resolve; s.onerror = function(){ reject(new Error('cannot load ' + src)); };
+        document.head.appendChild(s);
+      });
+    }
+    // loader + model are fetched once, the first time the mascot is actually shown
     function start(){
       if (started || hidden() || !desktop()) return;
       started = true;
-      var s = document.createElement('script');
-      s.src = CFG.MASCOT.runtime;
-      s.onload = function(){
-        if (typeof window.loadlive2d !== 'function') return;
-        window.loadlive2d('hv2-mascot-canvas', CFG.MASCOT.model);
+      var url = CFG.MASCOT.model;
+      fetch(url).then(function(r){ if (!r.ok) throw new Error('model ' + r.status); return r.json(); }).then(function(setting){
+        if (setting.Version === 3 || setting.FileReferences){
+          return script(CFG.MASCOT.cubism5Core).then(function(){ return import(CFG.MASCOT.runtime + 'chunk/index2.js'); }).then(function(m){
+            var app = new m.AppDelegate();
+            app.initialize(); app.changeModel(url); app.run();
+            engine = { stop: function(){ app.stop(); }, run: function(){ if (!app._drawFrameId) app.run(); } };
+          });
+        }
+        return script(CFG.MASCOT.runtime + 'live2d.min.js').then(function(){ return import(CFG.MASCOT.runtime + 'chunk/index.js'); }).then(function(m){
+          var model = new m.default();
+          engine = {
+            stop: function(){ if (model._drawFrameId){ cancelAnimationFrame(model._drawFrameId); model._drawFrameId = null; } model.isDrawStart = false; },
+            run: function(){ if (model.gl) model.startDraw(); }
+          };
+          return model.init('live2d', url, setting);
+        });
+      }).then(function(){
+        if (!engine) throw new Error('no loader');
+        sync();
         say(greeting(), 7000, 11);
-      };
-      s.onerror = function(){ console.warn('[hv2 mascot] runtime could not be loaded'); box.style.display = 'none'; };
-      document.head.appendChild(s);
+      }).catch(function(e){
+        console.warn('[hv2 mascot] could not be loaded', e);
+        box.style.display = 'none';
+      });
+    }
+    // draw only while the home layout shows the mascot (not hidden, not on another page of the app, not compact)
+    function sync(){
+      if (!engine) return;
+      var on = document.documentElement.classList.contains('hv2') && !box.classList.contains('hv2-m-off') && desktop();
+      if (on) engine.run(); else engine.stop();
     }
 
     function listen(){
@@ -220,7 +258,11 @@ export const MASCOT_JS = MASCOT.enabled ? `(function(){
       document.addEventListener('copy', function(){ if (started) say(CFG.MESSAGES.copy, 6000, 9); });
       document.addEventListener('visibilitychange', function(){ if (started && !document.hidden) say(CFG.MESSAGES.back, 6000, 9); });
       // the compact layout (tablet turned, window narrowed) hides the mascot by CSS; widening again starts it if needed
-      window.addEventListener('resize', function(){ if (!started) start(); });
+      window.addEventListener('resize', function(){ if (!started) start(); sync(); });
+      // leaving the home page (hash navigation removes html.hv2) pauses drawing, coming back resumes it
+      new MutationObserver(sync).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+      // the Cubism 2 loader zooms the model on mouse wheel and blocks page scrolling; stop the event before it gets there
+      box.addEventListener('mousewheel', function(e){ e.stopPropagation(); }, true);
     }
 
     build();
