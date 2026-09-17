@@ -21,9 +21,17 @@ const TABS = [
 // to the 16:9 frame so its lettering is not cut; already loaded as the page background)
 const FALLBACK = '/3qdc-vi/home/anh-nen-slogan-vi.webp';
 
+// the block sits in the owner's navy frame (overrides/home/khung-tin-tuc.webp, 2016x608: double gold trim, gold cloud
+// ornaments reaching 71px into each corner, flat #121526 inside), drawn as a 9-slice border image with 80px corner slices
+// so only the straight trim and the flat middle stretch. Shown at 0.5x on desktop (ornaments ~36px) and 0.3x on phones
+// (~21px); the padding keeps the slider, tabs and list clear of the ornaments. The rounded background of the same navy
+// hides the faint hairline Chrome leaves where the slices meet.
+const NEWS_FRAME = '/3qdc-vi/home/khung-tin-tuc.webp';
+
 export const NEWS_CSS = `
-#hv2-news .hv2-news{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:28px;padding:24px;
-  background:rgba(18,21,38,.92);border:1px solid rgba(214,176,106,.35);border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.35)}
+#hv2-news .hv2-news{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:28px;padding:40px;
+  border:0 solid transparent;border-image:url("${NEWS_FRAME}") 80 fill / 40px stretch;
+  background:#121526;border-radius:20px;box-shadow:0 12px 40px rgba(0,0,0,.35)}
 #hv2-news .hv2-slider{position:relative;aspect-ratio:16/9;border-radius:10px;overflow:hidden;background:#000}
 #hv2-news .hv2-slider-link{position:absolute;inset:0;display:block;cursor:pointer}
 #hv2-news .hv2-slide-item{position:absolute;inset:0;display:block;pointer-events:none}
@@ -51,7 +59,7 @@ export const NEWS_CSS = `
   border-radius:8px;color:#f3dfa6;text-decoration:none;cursor:pointer}
 #hv2-news .hv2-more:hover{background:rgba(214,176,106,.14)}
 @media ${COMPACT_MQ}{
-  #hv2-news .hv2-news{grid-template-columns:minmax(0,1fr);gap:16px;padding:12px;border-radius:12px}
+  #hv2-news .hv2-news{grid-template-columns:minmax(0,1fr);gap:16px;padding:26px 14px;border-image-width:24px;border-radius:14px}
   #hv2-news .hv2-slider{touch-action:pan-y pinch-zoom;border-radius:8px}
   /* dots keep their look; the invisible ring around each makes a finger-sized target */
   #hv2-news .hv2-dots{gap:18px;bottom:12px}
