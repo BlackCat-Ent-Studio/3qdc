@@ -1,72 +1,108 @@
-// section-music.mjs — the home page's own music player, bottom-right corner (the reference site the owner picked uses a
-// hosted third-party widget; nothing of it is reused, this is written here and serves the site's own files).
+// section-music.mjs — the home page's music player, bottom right, built to look like the one on the page the owner
+// picked (lyzwlkj.vip). That player is a hosted third-party widget (myhkw.cn, needs jQuery, plays their own account's
+// playlist), so nothing of it is reused: the look was measured off their page (plans\…\reports\ban-nhac-goc\) and
+// rebuilt here over the site's own files.
+//
+// Measured from theirs and kept: 300px wide, 155px body + 25px white strip, background rgba(70,84,115,.8), 5px corners,
+// 12px white text in three rows (song / artist / album on the left, time / shuffle / lyrics on the right), the round
+// cover in the middle with the play button on it, four 22px controls, and the bottom strip with the playlist button, a
+// switch, the orange progress bar, shuffle and volume. Collapsed, it slides off the right edge and leaves its tab.
 //
 // The songs are whatever audio files sit in overrides/home/nhac on the server: the owner drops a file in, names it
-// "Tên bài - Ca sĩ.mp3", and it shows up — server.mjs reads the folder on every request of MUSIC.api, so no restart is
-// needed. A picture with the same name is used as the cover, otherwise MUSIC.cover.
+// "Tên bài - Ca sĩ.mp3", and it shows up (server.mjs reads the folder on every request of MUSIC.api, no restart). A
+// picture with the same name is its cover, otherwise MUSIC.cover. With no files the player is not built at all.
 //
-// Browsers block sound until the visitor interacts with the page, so nothing plays by itself: the player opens quiet and
-// waits for the play button. The audio element keeps preload="none", so no song is fetched until then (the files are
-// served from this VPS). The chosen song, its position, the volume, shuffle/repeat and the collapsed state are kept in
-// the visitor's browser. With no files in the folder the player is not built at all.
+// Browsers block sound until the visitor interacts with the page, so nothing plays by itself and the audio element
+// keeps preload="none" (the files are served from this VPS). The song, its position, the volume, shuffle/repeat and the
+// collapsed state are kept in the visitor's browser.
 import { COMPACT_MQ } from './compact.mjs';
 
 export const MUSIC = {
   enabled: true,
   api: '/3qdc-vi/api/nhac',
-  // cover for songs that have no picture of their own
   cover: '/3qdc-vi/home/logo-3qdc.webp',
-  // same cloud frame as the social bar / download sidebar, drawn at the same 0.275x
-  frame: '/3qdc-vi/home/khung-mxh-may.webp',
 };
 
+// their palette, measured on the page
+const BG = 'rgba(70,84,115,.8)';
+const BAR = '#ff5722';       // progress fill
+const BAR_BG = '#b0aeb2';    // progress track
+const INK = '#38343e';       // icons on the white strip
+
 export const MUSIC_CSS = MUSIC.enabled ? `
-/* music player, bottom right: a round spinning disc when collapsed, the full box when open */
+/* music player, bottom right (look measured on the reference page) */
 #hv2-music{display:none}
-/* above the tool buttons (z-index 12): opening the box lies over the lowest of them until it is collapsed again */
-html.hv2:not(.hv2-embed) #hv2-music{display:block;position:fixed;right:14px;bottom:16px;z-index:13}
-#hv2-music .hv2-mu-mini{display:none;width:56px;height:56px;padding:0;border:2px solid rgba(214,176,106,.75);
-  border-radius:50%;background:#16273b center/cover no-repeat;cursor:pointer;
-  box-shadow:0 6px 16px rgba(0,0,0,.55)}
-#hv2-music.hv2-mu-off .hv2-mu-mini{display:block}
-#hv2-music.hv2-mu-off .hv2-mu-box{display:none}
-#hv2-music .hv2-mu-box{width:300px;box-sizing:border-box;padding:30px 18px;color:#e9d9b0;
-  border:0 solid transparent;border-image:url("${MUSIC.frame}") 122 124 122 fill / 33.5px 34px 33.5px stretch;
-  border-radius:24px;background:#16273b;filter:drop-shadow(0 8px 18px rgba(0,0,0,.55))}
-#hv2-music .hv2-mu-head{display:flex;align-items:center;gap:10px}
-#hv2-music .hv2-mu-disc{flex:0 0 auto;width:56px;height:56px;border-radius:50%;border:2px solid rgba(214,176,106,.75);
-  background:#0b0d18 center/cover no-repeat;animation:hv2-mu-spin 14s linear infinite;animation-play-state:paused}
-#hv2-music.hv2-mu-play .hv2-mu-disc,#hv2-music.hv2-mu-play .hv2-mu-mini{animation:hv2-mu-spin 14s linear infinite}
+html.hv2:not(.hv2-embed) #hv2-music{display:block;position:fixed;right:-300px;bottom:40px;width:300px;z-index:13;
+  transform:translateX(-300px);transition:transform .3s ease;
+  background:${BG};border-radius:5px;box-shadow:0 0 5px 5px rgba(0,0,0,.2);
+  color:#fff;font-size:12px;line-height:16px;font-family:"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+html.hv2 #hv2-music.hv2-mu-off{transform:translateX(0)}
+/* the tab hangs off the player's left edge, so it stays on screen when the player is slid away */
+#hv2-music .hv2-mu-tab{position:absolute;left:-20px;bottom:30px;width:20px;height:46px;padding:0;border:0;
+  border-radius:5px 0 0 5px;background:${BG};color:#fff;cursor:pointer;line-height:0}
+#hv2-music .hv2-mu-tab svg{width:12px;height:12px}
+#hv2-music.hv2-mu-off .hv2-mu-tab svg{transform:scaleX(-1)}
+#hv2-music .hv2-mu-top{position:relative;height:155px;overflow:hidden;border-radius:5px 5px 0 0;background:rgba(0,0,0,.1)}
+#hv2-music .hv2-mu-bg{position:absolute;inset:-20px;background:center/cover no-repeat;filter:blur(16px);opacity:.5}
+#hv2-music .hv2-mu-info{position:absolute;left:5px;top:15px;width:290px}
+#hv2-music .hv2-mu-row{display:flex;align-items:center;height:16px;margin-bottom:20px}
+#hv2-music .hv2-mu-row > span{display:flex;align-items:center;gap:4px;min-width:0}
+#hv2-music .hv2-mu-row .hv2-mu-l{flex:0 1 auto;max-width:140px}
+#hv2-music .hv2-mu-row .hv2-mu-r{margin-left:auto;flex:0 0 auto}
+#hv2-music .hv2-mu-row b{font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#hv2-music .hv2-mu-row svg{width:12px;height:13px;flex:0 0 auto;fill:currentColor}
+#hv2-music .hv2-mu-r.hv2-mu-btn{cursor:pointer}
+#hv2-music .hv2-mu-r.hv2-mu-btn:hover{color:#ffd9a0}
+#hv2-music .hv2-mu-r.on{color:#ffb15e}
+#hv2-music .hv2-mu-r.hv2-mu-dim{opacity:.5;cursor:default}
+/* cover in the middle, turning while the song plays, with the play button on it */
+#hv2-music .hv2-mu-disc{position:absolute;left:50%;top:36px;width:100px;height:100px;margin-left:-50px;border-radius:50%;
+  border:3px solid rgba(255,255,255,.85);background:#0b0d18 center/cover no-repeat;
+  animation:hv2-mu-spin 14s linear infinite;animation-play-state:paused}
+#hv2-music.hv2-mu-play .hv2-mu-disc{animation-play-state:running}
 @keyframes hv2-mu-spin{to{transform:rotate(360deg)}}
-#hv2-music .hv2-mu-meta{min-width:0;flex:1 1 auto}
-#hv2-music .hv2-mu-title{font-size:14px;font-weight:600;color:#f3e6c4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#hv2-music .hv2-mu-artist{font-size:12px;color:#b4a68a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#hv2-music .hv2-mu-min{flex:0 0 auto;width:26px;height:26px;padding:0;border:0;background:transparent;color:#e9d9b0;cursor:pointer}
-#hv2-music .hv2-mu-seek{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:11px;color:#b4a68a}
-#hv2-music input[type=range]{flex:1 1 auto;min-width:0;height:4px;accent-color:#d6b06a;cursor:pointer}
-#hv2-music .hv2-mu-ctl{display:flex;align-items:center;justify-content:space-between;gap:4px;margin-top:8px}
-#hv2-music .hv2-mu-ctl button{width:30px;height:30px;padding:0;border:0;border-radius:50%;background:transparent;
-  color:#e9d9b0;cursor:pointer;line-height:0}
-#hv2-music .hv2-mu-ctl button:hover{background:rgba(214,176,106,.18)}
-#hv2-music .hv2-mu-ctl button.on{color:#f3c96b}
-#hv2-music .hv2-mu-ctl .hv2-mu-play{width:38px;height:38px;border:1px solid rgba(214,176,106,.7)}
-#hv2-music svg{width:100%;height:100%;fill:currentColor;pointer-events:none}
-#hv2-music .hv2-mu-ctl button svg{width:18px;height:18px}
-#hv2-music .hv2-mu-ctl .hv2-mu-play svg{width:22px;height:22px}
-#hv2-music .hv2-mu-vol{display:flex;align-items:center;gap:6px;margin-top:8px;color:#b4a68a}
-#hv2-music .hv2-mu-vol svg{width:16px;height:16px;flex:0 0 auto}
-#hv2-music .hv2-mu-list{display:none;margin:10px 0 0;padding:8px 0 0;max-height:160px;overflow:auto;list-style:none;
-  border-top:1px solid rgba(214,176,106,.3)}
+#hv2-music .hv2-mu-status{position:absolute;left:50%;top:64px;margin-left:-22px;width:44px;height:44px;padding:0;
+  border:0;border-radius:50%;background:rgba(70,84,115,.5);color:#fff;cursor:pointer;line-height:0}
+#hv2-music .hv2-mu-status svg{width:40px;height:40px;fill:currentColor}
+#hv2-music .hv2-mu-ctl{position:absolute;left:0;bottom:0;width:300px;height:44px}
+#hv2-music .hv2-mu-ctl button{position:absolute;top:11px;width:22px;height:22px;padding:0;border:0;background:transparent;
+  color:#fff;cursor:pointer;line-height:0}
+#hv2-music .hv2-mu-ctl button svg{width:22px;height:22px;fill:currentColor}
+#hv2-music .hv2-mu-ctl button:hover{color:#ffd9a0}
+#hv2-music .hv2-mu-first{left:6px}
+#hv2-music .hv2-mu-back{left:67px}
+#hv2-music .hv2-mu-fwd{right:67px}
+#hv2-music .hv2-mu-last{right:6px}
+/* white strip: playlist, repeat switch, progress, shuffle, volume */
+#hv2-music .hv2-mu-bottom{display:flex;align-items:center;gap:8px;height:25px;padding:0 8px;box-sizing:border-box;
+  background:#fff;border-radius:0 0 5px 5px;color:${INK}}
+#hv2-music .hv2-mu-bottom button{padding:0;border:0;background:transparent;color:${INK};cursor:pointer;line-height:0}
+#hv2-music .hv2-mu-bottom button svg{width:16px;height:16px;fill:currentColor;display:block}
+#hv2-music .hv2-mu-bottom button.on{color:${BAR}}
+#hv2-music .hv2-mu-sw{position:relative;width:26px;height:14px;border-radius:7px;background:${BAR_BG};cursor:pointer;flex:0 0 auto}
+#hv2-music .hv2-mu-sw::after{content:"";position:absolute;top:2px;left:2px;width:10px;height:10px;border-radius:50%;
+  background:#fff;transition:left .15s ease}
+#hv2-music .hv2-mu-sw.on{background:${BAR}}
+#hv2-music .hv2-mu-sw.on::after{left:14px}
+#hv2-music .hv2-mu-prog{position:relative;flex:1 1 auto;height:5px;border-radius:3px;background:${BAR_BG};cursor:pointer}
+#hv2-music .hv2-mu-prog i{position:absolute;left:0;top:0;height:5px;width:0;border-radius:3px;background:${BAR}}
+#hv2-music .hv2-mu-prog b{position:absolute;top:-3px;left:0;width:11px;height:11px;margin-left:-5px;border-radius:50%;
+  background:#fff;box-shadow:0 0 2px rgba(0,0,0,.45)}
+/* playlist opens above the player */
+#hv2-music .hv2-mu-list{display:none;position:absolute;right:0;bottom:calc(100% + 6px);width:300px;max-height:200px;
+  overflow:auto;margin:0;padding:6px 0;list-style:none;background:rgba(70,84,115,.95);border-radius:5px;
+  box-shadow:0 0 5px 5px rgba(0,0,0,.2)}
 #hv2-music.hv2-mu-open-list .hv2-mu-list{display:block}
-#hv2-music .hv2-mu-list li{padding:5px 6px;font-size:13px;border-radius:6px;cursor:pointer;white-space:nowrap;
-  overflow:hidden;text-overflow:ellipsis}
-#hv2-music .hv2-mu-list li:hover{background:rgba(214,176,106,.14)}
-#hv2-music .hv2-mu-list li.on{color:#f3c96b}
-/* phones and tablets: the box would cover the page, so it starts as the disc and opens narrower */
+#hv2-music .hv2-mu-list li{padding:5px 12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+#hv2-music .hv2-mu-list li:hover{background:rgba(255,255,255,.12)}
+#hv2-music .hv2-mu-list li.on{color:#ffb15e}
+/* phones and tablets: same player, narrower, sitting just above the bottom edge */
 @media ${COMPACT_MQ}{
-  html.hv2:not(.hv2-embed) #hv2-music{right:12px;bottom:calc(12px + env(safe-area-inset-bottom))}
-  #hv2-music .hv2-mu-box{width:min(300px,92vw)}
-  #hv2-music .hv2-mu-mini{width:48px;height:48px}
+  html.hv2:not(.hv2-embed) #hv2-music{right:min(-300px,calc(-100vw + 12px));bottom:calc(12px + env(safe-area-inset-bottom));
+    width:min(300px,calc(100vw - 32px));transform:translateX(min(-300px,calc(-100vw + 12px)))}
+  html.hv2 #hv2-music.hv2-mu-off{transform:translateX(0)}
+  #hv2-music .hv2-mu-info,#hv2-music .hv2-mu-ctl,#hv2-music .hv2-mu-list{width:auto;left:5px;right:5px}
+  #hv2-music .hv2-mu-list{left:auto;right:0;width:min(300px,calc(100vw - 32px))}
 }
 ` : '';
 
@@ -74,17 +110,24 @@ export const MUSIC_JS = MUSIC.enabled ? `(function(){
   if (!window.__hv2 || document.documentElement.classList.contains('hv2-embed')) return;
   var CFG = ${JSON.stringify(MUSIC)};
   var K = { i: 'hv2-music-i', t: 'hv2-music-t', v: 'hv2-music-vol', off: 'hv2-music-off', sh: 'hv2-music-shuffle', rp: 'hv2-music-repeat' };
+  var SEEK = 10; // seconds the rewind / forward buttons jump
   var SVG = {
-    play: '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>',
-    pause: '<svg viewBox="0 0 24 24"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>',
-    prev: '<svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm12 0v12l-9-6z"/></svg>',
-    next: '<svg viewBox="0 0 24 24"><path d="M16 6h2v12h-2zM6 6l9 6-9 6z"/></svg>',
+    note: '<svg viewBox="0 0 24 24"><path d="M12 3v10.6a4 4 0 1 0 2 3.4V7h5V3h-7z"/></svg>',
+    clock: '<svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 10.6V6h-2v7.4l5.2 3.1 1-1.7-4.2-2.2z"/></svg>',
+    user: '<svg viewBox="0 0 24 24"><path d="M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9zm0 2c-4 0-8 2-8 5v2h16v-2c0-3-4-5-8-5z"/></svg>',
+    album: '<svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 13a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/></svg>',
     shuffle: '<svg viewBox="0 0 24 24"><path d="M17 3l4 4-4 4V8h-2.2l-2.3 3-1.3-1.7L13.8 6H17V3zM3 6h4.2l6.6 9H17v-3l4 4-4 4v-3h-4.2L6.2 8H3V6zm0 10h4.2l1.7-2.3 1.3 1.7L8.2 18H3v-2z"/></svg>',
-    repeat: '<svg viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg>',
-    list: '<svg viewBox="0 0 24 24"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h10v2H4z"/></svg>',
+    pin: '<svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>',
+    play: '<svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-2 5.5l7 4.5-7 4.5v-9z"/></svg>',
+    pause: '<svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM11 8H9v8h2V8zm4 0h-2v8h2V8z"/></svg>',
+    first: '<svg viewBox="0 0 24 24"><path d="M6 6h2.5v12H6zm12 0v12l-9-6z"/></svg>',
+    back: '<svg viewBox="0 0 24 24"><path d="M11 6v12l-8-6zm10 0v12l-8-6z"/></svg>',
+    fwd: '<svg viewBox="0 0 24 24"><path d="M13 6l8 6-8 6zM3 6l8 6-8 6z"/></svg>',
+    last: '<svg viewBox="0 0 24 24"><path d="M15.5 6H18v12h-2.5zM6 6l9 6-9 6z"/></svg>',
+    list: '<svg viewBox="0 0 24 24"><path d="M3 5h12v2H3zm0 5h12v2H3zm0 5h8v2H3zm12 .5l6-3.5-6-3.5z"/></svg>',
     vol: '<svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4zm12.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4z"/></svg>',
     mute: '<svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4zm12.6 3l2.2-2.2-1.4-1.4L15.2 10.6 13 8.4 11.6 9.8l2.2 2.2-2.2 2.2 1.4 1.4 2.2-2.2 2.2 2.2 1.4-1.4L16.6 12z"/></svg>',
-    min: '<svg viewBox="0 0 24 24"><path d="M6 11h12v2H6z"/></svg>',
+    arrow: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 5l7 7-7 7z"/></svg>',
   };
   var get = function(k, d){ try { var v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } };
   var set = function(k, v){ try { localStorage.setItem(k, v); } catch (e) {} };
@@ -96,82 +139,103 @@ export const MUSIC_JS = MUSIC.enabled ? `(function(){
 
   window.__hv2.onMount(function(api){
     var el = api.el;
-    var songs = [], i = 0, box, audio, disc, mini, title, artist, seek, cur, dur, playBtn, listEl, volRange, volIcon;
-    var shuffle = get(K.sh, '0') === '1', repeat = get(K.rp, '0') === '1', loaded = false, saveAt = 0;
+    var songs = [], i = 0, loaded = false, saveAt = 0, autoOff = false, reopened = false;
+    var box, audio, bg, disc, status, title, artist, album, time, shuffleTop, listEl;
+    var prog, progFill, progKnob, swRepeat, btnShuffle, btnVol, tab;
+    var shuffle = get(K.sh, '0') === '1', repeat = get(K.rp, '0') === '1';
 
-    function iconBtn(cls, svg, label, fn){
+    function icon(svg){ var s = el('span'); s.innerHTML = svg; return s; }
+    function button(cls, svg, label, fn){
       var b = el('button', { type: 'button', 'class': cls, title: label, 'aria-label': label });
       b.innerHTML = svg;
-      b.addEventListener('click', fn);
+      if (fn) b.addEventListener('click', fn);
       return b;
     }
-    function cover(s){ return (s && s.cover) || CFG.cover; }
+    function row(iconSvg, rightSvg, rightText){
+      var r = el('div', { 'class': 'hv2-mu-row' });
+      var l = el('span', { 'class': 'hv2-mu-l' });
+      l.appendChild(icon(iconSvg));
+      var lb = el('b');
+      l.appendChild(lb);
+      r.appendChild(l);
+      var rt = el('span', { 'class': 'hv2-mu-r' });
+      rt.appendChild(icon(rightSvg));
+      var rb = el('b', { text: rightText });
+      rt.appendChild(rb);
+      r.appendChild(rt);
+      return { row: r, left: lb, right: rt, rightText: rb };
+    }
     function playing(){ return audio && !audio.paused && !audio.ended; }
+    function cover(s){ return (s && s.cover) || CFG.cover; }
+    function vol0(){ var v = parseFloat(get(K.v, '0.7')); return isFinite(v) && v >= 0 && v <= 1 ? v : 0.7; }
 
     function build(){
       box = el('div', { id: 'hv2-music', 'data-home-v2': '', role: 'region', 'aria-label': 'Nhạc nền' });
       audio = el('audio', { preload: 'none' });
-      mini = el('button', { type: 'button', 'class': 'hv2-mu-mini', title: 'Mở trình phát nhạc', 'aria-label': 'Mở trình phát nhạc' });
-      mini.addEventListener('click', function(){ setOff(false); });
-      var inner = el('div', { 'class': 'hv2-mu-box' });
-      var head = el('div', { 'class': 'hv2-mu-head' });
+      tab = button('hv2-mu-tab', SVG.arrow, 'Thu gọn trình phát nhạc', function(){ setOff(!box.classList.contains('hv2-mu-off'), true); });
+
+      var top = el('div', { 'class': 'hv2-mu-top' });
+      bg = el('div', { 'class': 'hv2-mu-bg' });
+      var info = el('div', { 'class': 'hv2-mu-info' });
+      var r1 = row(SVG.note, SVG.clock, '0:00 / 0:00');
+      var r2 = row(SVG.user, SVG.shuffle, 'Ngẫu nhiên');
+      var r3 = row(SVG.album, SVG.pin, 'Lời bài hát');
+      title = r1.left; time = r1.rightText; artist = r2.left; album = r3.left;
+      shuffleTop = r2.right;
+      shuffleTop.classList.add('hv2-mu-btn');
+      shuffleTop.setAttribute('title', 'Phát ngẫu nhiên');
+      shuffleTop.addEventListener('click', toggleShuffle);
+      // no .lrc files yet, so the lyrics item is only shown, greyed out
+      r3.right.classList.add('hv2-mu-dim');
+      r3.right.setAttribute('title', 'Chưa có lời bài hát');
+      info.appendChild(r1.row); info.appendChild(r2.row); info.appendChild(r3.row);
+
       disc = el('div', { 'class': 'hv2-mu-disc' });
-      var meta = el('div', { 'class': 'hv2-mu-meta' });
-      title = el('div', { 'class': 'hv2-mu-title' });
-      artist = el('div', { 'class': 'hv2-mu-artist' });
-      meta.appendChild(title); meta.appendChild(artist);
-      head.appendChild(disc); head.appendChild(meta);
-      head.appendChild(iconBtn('hv2-mu-min', SVG.min, 'Thu gọn trình phát', function(){ setOff(true); }));
-
-      var seekRow = el('div', { 'class': 'hv2-mu-seek' });
-      cur = el('span', { text: '0:00' });
-      seek = el('input', { type: 'range', min: '0', max: '1000', value: '0', 'aria-label': 'Vị trí bài hát' });
-      dur = el('span', { text: '0:00' });
-      seek.addEventListener('input', function(){
-        if (audio.duration) audio.currentTime = audio.duration * (seek.value / 1000);
-      });
-      seekRow.appendChild(cur); seekRow.appendChild(seek); seekRow.appendChild(dur);
-
+      status = button('hv2-mu-status', SVG.play, 'Phát', toggle);
       var ctl = el('div', { 'class': 'hv2-mu-ctl' });
-      var shBtn = iconBtn('hv2-mu-shuffle', SVG.shuffle, 'Phát ngẫu nhiên', function(){
-        shuffle = !shuffle; set(K.sh, shuffle ? '1' : '0'); shBtn.classList.toggle('on', shuffle);
-      });
-      shBtn.classList.toggle('on', shuffle);
-      var rpBtn = iconBtn('hv2-mu-repeat', SVG.repeat, 'Lặp lại một bài', function(){
-        repeat = !repeat; set(K.rp, repeat ? '1' : '0'); rpBtn.classList.toggle('on', repeat);
-      });
-      rpBtn.classList.toggle('on', repeat);
-      playBtn = iconBtn('hv2-mu-play', SVG.play, 'Phát', toggle);
-      var listBtn = iconBtn('hv2-mu-listbtn', SVG.list, 'Danh sách bài hát', function(){
-        box.classList.toggle('hv2-mu-open-list');
-      });
-      ctl.appendChild(shBtn);
-      ctl.appendChild(iconBtn('hv2-mu-prev', SVG.prev, 'Bài trước', function(){ step(-1, true); }));
-      ctl.appendChild(playBtn);
-      ctl.appendChild(iconBtn('hv2-mu-next', SVG.next, 'Bài sau', function(){ step(1, true); }));
-      ctl.appendChild(rpBtn);
-      ctl.appendChild(listBtn);
+      ctl.appendChild(button('hv2-mu-first', SVG.first, 'Bài trước', function(){ step(-1, true); }));
+      ctl.appendChild(button('hv2-mu-back', SVG.back, 'Lùi ' + SEEK + ' giây', function(){ audio.currentTime = Math.max(0, audio.currentTime - SEEK); }));
+      ctl.appendChild(button('hv2-mu-fwd', SVG.fwd, 'Tới ' + SEEK + ' giây', function(){ if (audio.duration) audio.currentTime = Math.min(audio.duration, audio.currentTime + SEEK); }));
+      ctl.appendChild(button('hv2-mu-last', SVG.last, 'Bài sau', function(){ step(1, true); }));
+      top.appendChild(bg); top.appendChild(info); top.appendChild(disc); top.appendChild(status); top.appendChild(ctl);
 
-      var volRow = el('div', { 'class': 'hv2-mu-vol' });
-      volIcon = el('span');
-      volIcon.innerHTML = SVG.vol;
-      volRange = el('input', { type: 'range', min: '0', max: '100', value: String(Math.round(audioVol() * 100)), 'aria-label': 'Âm lượng' });
-      volRange.addEventListener('input', function(){
-        audio.volume = volRange.value / 100;
-        set(K.v, String(audio.volume));
-        volIcon.innerHTML = audio.volume > 0 ? SVG.vol : SVG.mute;
+      var bottom = el('div', { 'class': 'hv2-mu-bottom' });
+      bottom.appendChild(button('hv2-mu-listbtn', SVG.list, 'Danh sách bài hát', function(){ box.classList.toggle('hv2-mu-open-list'); }));
+      swRepeat = el('span', { 'class': 'hv2-mu-sw', role: 'switch', title: 'Lặp lại một bài', 'aria-label': 'Lặp lại một bài' });
+      swRepeat.addEventListener('click', function(){
+        repeat = !repeat; set(K.rp, repeat ? '1' : '0');
+        swRepeat.classList.toggle('on', repeat);
+        swRepeat.setAttribute('aria-checked', repeat ? 'true' : 'false');
       });
-      volRow.appendChild(volIcon); volRow.appendChild(volRange);
+      swRepeat.classList.toggle('on', repeat);
+      swRepeat.setAttribute('aria-checked', repeat ? 'true' : 'false');
+      bottom.appendChild(swRepeat);
+      prog = el('div', { 'class': 'hv2-mu-prog', role: 'slider', 'aria-label': 'Vị trí bài hát' });
+      progFill = el('i'); progKnob = el('b');
+      prog.appendChild(progFill); prog.appendChild(progKnob);
+      prog.addEventListener('click', function(e){
+        if (!audio.duration) return;
+        var r = prog.getBoundingClientRect();
+        audio.currentTime = audio.duration * Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
+      });
+      bottom.appendChild(prog);
+      btnShuffle = button('hv2-mu-shufflebtn', SVG.shuffle, 'Phát ngẫu nhiên', toggleShuffle);
+      btnShuffle.classList.toggle('on', shuffle);
+      bottom.appendChild(btnShuffle);
+      btnVol = button('hv2-mu-vol', SVG.vol, 'Tắt tiếng', function(){
+        audio.volume = audio.volume > 0 ? 0 : (vol0() || 0.7);
+        if (audio.volume > 0) set(K.v, String(audio.volume));
+        btnVol.innerHTML = audio.volume > 0 ? SVG.vol : SVG.mute;
+        btnVol.setAttribute('title', audio.volume > 0 ? 'Tắt tiếng' : 'Bật tiếng');
+      });
+      bottom.appendChild(btnVol);
 
       listEl = el('ul', { 'class': 'hv2-mu-list' });
 
-      inner.appendChild(head); inner.appendChild(seekRow); inner.appendChild(ctl); inner.appendChild(volRow); inner.appendChild(listEl);
-      box.appendChild(mini); box.appendChild(inner); box.appendChild(audio);
+      box.appendChild(tab); box.appendChild(top); box.appendChild(bottom); box.appendChild(listEl); box.appendChild(audio);
       document.body.appendChild(box);
-      // the layout keeps a corner free for the disc once the player exists (placeTools listens for resize)
-      window.dispatchEvent(new Event('resize'));
 
-      audio.volume = audioVol();
+      audio.volume = vol0();
       audio.addEventListener('timeupdate', onTime);
       audio.addEventListener('loadedmetadata', onTime);
       audio.addEventListener('play', onState);
@@ -180,29 +244,48 @@ export const MUSIC_JS = MUSIC.enabled ? `(function(){
       audio.addEventListener('error', function(){ title.textContent = 'Không phát được bài này'; });
       window.addEventListener('pagehide', saveTime);
       document.addEventListener('visibilitychange', function(){ if (document.hidden) saveTime(); });
-      // leaving the home page (the layout removes html.hv2) stops the sound
+      // once the download sidebar slides in (same corner), the player tucks itself away unless the viewer opened it again;
+      // back at the top of the page it comes out. Leaving the home page stops the sound.
       new MutationObserver(function(){
-        if (!document.documentElement.classList.contains('hv2') && playing()) audio.pause();
+        var html = document.documentElement;
+        if (!html.classList.contains('hv2') && playing()) audio.pause();
+        var scrolled = html.classList.contains('hv2-scrolled');
+        if (!scrolled){ reopened = false; if (autoOff){ autoOff = false; setOff(false, false); } }
+        else if (!autoOff && !reopened && !box.classList.contains('hv2-mu-off')){ autoOff = true; setOff(true, false); }
       }).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
     }
-    function audioVol(){ var v = parseFloat(get(K.v, '0.7')); return isFinite(v) && v >= 0 && v <= 1 ? v : 0.7; }
 
-    function setOff(off){
+    function toggleShuffle(){
+      shuffle = !shuffle;
+      set(K.sh, shuffle ? '1' : '0');
+      btnShuffle.classList.toggle('on', shuffle);
+      shuffleTop.classList.toggle('on', shuffle);
+    }
+    function setOff(off, byViewer){
       box.classList.toggle('hv2-mu-off', off);
-      set(K.off, off ? '1' : '0');
+      tab.setAttribute('title', off ? 'Mở trình phát nhạc' : 'Thu gọn trình phát nhạc');
+      tab.setAttribute('aria-label', tab.getAttribute('title'));
+      if (byViewer){
+        set(K.off, off ? '1' : '0');
+        autoOff = false;
+        // opening it by hand while scrolled means "leave it out"; opening it at the top of the page does not stop the
+        // player from tucking itself away again when the sidebar slides in
+        reopened = !off && document.documentElement.classList.contains('hv2-scrolled');
+      }
     }
     function onState(){
       var on = playing();
       box.classList.toggle('hv2-mu-play', on);
-      playBtn.innerHTML = on ? SVG.pause : SVG.play;
-      playBtn.setAttribute('title', on ? 'Tạm dừng' : 'Phát');
-      playBtn.setAttribute('aria-label', on ? 'Tạm dừng' : 'Phát');
+      status.innerHTML = on ? SVG.pause : SVG.play;
+      status.setAttribute('title', on ? 'Tạm dừng' : 'Phát');
+      status.setAttribute('aria-label', on ? 'Tạm dừng' : 'Phát');
     }
     function onTime(){
       var d = audio.duration || 0;
-      cur.textContent = mmss(audio.currentTime);
-      dur.textContent = mmss(d);
-      if (d) seek.value = String(Math.round((audio.currentTime / d) * 1000));
+      time.textContent = mmss(audio.currentTime) + ' / ' + mmss(d);
+      var p = d ? (audio.currentTime / d) : 0;
+      progFill.style.width = (p * 100) + '%';
+      progKnob.style.left = (p * 100) + '%';
       var now = Date.now();
       if (now - saveAt > 5000){ saveAt = now; saveTime(); }
     }
@@ -215,12 +298,12 @@ export const MUSIC_JS = MUSIC.enabled ? `(function(){
       audio.src = s.file;
       title.textContent = s.title;
       title.setAttribute('title', s.title);
-      artist.textContent = s.artist || '';
+      artist.textContent = s.artist || '—';
+      album.textContent = s.title;
       disc.style.backgroundImage = 'url("' + cover(s) + '")';
-      mini.style.backgroundImage = 'url("' + cover(s) + '")';
+      bg.style.backgroundImage = 'url("' + cover(s) + '")';
       [].forEach.call(listEl.children, function(li, k){ li.classList.toggle('on', k === i); });
-      set(K.i, String(i));
-      set(K.t, '0');
+      set(K.i, String(i)); set(K.t, '0');
       if (play) audio.play().catch(function(){});
     }
     function step(d, play){
@@ -228,7 +311,7 @@ export const MUSIC_JS = MUSIC.enabled ? `(function(){
       select(shuffle ? Math.floor(Math.random() * songs.length) : i + d, play);
     }
     function toggle(){
-      if (playing()) { audio.pause(); saveTime(); return; }
+      if (playing()){ audio.pause(); saveTime(); return; }
       if (!audio.src) select(i, true); else audio.play().catch(function(){});
     }
 
@@ -244,15 +327,17 @@ export const MUSIC_JS = MUSIC.enabled ? `(function(){
       select(isFinite(saved) && saved >= 0 && saved < songs.length ? saved : 0, false);
       var t = parseInt(get(K.t, '0'), 10);
       if (isFinite(t) && t > 0){
-        // the song is only fetched on play, so the saved position is applied once its length is known
         audio.addEventListener('loadedmetadata', function once(){
           audio.removeEventListener('loadedmetadata', once);
           if (t < audio.duration - 2) audio.currentTime = t;
         });
       }
-      // the disc is the resting state everywhere: the open box would lie over the tool buttons in the same corner
-      setOff(get(K.off, '1') === '1');
+      setOff(get(K.off, '0') === '1', false);
+      if (document.documentElement.classList.contains('hv2-scrolled') && !box.classList.contains('hv2-mu-off')){
+        autoOff = true; setOff(true, false);
+      }
       onState();
+      onTime();
     }
 
     function load(){
