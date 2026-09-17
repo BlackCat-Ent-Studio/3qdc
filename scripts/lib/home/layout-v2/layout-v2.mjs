@@ -177,13 +177,15 @@ html.hv2 .star-site-index-navs__item:hover .star-site-index-navs__item-img_hover
 .star-site-index .star-site-index-download{display:none!important}
 
 /* download panel (omg3q style): QR | 2x2 Vietnamese buttons | top-up box, starting just below the event banner
-   frame of the background art (top comes from --hv2-dl-top computed in JS), below the header layers */
+   frame of the background art (top comes from --hv2-dl-top computed in JS), below the header layers. Drawn in the
+   cloud frame (SOCIAL_FRAME) like the two side bars; the panel is short, so its content keeps the thin top/bottom
+   padding and moves in from the sides instead (38px+ clears the 34px corner clouds) */
 #hv2-dlpanel{display:none}
 html.hv2 #hv2-dlpanel{display:flex;align-items:center;gap:clamp(14px,1.3vw,24px);position:absolute;left:50%;
   top:var(--hv2-dl-top,auto);z-index:8;transform:translateX(-50%);box-sizing:border-box;
-  padding:clamp(10px,.8vw,14px) clamp(16px,1.5vw,28px);border:2px solid rgba(214,176,106,.8);border-radius:16px;
-  background:linear-gradient(180deg,rgba(30,37,84,.95),rgba(13,17,42,.95));
-  box-shadow:0 10px 30px rgba(0,0,0,.45),inset 0 0 0 1px rgba(255,255,255,.06)}
+  padding:clamp(10px,.8vw,14px) clamp(38px,2.6vw,46px);
+  border:0 solid transparent;border-image:url("${SOCIAL_FRAME}") 122 124 122 fill / 33.5px 34px 33.5px stretch;
+  border-radius:24px;background:#16273b;filter:drop-shadow(0 8px 18px rgba(0,0,0,.55))}
 #hv2-dlpanel .hv2-dl-qr{display:flex;flex-direction:column;align-items:center;gap:4px}
 #hv2-dlpanel .hv2-dl-qr-img{width:calc(var(--hv2-dl-btn) * 2 + 8px);aspect-ratio:1;padding:4px;box-sizing:border-box;
   background:#fff;border-radius:8px}
@@ -317,8 +319,9 @@ html.hv2 #home-v2{display:block;position:relative;z-index:1;background:#0b0d18;c
     background-size:100% 100%!important;background-position:center top!important}
   html.hv2 .star-site-index-decorate,html.hv2 .star-site-index-slogan{display:none!important}
 
-  /* download panel: full width under the key art, the four buttons in two columns; no QR (a phone cannot scan its own screen) */
-  html.hv2 #hv2-dlpanel{left:max(12px,calc(50% - 280px));right:max(12px,calc(50% - 280px));transform:none;display:block;padding:12px;border-radius:14px}
+  /* download panel: full width under the key art, the four buttons in two columns; no QR (a phone cannot scan its own screen).
+     Same cloud frame; here height is cheap, so the buttons keep the full width and clear the clouds above and below */
+  html.hv2 #hv2-dlpanel{left:max(12px,calc(50% - 280px));right:max(12px,calc(50% - 280px));transform:none;display:block;padding:36px 12px}
   #hv2-dlpanel .hv2-dl-qr{display:none}
   #hv2-dlpanel .hv2-dl-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;max-width:520px;margin:0 auto}
   #hv2-dlpanel .hv2-dl-grid a{display:flex;justify-content:center}
@@ -326,7 +329,7 @@ html.hv2 #home-v2{display:block;position:relative;z-index:1;background:#0b0d18;c
   html.hv2 #hv2-sidebar{display:none!important}
   /* 320px phones: tighter panel so each button stays about 42px tall */
   @media (max-width:359px){
-    html.hv2 #hv2-dlpanel{left:8px;right:8px;padding:8px}
+    html.hv2 #hv2-dlpanel{left:8px;right:8px;padding:36px 10px}
     #hv2-dlpanel .hv2-dl-grid{gap:8px}
   }
 
