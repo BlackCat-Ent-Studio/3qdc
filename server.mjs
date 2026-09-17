@@ -16,7 +16,7 @@
 //   (/wiki         → deferred)
 // API: same-origin snapshots (galaxias one-door body-keyed + game-ages + bbs).
 import { createServer as createHttp } from 'node:http';
-import { readFile, stat } from 'node:fs/promises';
+import { readFile, readdir, stat } from 'node:fs/promises';
 import { createReadStream } from 'node:fs';
 import { join, extname, normalize, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -113,7 +113,40 @@ const MIME = {
   '.gif': 'image/gif', '.svg': 'image/svg+xml', '.ico': 'image/x-icon',
   '.woff': 'font/woff', '.woff2': 'font/woff2', '.ttf': 'font/ttf',
   '.mp4': 'video/mp4', '.webm': 'video/webm', '.m4a': 'audio/mp4', '.mp3': 'audio/mpeg',
+  '.ogg': 'audio/ogg', '.opus': 'audio/ogg', '.wav': 'audio/wav',
 };
+
+// Songs of the home page's music player: whatever audio files sit in overrides/home/nhac. The file name carries the
+// text: "Tên bài - Ca sĩ.mp3" (the part after the last " - " is the artist, and a file without it is all title); a
+// picture with the same name is that song's cover. The folder is read on every request, so songs can be added or
+// removed without restarting the service (a restart logs the editors out of /quan-tri).
+const MUSIC_URL = OVERRIDES_URL + 'api/nhac';
+const MUSIC_DIR = join(OVERRIDES, 'home', 'nhac');
+const MUSIC_EXT = ['.mp3', '.m4a', '.ogg', '.opus', '.wav'];
+const MUSIC_COVER_EXT = ['.webp', '.jpg', '.jpeg', '.png'];
+const musicUrl = (name) => OVERRIDES_URL + 'home/nhac/' + encodeURIComponent(name);
+async function musicList() {
+  const names = await readdir(MUSIC_DIR).catch(() => []);
+  const covers = new Map();
+  for (const n of names) {
+    const ext = extname(n).toLowerCase();
+    if (MUSIC_COVER_EXT.includes(ext)) covers.set(n.slice(0, -ext.length), n);
+  }
+  return names
+    .filter((n) => MUSIC_EXT.includes(extname(n).toLowerCase()))
+    .sort((a, b) => a.localeCompare(b, 'vi'))
+    .map((n) => {
+      const stem = n.slice(0, -extname(n).length);
+      const cut = stem.lastIndexOf(' - ');
+      const cover = covers.get(stem);
+      return {
+        file: musicUrl(n),
+        title: cut > 0 ? stem.slice(0, cut) : stem,
+        artist: cut > 0 ? stem.slice(cut + 3) : '',
+        cover: cover ? musicUrl(cover) : null,
+      };
+    });
+}
 const TRACKER_PATHS = ['/r.png', '/beacon'];
 const API_HOST_DIRS = ['galaxias-api.lingxigames.com', 'game-ages-fx.lingxigames.com', 'p10488-bbs.ejoy.com'];
 
@@ -246,6 +279,13 @@ export function startServer(port = 8080) {
       if (await handleNews(req, res, cleanPath, u)) return;
       if (BUILDB_PATHS[cleanPath]) return sendHtml(res, await buildBEntry(BUILDB_PATHS[cleanPath], cleanPath));
       if (cleanPath === '/huong-dan' || cleanPath === '/wiki') return sendHtml(res, await wikiEntry());
+
+      // --- the home page's music player asks for the song list here ---
+      if (pathname === MUSIC_URL) {
+        const body = JSON.stringify(await musicList());
+        res.writeHead(200, { 'Content-Type': MIME['.json'], 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-store' });
+        return res.end(body);
+      }
 
       // --- localised artwork from overrides/ (never resolves outside that folder) ---
       if (pathname.startsWith(OVERRIDES_URL)) {
