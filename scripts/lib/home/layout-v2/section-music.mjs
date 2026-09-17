@@ -139,7 +139,9 @@ export const MUSIC_JS = MUSIC.enabled ? `(function(){
 
   window.__hv2.onMount(function(api){
     var el = api.el;
-    var songs = [], i = 0, loaded = false, saveAt = 0, autoOff = false, reopened = false;
+    var songs = [], i = 0, saveAt = 0, autoOff = false, reopened = false;
+    var fetching = false, lastFetch = 0, badFiles = 0;
+    var REFRESH_MS = 30000;
     var box, audio, bg, disc, status, title, artist, album, time, shuffleTop, listEl;
     var prog, progFill, progKnob, swRepeat, btnShuffle, btnVol, tab;
     var shuffle = get(K.sh, '0') === '1', repeat = get(K.rp, '0') === '1';
@@ -241,7 +243,14 @@ export const MUSIC_JS = MUSIC.enabled ? `(function(){
       audio.addEventListener('play', onState);
       audio.addEventListener('pause', onState);
       audio.addEventListener('ended', function(){ if (repeat){ audio.currentTime = 0; audio.play(); } else step(1, true); });
-      audio.addEventListener('error', function(){ title.textContent = 'Không phát được bài này'; });
+      // a song deleted in /quan-tri while someone is listening: move on to the next one instead of stopping dead
+      // (badFiles guards against walking a whole broken list; a song that plays clears it)
+      audio.addEventListener('playing', function(){ badFiles = 0; });
+      audio.addEventListener('error', function(){
+        if (!audio.src) return;
+        if (songs.length > 1 && ++badFiles < songs.length){ step(1, true); return; }
+        title.textContent = 'Không phát được bài này';
+      });
       window.addEventListener('pagehide', saveTime);
       document.addEventListener('visibilitychange', function(){ if (document.hidden) saveTime(); });
       // once the download sidebar slides in (same corner), the player tucks itself away unless the viewer opened it again;
@@ -302,7 +311,7 @@ export const MUSIC_JS = MUSIC.enabled ? `(function(){
       album.textContent = s.title;
       disc.style.backgroundImage = 'url("' + cover(s) + '")';
       bg.style.backgroundImage = 'url("' + cover(s) + '")';
-      [].forEach.call(listEl.children, function(li, k){ li.classList.toggle('on', k === i); });
+      markList();
       set(K.i, String(i)); set(K.t, '0');
       if (play) audio.play().catch(function(){});
     }
@@ -315,7 +324,8 @@ export const MUSIC_JS = MUSIC.enabled ? `(function(){
       if (!audio.src) select(i, true); else audio.play().catch(function(){});
     }
 
-    function fill(list){
+    // the <li> list and the songs array; used both on the first fill and on every later refresh
+    function fillList(list){
       songs = list;
       listEl.textContent = '';
       songs.forEach(function(s, k){
@@ -323,6 +333,12 @@ export const MUSIC_JS = MUSIC.enabled ? `(function(){
         li.addEventListener('click', function(){ select(k, true); });
         listEl.appendChild(li);
       });
+    }
+    function markList(){
+      [].forEach.call(listEl.children, function(li, k){ li.classList.toggle('on', k === i); });
+    }
+    function fill(list){
+      fillList(list);
       var saved = parseInt(get(K.i, '0'), 10);
       select(isFinite(saved) && saved >= 0 && saved < songs.length ? saved : 0, false);
       var t = parseInt(get(K.t, '0'), 10);
@@ -340,17 +356,52 @@ export const MUSIC_JS = MUSIC.enabled ? `(function(){
       onTime();
     }
 
-    function load(){
-      if (loaded) return;
-      loaded = true;
-      fetch(CFG.api, { credentials: 'omit' }).then(function(r){ return r.ok ? r.json() : []; }).then(function(list){
-        if (!Array.isArray(list) || !list.length) return;   // no songs in the folder yet: no player
-        build();
+    // Asking the server for the songs. A failed request (server restarting, a hiccup on the way) answers null, which is
+    // NOT the same as an empty folder: only a real answer with no songs in it means "nothing to show". That difference is
+    // why the player once vanished for a whole visit after a bad deploy.
+    function fetchList(){
+      if (fetching) return Promise.resolve(null);
+      fetching = true;
+      lastFetch = Date.now();
+      return fetch(CFG.api, { credentials: 'omit', cache: 'no-store' })
+        .then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        .then(function(list){ fetching = false; return Array.isArray(list) ? list : []; })
+        .catch(function(){ fetching = false; return null; });
+    }
+    function load(tries){
+      fetchList().then(function(list){
+        if (list === null){
+          if (tries < 3) setTimeout(function(){ load(tries + 1); }, tries === 0 ? 2000 : 5000);
+          return;
+        }
+        if (!list.length) return;   // the folder really is empty: no player
+        if (!box) build();
         fill(list);
-      }).catch(function(){});
+      });
+    }
+    // Songs added or deleted in /quan-tri show up without reloading the page: the list is asked again when the viewer
+    // comes back to this tab (at most once every REFRESH_MS). A failed ask or an empty answer never removes the player
+    // that is already playing.
+    function refresh(){
+      if (document.hidden || Date.now() - lastFetch < REFRESH_MS) return;
+      fetchList().then(function(list){
+        if (list === null || !list.length) return;
+        if (!box){ build(); fill(list); return; }
+        if (songs.length === list.length && songs.every(function(s, k){ return s.file === list[k].file; })) return;
+        var cur = songs[i] && songs[i].file;
+        fillList(list);
+        var at = -1;
+        list.forEach(function(s, k){ if (s.file === cur) at = k; });
+        if (at >= 0){ i = at; markList(); return; }   // same song still there: keep playing it
+        if (playing()) audio.pause();
+        select(0, false);
+      });
     }
 
-    if (document.readyState === 'complete') setTimeout(load, 800);
-    else window.addEventListener('load', function(){ setTimeout(load, 800); });
+    document.addEventListener('visibilitychange', function(){ if (!document.hidden) refresh(); });
+    window.addEventListener('focus', refresh);
+
+    if (document.readyState === 'complete') setTimeout(function(){ load(0); }, 800);
+    else window.addEventListener('load', function(){ setTimeout(function(){ load(0); }, 800); });
   });
 })();` : '';
