@@ -1,6 +1,7 @@
 // Vietnamese <head> for the build-B entry (mirror/index.html, the Chinese site's page): link previews (Zalo, Facebook)
 // and search engines read the raw HTML without running scripts, so the Chinese title, description and keywords of the
-// mirrored page are replaced on the server, and share tags (og:*) with a JPEG picture are added.
+// mirrored page are replaced on the server, and share tags (og:*) with a JPEG picture are added. The browser tab icon of
+// the Chinese app is swapped for the 3Q Đại Chiến logo as well.
 // The mirror file itself stays untouched.
 
 export const SITE_NAME = '3Q Đại Chiến';
@@ -9,6 +10,10 @@ export const SITE_DESCRIPTION = '3Q Đại Chiến – game thẻ tướng Tam Q
   + 'Tiểu tướng quân, cùng bước vào hành trình Tam Quốc vượt ngoài tưởng tượng!';
 // the home key visual cropped to 1200x630 (link preview ratio); JPEG because Zalo shows no WEBP preview picture
 export const SHARE_IMAGE = { path: '/3qdc-vi/home/chia-se-1200x630.jpg', width: 1200, height: 630 };
+// tab icon: the header logo (logo-3qdc.webp, 203x152) trimmed and centred on a transparent 64x64 square
+export const FAVICON = '/3qdc-vi/home/favicon-3qdc.png';
+// the mirrored page's icon link (the Chinese app icon); spread over several lines in mirror/index.html
+const FAVICON_LINK = /<link\s+rel="shortcut icon"\s+href="[^"]*"\s*\/?>/;
 
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
@@ -53,5 +58,6 @@ export function viHead(html, { title, origin, path }) {
     .replace(PARTS[1][1], '')
     .replace(PARTS[2][1], '')
     .replace(PARTS[3][1], '')
-    .replace(PARTS[4][1], () => tags);
+    .replace(PARTS[4][1], () => tags)
+    .replace(FAVICON_LINK, `<link rel="icon" type="image/png" sizes="64x64" href="${FAVICON}">`);
 }
