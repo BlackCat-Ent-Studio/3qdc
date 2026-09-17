@@ -23,19 +23,31 @@ const BANNERS = [
   'tinh-nang-5-vi.webp',
 ].map((f) => BANNER_DIR + f);
 
-// centre slide width as a fraction of the track; the track height follows the banner ratio
+// Every slide sits in the gold frame with flame corners the owner picked from another game site (overrides/home/
+// tinh-nang-khung.webp, 1069x577, transparent middle; the flames reach outside the gold line at the top-left and
+// bottom-right). The banner fills the frame's window (979x537 at 45,20 of the frame, a little wider than the banners'
+// 1211:680, so ~2% of their height is cropped), its corners cut by that site's window mask (tinh-nang-mat-na.png),
+// and the frame is drawn over it.
+const FRAME = { src: BANNER_DIR + 'tinh-nang-khung.webp', mask: BANNER_DIR + 'tinh-nang-mat-na.png', w: 1069, h: 577 };
+const WINDOW = { x: 45, y: 20, w: 979, h: 537 };
+const pct = (v, of) => `${((v / of) * 100).toFixed(3)}%`;
+
+// centre slide width as a fraction of the track; the track height follows the frame ratio
 const SLIDE_W = 0.66;
 const EDGE = ((1 - SLIDE_W) * 50).toFixed(1); // % from the track edge to the centre slide
 
 export const FEATURES_CSS = `
 #hv2-features .hv2-feat{position:relative;max-width:1280px;margin:0 auto}
-#hv2-features .hv2-feat-track{position:relative;overflow:hidden;aspect-ratio:1211/${(680 * SLIDE_W).toFixed(1)}}
+#hv2-features .hv2-feat-track{position:relative;overflow:hidden;aspect-ratio:${FRAME.w}/${(FRAME.h * SLIDE_W).toFixed(1)}}
 #hv2-features .hv2-feat-slide{position:absolute;top:0;left:50%;width:${SLIDE_W * 100}%;height:100%;box-sizing:border-box;
-  border-radius:12px;overflow:hidden;border:1px solid rgba(214,176,106,.4);background:#12152a;
   transform:translateX(-50%);transition:transform .5s ease,opacity .5s ease,filter .5s ease}
-#hv2-features .hv2-feat-link{display:block;width:100%;height:100%;cursor:pointer}
+#hv2-features .hv2-feat-slide:after{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:url("${FRAME.src}") no-repeat 0 0/100% 100%}
+#hv2-features .hv2-feat-link{position:absolute;left:${pct(WINDOW.x, FRAME.w)};top:${pct(WINDOW.y, FRAME.h)};
+  width:${pct(WINDOW.w, FRAME.w)};height:${pct(WINDOW.h, FRAME.h)};display:block;cursor:pointer;background:#12152a;
+  -webkit-mask:url("${FRAME.mask}") no-repeat 0 0/100% 100%;mask:url("${FRAME.mask}") no-repeat 0 0/100% 100%}
 #hv2-features .hv2-feat-link img{display:block;width:100%;height:100%;object-fit:cover}
-#hv2-features .hv2-feat-slide.is-active{z-index:3;border-color:#f3dfa6}
+#hv2-features .hv2-feat-slide.is-active{z-index:3}
 #hv2-features .hv2-feat-slide.is-prev,#hv2-features .hv2-feat-slide.is-next{z-index:2;filter:brightness(.5);cursor:pointer}
 #hv2-features .hv2-feat-slide.is-prev{transform:translateX(-50%) translateX(-46%) scale(.76)}
 #hv2-features .hv2-feat-slide.is-next{transform:translateX(-50%) translateX(46%) scale(.76)}
@@ -55,8 +67,8 @@ export const FEATURES_CSS = `
   cursor:pointer;transition:width .3s ease,background .3s ease}
 #hv2-features .hv2-feat-dot.is-on{width:30px;background:#f3dfa6}
 @media ${COMPACT_MQ}{
-  #hv2-features .hv2-feat-track{aspect-ratio:1211/680;touch-action:pan-y pinch-zoom;border-radius:10px}
-  #hv2-features .hv2-feat-slide{width:100%;border-radius:10px}
+  #hv2-features .hv2-feat-track{aspect-ratio:${FRAME.w}/${FRAME.h};touch-action:pan-y pinch-zoom}
+  #hv2-features .hv2-feat-slide{width:100%}
   #hv2-features .hv2-feat-slide.is-active{transform:translateX(-50%)}
   #hv2-features .hv2-feat-slide.is-prev,#hv2-features .hv2-feat-slide.is-far-prev{transform:translateX(-150%);opacity:1;filter:none;pointer-events:none}
   #hv2-features .hv2-feat-slide.is-next,#hv2-features .hv2-feat-slide.is-far-next{transform:translateX(50%);opacity:1;filter:none;pointer-events:none}
