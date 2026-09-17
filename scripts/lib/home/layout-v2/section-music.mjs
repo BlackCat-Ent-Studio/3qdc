@@ -38,7 +38,7 @@ html.hv2:not(.hv2-embed) #hv2-music{display:block;position:fixed;right:-300px;bo
   color:#fff;font-size:12px;line-height:16px;font-family:"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
 html.hv2 #hv2-music.hv2-mu-off{transform:translateX(0)}
 /* the tab hangs off the player's left edge, so it stays on screen when the player is slid away */
-#hv2-music .hv2-mu-tab{position:absolute;left:-20px;bottom:30px;width:20px;height:46px;padding:0;border:0;
+#hv2-music .hv2-mu-tab{position:absolute;z-index:3;left:-20px;bottom:30px;width:20px;height:46px;padding:0;border:0;
   border-radius:5px 0 0 5px;background:${BG};color:#fff;cursor:pointer;line-height:0}
 #hv2-music .hv2-mu-tab svg{width:12px;height:12px}
 #hv2-music.hv2-mu-off .hv2-mu-tab svg{transform:scaleX(-1)}
@@ -118,7 +118,10 @@ html.hv2 #hv2-music.hv2-mu-off{transform:translateX(0)}
   #hv2-music:not(.hv2-mu-off) .hv2-mu-tab svg{display:block;width:14px;height:14px;margin:0 auto}
   /* open panel: cover + text on one line, then the three big controls */
   #hv2-music .hv2-mu-top{height:auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:12px 12px 6px}
-  #hv2-music .hv2-mu-disc{position:static;order:1;width:64px;height:64px;margin:0}
+  /* the blurred cover is only wallpaper: everything the finger touches sits above it */
+  #hv2-music .hv2-mu-bg{z-index:0}
+  #hv2-music .hv2-mu-info,#hv2-music .hv2-mu-ctl{position:relative;z-index:1}
+  #hv2-music .hv2-mu-disc{position:relative;z-index:1;left:auto;top:auto;order:1;width:64px;height:64px;margin:0}
   #hv2-music .hv2-mu-status{left:14px;top:22px;margin:0;width:44px;height:44px}
   #hv2-music .hv2-mu-status svg{width:38px;height:38px}
   #hv2-music .hv2-mu-info{position:static;order:2;flex:1 1 0;width:auto;padding-right:30px}
@@ -157,8 +160,8 @@ export const MUSIC_JS = MUSIC.enabled ? `(function(){
     album: '<svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 13a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/></svg>',
     shuffle: '<svg viewBox="0 0 24 24"><path d="M17 3l4 4-4 4V8h-2.2l-2.3 3-1.3-1.7L13.8 6H17V3zM3 6h4.2l6.6 9H17v-3l4 4-4 4v-3h-4.2L6.2 8H3V6zm0 10h4.2l1.7-2.3 1.3 1.7L8.2 18H3v-2z"/></svg>',
     pin: '<svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>',
-    play: '<svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-2 5.5l7 4.5-7 4.5v-9z"/></svg>',
-    pause: '<svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM11 8H9v8h2V8zm4 0h-2v8h2V8z"/></svg>',
+    play: '<svg viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-2 5.5l7 4.5-7 4.5v-9z"/></svg>',
+    pause: '<svg viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM11 8H9v8h2V8zm4 0h-2v8h2V8z"/></svg>',
     first: '<svg viewBox="0 0 24 24"><path d="M6 6h2.5v12H6zm12 0v12l-9-6z"/></svg>',
     back: '<svg viewBox="0 0 24 24"><path d="M11 6v12l-8-6zm10 0v12l-8-6z"/></svg>',
     fwd: '<svg viewBox="0 0 24 24"><path d="M13 6l8 6-8 6zM3 6l8 6-8 6z"/></svg>',
