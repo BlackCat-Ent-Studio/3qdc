@@ -5,26 +5,15 @@
 // hero's portrait with the name and position, arrows and a sideways swipe to change hero, the three in-game skills with
 // their names written under the icons (no hover on a touch screen), and a strip of the faction's hero icons.
 //
-// Data: the same hero lists the /tuong page loads (POST /ds/ajax/endpoint.json, getQueryDataInfoListByCategory, one list of
-// 13 heroes per faction; the server answers from its snapshots, keyed by the exact request body), using the site's
-// portrait made for phones (新官网移动立绘, 750x1624 PNG with a transparent background) and its round icons
-// (新官网Icon, 84x84 grey; 新官网hoverIcon for the selected hero). The names in the data are Chinese: the page's
-// translation overlay rewrites them on screen, and the skills are looked up by that translated name, exactly as the
-// desktop frame does (HERO_SKILLS, hero-skills-data.mjs).
+// Data: the site's own hero roster (hero-roster-data.mjs: 4 factions x 13 heroes with their Vietnamese names) and artwork
+// in overrides/home/tuong/<rowId>/ — the portrait made for phones (mobile.png, 750x1624 with a transparent background) and
+// the round icons (icon.png grey, icon-on.png for the selected hero). The skills are looked up by the Vietnamese name, as
+// in the desktop block (HERO_SKILLS, hero-skills-data.mjs). Nothing is loaded from the mirror.
 
 import { HERO_SKILLS } from './hero-skills-data.mjs';
+import { HERO_FACTIONS, HERO_ART_DIR, DEFAULT_FACTION } from './hero-roster-data.mjs';
 import { COMPACT_MQ } from './compact.mjs';
 
-// [id, category id of the hero list, tab artwork base name]; tab order as on /tuong (魏吴蜀群)
-const FACTIONS = [
-  ['nguy', '454680400827016705', 'phe-1-nguy'],
-  ['ngo', '454680400827016707', 'phe-2-ngo'],
-  ['thuc', '454680400827016706', 'phe-3-thuc'],
-  ['quan', '454680400827016708', 'phe-4-quan'],
-];
-// the desktop frame opens on Ngô (its first hero, Chu Du): same start here
-const DEFAULT_FACTION = 1;
-const LIST_TABLE = '452555206502894595';
 
 export const HEROES_MOBILE_CSS = `
 #hv2-heroes .hv2-hm{display:none}
@@ -77,9 +66,9 @@ export const HEROES_MOBILE_CSS = `
 
 export const HEROES_MOBILE_JS = `(function(){
   if (!window.__hv2) return;
-  var FACTIONS = ${JSON.stringify(FACTIONS)};
+  var FACTIONS = ${JSON.stringify(HERO_FACTIONS)};
   var DEFAULT_FACTION = ${DEFAULT_FACTION};
-  var LIST_TABLE = ${JSON.stringify(LIST_TABLE)};
+  var ART = ${JSON.stringify(HERO_ART_DIR)};
   // hero name as shown (translated) -> [game hero id, Thường name, Kỹ name, Nộ name]
   var SKILLS = ${JSON.stringify(HERO_SKILLS)};
   var SLOTS = [['thuong', 'Thường'], ['ky', 'Kỹ'], ['no', 'Nộ']];
@@ -90,7 +79,6 @@ export const HEROES_MOBILE_JS = `(function(){
 
     var tabs = el('div', { 'class': 'hv2-hm-tabs', role: 'group', 'aria-label': 'Phe' });
     var art = el('img', { 'class': 'hv2-hm-art', alt: '', draggable: 'false' });
-    // no live region: the name first appears in Chinese and the translation replaces it a moment later
     var name = el('div', { 'class': 'hv2-hm-name' });
     var count = el('div', { 'class': 'hv2-hm-count' });
     var prev = el('button', { type: 'button', 'class': 'hv2-hm-nav is-left', 'aria-label': 'Tướng trước', text: '\\u2039' });
@@ -111,7 +99,7 @@ export const HEROES_MOBILE_JS = `(function(){
     function paintTabs(){
       for (var i = 0; i < tabs.children.length; i++){
         var on = i === faction, b = tabs.children[i], img = b.firstChild;
-        var src = '/3qdc-vi/home/' + FACTIONS[i][2] + (on ? '-hover-dang-chon.png' : '-thuong.png');
+        var src = '/3qdc-vi/home/' + FACTIONS[i].tab + (on ? '-hover-dang-chon.png' : '-thuong.png');
         if (img.getAttribute('src') !== src) img.setAttribute('src', src);
         b.setAttribute('aria-pressed', on ? 'true' : 'false');
       }
@@ -120,24 +108,11 @@ export const HEROES_MOBILE_JS = `(function(){
     ['Ngụy', 'Ngô', 'Thục', 'Quần'].forEach(function(label, i){ tabs.children[i].setAttribute('aria-label', label); });
 
     function load(i){
-      var id = FACTIONS[i][1];
-      if (!cache[id]){
-        // byte-identical to the /tuong request, so the server finds the same snapshot
-        var body = JSON.stringify({ api: '/api/l/owresource/getQueryDataInfoListByCategory', params: { gameId: '10000147', tbId: LIST_TABLE, categoryIds: id, page: 0, size: 50 } });
-        cache[id] = fetch('/ds/ajax/endpoint.json', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body })
-          .then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-          .then(function(j){
-            var items = (j && j.result && j.result.items) || [];
-            return items.map(function(it){
-              var d = {};
-              (it.details || []).forEach(function(x){ d[x.key] = x.val; });
-              return { name: String(it.priVal || ''), art: api.local(d['\\u65b0\\u5b98\\u7f51\\u79fb\\u52a8\\u7acb\\u7ed8']),
-                icon: api.local(d['\\u65b0\\u5b98\\u7f51Icon']), iconOn: api.local(d['\\u65b0\\u5b98\\u7f51hoverIcon']) };
-            }).filter(function(h){ return h.name && h.art; });
-          })
-          .catch(function(e){ delete cache[id]; console.warn('[hv2 heroes mobile]', e); return []; });
-      }
-      return cache[id];
+      if (!cache[i]) cache[i] = Promise.resolve(FACTIONS[i].heroes.map(function(h){
+        var dir = ART + h[0] + '/';
+        return { name: h[2], art: dir + 'mobile.png', icon: dir + 'icon.png', iconOn: dir + 'icon-on.png' };
+      }));
+      return cache[i];
     }
 
     function selectFaction(i){
@@ -171,7 +146,6 @@ export const HEROES_MOBILE_JS = `(function(){
         art.onload = art.onerror = function(){ art.classList.remove('is-loading'); };
         art.setAttribute('src', h.art);
       }
-      // the Chinese name; the translation overlay rewrites it and the skills follow (see the observer below)
       name.textContent = h.name;
       count.textContent = (hero + 1) + ' / ' + heroes.length;
       for (var i = 0; i < strip.children.length; i++){

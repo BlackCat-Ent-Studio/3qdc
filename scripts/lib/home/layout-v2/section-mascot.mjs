@@ -210,6 +210,14 @@ export const MASCOT_JS = MASCOT.enabled ? `(function(){
           });
         }
         return script(CFG.MASCOT.runtime + 'live2d.min.js').then(function(){ return import(CFG.MASCOT.runtime + 'chunk/index.js'); }).then(function(m){
+          // the loader follows the mouse on the whole document from the start, but asks the model for hit areas before the
+          // model has loaded (a page error on an early mouse move or click): ignore those events until it is there
+          ['followPointer', 'modelTurnHead'].forEach(function(k){
+            var fn = m.default.prototype[k];
+            if (typeof fn !== 'function' || fn.hv2Guarded) return;
+            m.default.prototype[k] = function(e){ if (this.live2DMgr && this.live2DMgr.model) return fn.call(this, e); };
+            m.default.prototype[k].hv2Guarded = true;
+          });
           var model = new m.default();
           engine = {
             stop: function(){ if (model._drawFrameId){ cancelAnimationFrame(model._drawFrameId); model._drawFrameId = null; } model.isDrawStart = false; },
