@@ -12,9 +12,10 @@
 // "Tên bài - Ca sĩ.mp3", and it shows up (server.mjs reads the folder on every request of MUSIC.api, no restart). A
 // picture with the same name is its cover, otherwise MUSIC.cover. With no files the player is not built at all.
 //
-// Browsers block sound until the visitor interacts with the page, so nothing plays by itself and the audio element
-// keeps preload="none" (the files are served from this VPS). The song, its position, the volume, shuffle/repeat and the
-// collapsed state are kept in the visitor's browser.
+// The music starts by itself where the browser allows it; where it does not (every phone, most desktops), the first
+// tap, click or key press on the page starts it (see autoPlay). A visitor who presses pause is remembered and left
+// alone on later visits. preload="none" keeps the file unfetched until it actually plays (it is served from this VPS).
+// The song, its position, the volume, shuffle/repeat and the collapsed state are kept in the visitor's browser.
 import { COMPACT_MQ } from './compact.mjs';
 
 export const MUSIC = {
@@ -61,13 +62,13 @@ html.hv2 #hv2-music.hv2-mu-off{transform:translateX(0)}
   animation:hv2-mu-spin 14s linear infinite;animation-play-state:paused}
 #hv2-music.hv2-mu-play .hv2-mu-disc{animation-play-state:running}
 @keyframes hv2-mu-spin{to{transform:rotate(360deg)}}
-#hv2-music .hv2-mu-status{position:absolute;left:50%;top:64px;margin-left:-22px;width:44px;height:44px;padding:0;
+#hv2-music .hv2-mu-status{position:absolute;left:50%;top:-47px;margin-left:-22px;width:44px;height:44px;padding:0;
   border:0;border-radius:50%;background:rgba(70,84,115,.5);color:#fff;cursor:pointer;line-height:0;z-index:2}
 #hv2-music .hv2-mu-status svg{width:40px;height:40px;fill:currentColor}
 #hv2-music .hv2-mu-ctl{position:absolute;left:0;bottom:0;width:300px;height:44px}
-#hv2-music .hv2-mu-ctl button{position:absolute;top:11px;width:22px;height:22px;padding:0;border:0;background:transparent;
+#hv2-music .hv2-mu-ctl button:not(.hv2-mu-status){position:absolute;top:11px;width:22px;height:22px;padding:0;border:0;background:transparent;
   color:#fff;cursor:pointer;line-height:0}
-#hv2-music .hv2-mu-ctl button svg{width:22px;height:22px;fill:currentColor}
+#hv2-music .hv2-mu-ctl button:not(.hv2-mu-status) svg{width:22px;height:22px;fill:currentColor}
 #hv2-music .hv2-mu-ctl button:hover{color:#ffd9a0}
 #hv2-music .hv2-mu-first{left:6px}
 #hv2-music .hv2-mu-back{left:67px}
@@ -122,16 +123,16 @@ html.hv2 #hv2-music.hv2-mu-off{transform:translateX(0)}
   #hv2-music .hv2-mu-bg{z-index:0}
   #hv2-music .hv2-mu-info,#hv2-music .hv2-mu-ctl{position:relative;z-index:1}
   #hv2-music .hv2-mu-disc{position:relative;z-index:1;left:auto;top:auto;order:1;width:64px;height:64px;margin:0}
-  #hv2-music .hv2-mu-status{left:14px;top:22px;margin:0;width:44px;height:44px}
-  #hv2-music .hv2-mu-status svg{width:38px;height:38px}
+  #hv2-music .hv2-mu-status{position:static;margin:0;width:56px;height:56px}
+  #hv2-music .hv2-mu-status svg{width:50px;height:50px}
   #hv2-music .hv2-mu-info{position:static;order:2;flex:1 1 0;width:auto;padding-right:30px}
   #hv2-music .hv2-mu-row{height:auto;margin-bottom:6px}
   #hv2-music .hv2-mu-row:last-child{display:none}
   #hv2-music .hv2-mu-row .hv2-mu-l{max-width:none}
   #hv2-music .hv2-mu-ctl{position:static;order:3;width:100%;height:auto;display:flex;align-items:center;
     justify-content:center;gap:34px;padding:2px 0 6px}
-  #hv2-music .hv2-mu-ctl button{position:static;top:auto;left:auto;right:auto;width:44px;height:44px}
-  #hv2-music .hv2-mu-ctl button svg{width:26px;height:26px;margin:0 auto}
+  #hv2-music .hv2-mu-ctl button:not(.hv2-mu-status){position:static;top:auto;left:auto;right:auto;width:44px;height:44px}
+  #hv2-music .hv2-mu-ctl button:not(.hv2-mu-status) svg{width:26px;height:26px;margin:0 auto}
   #hv2-music .hv2-mu-back,#hv2-music .hv2-mu-fwd{display:none}
   /* bottom strip: taller, so every control is a real touch target */
   #hv2-music .hv2-mu-bottom{height:40px;gap:12px;padding:0 12px}
@@ -151,7 +152,7 @@ html.hv2 #hv2-music.hv2-mu-off{transform:translateX(0)}
 export const MUSIC_JS = MUSIC.enabled ? `(function(){
   if (!window.__hv2 || document.documentElement.classList.contains('hv2-embed')) return;
   var CFG = ${JSON.stringify(MUSIC)};
-  var K = { i: 'hv2-music-i', t: 'hv2-music-t', v: 'hv2-music-vol', off: 'hv2-music-off', sh: 'hv2-music-shuffle', rp: 'hv2-music-repeat' };
+  var K = { i: 'hv2-music-i', t: 'hv2-music-t', v: 'hv2-music-vol', off: 'hv2-music-off', sh: 'hv2-music-shuffle', rp: 'hv2-music-repeat', stop: 'hv2-music-stopped' };
   var SEEK = 10; // seconds the rewind / forward buttons jump
   var SVG = {
     note: '<svg viewBox="0 0 24 24"><path d="M12 3v10.6a4 4 0 1 0 2 3.4V7h5V3h-7z"/></svg>',
@@ -181,7 +182,7 @@ export const MUSIC_JS = MUSIC.enabled ? `(function(){
 
   window.__hv2.onMount(function(api){
     var el = api.el;
-    var songs = [], i = 0, saveAt = 0, autoOff = false, reopened = false;
+    var songs = [], i = 0, saveAt = 0, autoOff = false;
     var fetching = false, lastFetch = 0, badFiles = 0;
     var REFRESH_MS = 30000;
     var box, audio, bg, disc, status, title, artist, album, time, shuffleTop, listEl;
@@ -239,9 +240,12 @@ export const MUSIC_JS = MUSIC.enabled ? `(function(){
       var ctl = el('div', { 'class': 'hv2-mu-ctl' });
       ctl.appendChild(button('hv2-mu-first', SVG.first, 'Bài trước', function(){ step(-1, true); }));
       ctl.appendChild(button('hv2-mu-back', SVG.back, 'Lùi ' + SEEK + ' giây', function(){ audio.currentTime = Math.max(0, audio.currentTime - SEEK); }));
+      // the play button lives in the control row: on a phone (where the 10-second buttons are hidden) it lands exactly
+      // between "bài trước" and "bài sau"; on a mouse screen it is lifted onto the cover by CSS
+      ctl.appendChild(status);
       ctl.appendChild(button('hv2-mu-fwd', SVG.fwd, 'Tới ' + SEEK + ' giây', function(){ if (audio.duration) audio.currentTime = Math.min(audio.duration, audio.currentTime + SEEK); }));
       ctl.appendChild(button('hv2-mu-last', SVG.last, 'Bài sau', function(){ step(1, true); }));
-      top.appendChild(bg); top.appendChild(info); top.appendChild(disc); top.appendChild(status); top.appendChild(ctl);
+      top.appendChild(bg); top.appendChild(info); top.appendChild(disc); top.appendChild(ctl);
 
       var bottom = el('div', { 'class': 'hv2-mu-bottom' });
       bottom.appendChild(button('hv2-mu-listbtn', SVG.list, 'Danh sách bài hát', function(){ box.classList.toggle('hv2-mu-open-list'); }));
@@ -300,9 +304,10 @@ export const MUSIC_JS = MUSIC.enabled ? `(function(){
       new MutationObserver(function(){
         var html = document.documentElement;
         if (!html.classList.contains('hv2') && playing()) audio.pause();
+        // scrolling down tucks the player away (the download sidebar takes the same corner); coming back to the top does
+        // NOT open it again — the viewer decides when it opens, and that choice is remembered
         var scrolled = html.classList.contains('hv2-scrolled');
-        if (!scrolled){ reopened = false; if (autoOff){ autoOff = false; setOff(false, false); } }
-        else if (!autoOff && !reopened && !box.classList.contains('hv2-mu-off')){ autoOff = true; setOff(true, false); }
+        if (scrolled && !autoOff && !box.classList.contains('hv2-mu-off')){ autoOff = true; setOff(true, false); }
       }).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
     }
 
@@ -316,13 +321,7 @@ export const MUSIC_JS = MUSIC.enabled ? `(function(){
       box.classList.toggle('hv2-mu-off', off);
       tab.setAttribute('title', off ? 'Mở trình phát nhạc' : 'Thu gọn trình phát nhạc');
       tab.setAttribute('aria-label', tab.getAttribute('title'));
-      if (byViewer){
-        set(K.off, off ? '1' : '0');
-        autoOff = false;
-        // opening it by hand while scrolled means "leave it out"; opening it at the top of the page does not stop the
-        // player from tucking itself away again when the sidebar slides in
-        reopened = !off && document.documentElement.classList.contains('hv2-scrolled');
-      }
+      if (byViewer){ set(K.off, off ? '1' : '0'); autoOff = false; }
     }
     function onState(){
       var on = playing();
@@ -364,8 +363,35 @@ export const MUSIC_JS = MUSIC.enabled ? `(function(){
       select(shuffle ? Math.floor(Math.random() * songs.length) : i + d, play);
     }
     function toggle(){
-      if (playing()){ audio.pause(); saveTime(); return; }
+      // pressing pause is remembered: the page will not start the music by itself for this visitor again
+      if (playing()){ set(K.stop, '1'); audio.pause(); saveTime(); return; }
+      set(K.stop, '0');
       if (!audio.src) select(i, true); else audio.play().catch(function(){});
+    }
+
+    // Start the music by itself. Browsers only allow that after the visitor has touched the page, so: try once, and if
+    // the browser says no, wait for the first tap, click or key press anywhere and start then. A visitor who pressed
+    // pause before is left alone (K.stop).
+    function autoPlay(){
+      if (get(K.stop, '0') === '1') return;
+      var go = function(){
+        if (playing()) return;
+        if (!audio.src) select(i, false);
+        audio.play().catch(function(){});
+      };
+      var arm = function(){
+        var once = function(){
+          document.removeEventListener('pointerdown', once, true);
+          document.removeEventListener('keydown', once, true);
+          document.removeEventListener('touchstart', once, true);
+          go();
+        };
+        document.addEventListener('pointerdown', once, true);
+        document.addEventListener('keydown', once, true);
+        document.addEventListener('touchstart', once, true);
+      };
+      if (!audio.src) select(i, false);
+      audio.play().then(function(){}, arm);
     }
 
     // the <li> list and the songs array; used both on the first fill and on every later refresh
@@ -399,6 +425,7 @@ export const MUSIC_JS = MUSIC.enabled ? `(function(){
       }
       onState();
       onTime();
+      autoPlay();
     }
 
     // Asking the server for the songs. A failed request (server restarting, a hiccup on the way) answers null, which is
