@@ -182,7 +182,9 @@ export const HEROES_JS = `(function(){
       track.textContent = '';
       for (var c = 0; c < 3; c++) heroes.forEach(function(h, k){
         var b = el('button', { type: 'button', 'class': 'hv2-hd-item', 'aria-label': h[2], tabindex: c === 1 ? '0' : '-1' }, [el('img', { alt: '', src: path(h, 'icon.png'), draggable: 'false' })]);
-        b.addEventListener('click', function(){ move(c * heroes.length + k); });
+        // the button brings the slot it sits in to the top; read that slot from the DOM, because c is shared by every
+        // handler this loop creates and by click time it holds the value the loop ended on
+        b.addEventListener('click', function(){ move(Array.prototype.indexOf.call(track.children, b)); });
         track.appendChild(b);
       });
     }
@@ -204,7 +206,10 @@ export const HEROES_JS = `(function(){
       place(i, true);
       paintHero();
     }
-    track.addEventListener('transitionend', function(){
+    // only the track's own slide ends a move: a transition on anything inside the list bubbles here too and must not
+    // snap the list out from under a slide that is still running
+    track.addEventListener('transitionend', function(e){
+      if (e.target !== track) return;
       var n = heroes.length, mid = n + hero;
       if (pos !== mid) place(mid, false);
     });
