@@ -49,8 +49,10 @@ export const FEATURES_CSS = `
 #hv2-features .hv2-feat-link img{display:block;width:100%;height:100%;object-fit:cover}
 #hv2-features .hv2-feat-slide.is-active{z-index:3}
 #hv2-features .hv2-feat-slide.is-prev,#hv2-features .hv2-feat-slide.is-next{z-index:2;filter:brightness(.5);cursor:pointer}
-#hv2-features .hv2-feat-slide.is-prev{transform:translateX(-50%) translateX(-46%) scale(.76)}
-#hv2-features .hv2-feat-slide.is-next{transform:translateX(-50%) translateX(46%) scale(.76)}
+/* the scale and the push out are tuned so a side slide ends inside the track (.5*.70*.66 + .40*.66 = .495 < .5 of
+   the track width): its gold frame is never clipped by the track edge */
+#hv2-features .hv2-feat-slide.is-prev{transform:translateX(-50%) translateX(-40%) scale(.70)}
+#hv2-features .hv2-feat-slide.is-next{transform:translateX(-50%) translateX(40%) scale(.70)}
 #hv2-features .hv2-feat-slide.is-prev:hover,#hv2-features .hv2-feat-slide.is-next:hover{filter:brightness(.75)}
 #hv2-features .hv2-feat-slide.is-far-prev,#hv2-features .hv2-feat-slide.is-far-next{z-index:1;opacity:0;pointer-events:none}
 #hv2-features .hv2-feat-slide.is-far-prev{transform:translateX(-50%) translateX(-80%) scale(.56)}
