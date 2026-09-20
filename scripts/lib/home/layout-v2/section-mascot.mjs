@@ -90,13 +90,18 @@ const MESSAGES = {
   show: 'Ta quay lại rồi đây!',
 };
 
-// box: square, at most 250px, and short enough to stay below the vertically centred social bar (407px high with its
-// cloud frame); the speech bubble sits to the right of the mascot, clear of the bar
+// box: square, sized from the room under the vertically centred social bar (407px high with its cloud frame), then
+// grown by GROW because the client asked for a bigger mascot. At GROW = 1.26 the top of the box reaches about 30-40px
+// into the bar's row; the icons stay clickable because that corner of the artwork is transparent, so a future mascot
+// with tall hair or a hat needs this measured again (verify\check-mascot-size.cjs).
+// The speech bubble sits to the right of the mascot, clear of the bar.
 const SOCIAL_BAR_H = 407;
+const GROW = 1.26;
+const MAX_BOX = Math.round(250 * GROW);
 
 export const MASCOT_CSS = MASCOT.enabled ? `
 #hv2-mascot,#hv2-mascot-toggle{display:none}
-html.hv2:not(.hv2-embed) #hv2-mascot{--hv2-m:min(250px,calc((100vh - ${SOCIAL_BAR_H}px) / 2 - 8px));display:block;position:fixed;
+html.hv2:not(.hv2-embed) #hv2-mascot{--hv2-m:min(${MAX_BOX}px,calc((100vh - ${SOCIAL_BAR_H}px) / 2 * ${GROW} - 8px));display:block;position:fixed;
   left:6px;bottom:0;width:var(--hv2-m);height:var(--hv2-m);z-index:11;pointer-events:none;transition:transform .5s ease}
 #hv2-mascot.hv2-m-off{transform:translateY(110%)}
 #hv2-mascot canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:auto;cursor:grab}
