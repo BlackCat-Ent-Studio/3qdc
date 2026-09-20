@@ -67,11 +67,32 @@ export function adminApp() {
       ? `<nav class="adm-nav" aria-label="Mục quản trị">${[['posts', '#/', 'Bài viết'], ['music', '#/nhac', 'Nhạc nền'], ['trash', '#/thung-rac', 'Thùng rác'], ['users', '#/nguoi-dung', 'Người dùng']]
         .map(([key, href, label]) => `<a href="${href}"${(active || 'posts') === key ? ' class="on" aria-current="page"' : ''}>${label}</a>`).join('')}</nav>`
       : '';
-    return `<header class="adm-h"><div class="wrap"><a href="#/" class="adm-logo"><img src="${esc(LOGO)}" alt="3Q Đại Chiến"></a><span class="ttl">Quản trị tin tức</span>${nav}
-<div class="who">${THEME_BUTTON}${avatar(me.name)}<span><b>${esc(me.name)}</b> · ${esc(ROLES[me.role] || me.role)}</span>
+    // On phones the account row is folded behind this button (CSS hides .who until the header carries data-menu).
+    const menuBtn = `<button type="button" class="adm-menu" id="adm-menu" aria-expanded="false" aria-controls="adm-who" aria-label="Tài khoản và tuỳ chọn">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>`;
+    return `<header class="adm-h"><div class="wrap"><a href="#/" class="adm-logo"><img src="${esc(LOGO)}" alt="3Q Đại Chiến"></a><span class="ttl">Quản trị tin tức</span>${menuBtn}${nav}
+<div class="who" id="adm-who">${THEME_BUTTON}${avatar(me.name)}<span><b>${esc(me.name)}</b> · ${esc(ROLES[me.role] || me.role)}</span>
 <a class="btn btn-ghost btn-sm" href="/tin-tuc" target="_blank" rel="noopener">Xem trang tin</a><button type="button" class="btn btn-ghost btn-sm" id="logout">Đăng xuất</button></div></div></header>`;
   }
   function bindHeader() {
+    const head = $('.adm-h');
+    const menu = $('#adm-menu');
+    // The sticky editor toolbar sits below the header, whose height changes with the width (one row on a desktop,
+    // a second row for the tab strip on a phone) and when the account panel opens, so measure it instead of guessing.
+    const trackHeight = () => document.documentElement.style.setProperty('--adm-h', Math.round(head.getBoundingClientRect().height) + 'px');
+    trackHeight();
+    if (window.ResizeObserver) new ResizeObserver(trackHeight).observe(head);
+    else window.addEventListener('resize', trackHeight);
+    if (menu) {
+      const setOpen = (open) => {
+        head.toggleAttribute('data-menu', open);
+        menu.setAttribute('aria-expanded', open ? 'true' : 'false');
+      };
+      menu.addEventListener('click', () => setOpen(!head.hasAttribute('data-menu')));
+      // tapping a section tab or anything inside the panel closes it again
+      head.addEventListener('click', (e) => { if (e.target.closest('.adm-nav a, .who a')) setOpen(false); });
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setOpen(false); });
+    }
     $('#logout').addEventListener('click', async () => {
       if (dirty() && !window.confirm('Bài đang có thay đổi chưa lưu. Vẫn đăng xuất?')) return;
       cleanupEditor();
@@ -267,7 +288,7 @@ ${rows.map((u) => {
       $('main').innerHTML = `${pendingBar}<div class="adm-top"><div><h1>Bài viết</h1><p>${hint}</p></div><a class="btn btn-fire" href="#/viet-bai">+ Viết bài mới</a></div>
 <div class="filters">${['all', 'published', 'scheduled', 'pending', 'draft'].map((s) => `<button type="button" class="tab${listView.state === s ? ' on' : ''}" data-st="${s}">${s === 'all' ? 'Tất cả' : STATE[s]}<small>${n(s)}</small></button>`).join('')}
 <select id="fcat" aria-label="Lọc theo mục"><option value="all">Mọi mục</option>${CATS.map((c) => `<option value="${c.id}"${listView.cat === c.id ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select></div>
-<div class="tbl-wrap"><table class="posts"><thead><tr><th>Bài viết</th><th>Mục</th><th>Trạng thái</th><th>Người viết</th><th>Sửa lần cuối</th><th></th></tr></thead><tbody>
+<div class="tbl-wrap"><table class="posts posts-bai"><thead><tr><th>Bài viết</th><th>Mục</th><th>Trạng thái</th><th>Người viết</th><th>Sửa lần cuối</th><th></th></tr></thead><tbody>
 ${rows.map((p) => {
     const st = stateOf(p);
     const canEdit = me.role === 'manager' || p.status === 'draft';
@@ -330,7 +351,7 @@ ${rows.length ? '' : `<tr><td colspan="6" class="meta" style="text-align:center;
     const draw = (items, notice) => {
       $('main').innerHTML = `<div class="adm-top"><div><h1>Thùng rác</h1><p>Bài đã xoá nằm ở đây. <b>Khôi phục</b> đưa bài về <b>Nháp</b> — người chơi chưa thấy cho tới khi đăng lại.</p></div></div>
 <div class="err" id="t-err" role="alert"${notice ? '' : ' hidden'}>${esc(notice || '')}</div>
-<div class="tbl-wrap"><table class="posts"><thead><tr><th>Bài viết</th><th>Mục</th><th>Lúc xoá</th><th>Người viết</th><th>Xoá bởi</th><th></th></tr></thead><tbody>
+<div class="tbl-wrap"><table class="posts posts-rac"><thead><tr><th>Bài viết</th><th>Mục</th><th>Lúc xoá</th><th>Người viết</th><th>Xoá bởi</th><th></th></tr></thead><tbody>
 ${items.map((t) => `<tr data-file="${esc(t.file)}">
 <td><div class="p-title">${t.cover ? `<img class="cover" src="${esc(t.cover)}" alt="" loading="lazy">` : '<div class="cover"></div>'}<div><b>${esc(t.title)}</b><small>/tin-tuc/${esc(t.slug)} · trước khi xoá: ${esc(STATE[t.status] || t.status)}</small></div></div></td>
 <td><span class="chip c-${esc(t.category)}">${esc(catName(t.category))}</span></td>
@@ -378,7 +399,7 @@ ${items.length ? '' : '<tr><td colspan="6" class="meta" style="text-align:center
 <div><input type="file" id="m-file" accept="audio/*" multiple hidden><button type="button" class="btn btn-fire" id="m-add">+ Thêm bài hát</button></div></div>
 <div class="err" id="m-err" role="alert"${notice ? '' : ' hidden'}>${esc(notice || '')}</div>
 <p class="meta" id="m-used">Đang dùng ${mb(used)} / ${mb(total)} — ${items.length} bài.</p>
-<div class="tbl-wrap"><table class="posts"><thead><tr><th>Bài hát</th><th>Ca sĩ</th><th>Dung lượng</th><th>Nghe thử</th><th></th></tr></thead><tbody>
+<div class="tbl-wrap"><table class="posts posts-nhac"><thead><tr><th>Bài hát</th><th>Ca sĩ</th><th>Dung lượng</th><th>Nghe thử</th><th></th></tr></thead><tbody>
 ${items.map((s) => `<tr data-name="${esc(s.name)}">
 <td><div class="p-title"><div><b>${esc(s.title)}</b><div class="meta">${esc(s.name)}</div></div></div></td>
 <td class="meta">${esc(s.artist || '—')}</td>

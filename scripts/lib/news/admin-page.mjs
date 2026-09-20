@@ -66,7 +66,7 @@ table.posts{border-collapse:collapse;width:100%;min-width:860px}
 .count{align-self:flex-end;font-size:12px;color:var(--faint);font-variant-numeric:tabular-nums}
 .count.over{color:var(--danger)}
 .editor{border:1px solid var(--line);border-radius:var(--r);background:var(--ink-2)}
-.tb{display:flex;flex-wrap:wrap;gap:2px;padding:6px;border-bottom:1px solid var(--line);position:sticky;top:60px;background:var(--ink-2);z-index:5;border-radius:var(--r) var(--r) 0 0}
+.tb{display:flex;flex-wrap:wrap;gap:2px;padding:6px;border-bottom:1px solid var(--line);position:sticky;top:var(--adm-h,60px);background:var(--ink-2);z-index:5;border-radius:var(--r) var(--r) 0 0}
 .tb[hidden]{display:none}
 .tb button{background:transparent;border:1px solid transparent;border-radius:6px;padding:5px 9px;cursor:pointer;color:var(--nav);font-size:13.5px}
 .tb button:hover{border-color:var(--line);background:var(--tint)}
@@ -143,6 +143,76 @@ table.users{min-width:760px}
 @media (max-width:600px){.auth{padding-top:64px}}
 html[data-theme="light"] .btn-danger{border-color:rgba(179,55,42,.5)}
 html[data-theme="light"] .btn-danger:hover{background:rgba(179,55,42,.08)}
+
+/* ---------- phones and narrow tablets ----------
+   The desktop layout stays exactly as it is above 760px. Below that the header keeps one row (logo, title, a menu
+   button) with the section tabs as a scrolling strip under it, and every table drops its columns to become one card
+   per row: the identity cell on its own line, the short cells flowing after it, the buttons on a full-width line with
+   44px touch targets. --adm-h is the header height the sticky editor toolbar sits below. */
+.adm-menu{display:none}
+@media (max-width:820px){
+  :root{--adm-h:56px}
+  .adm-h .wrap{gap:10px;min-height:0;padding-block:8px;align-items:center}
+  .adm-logo img{height:30px}
+  .adm-h .ttl{font-size:15.5px;margin-right:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .adm-menu{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;flex:none;
+    border:1px solid var(--line);border-radius:10px;background:transparent;color:var(--text);cursor:pointer;padding:0}
+  .adm-menu svg{width:20px;height:20px}
+  .adm-nav{order:3;flex:1 0 100%;margin:0 -16px;padding:0 16px 2px;gap:2px;overflow-x:auto;scrollbar-width:none}
+  .adm-nav::-webkit-scrollbar{display:none}
+  .adm-nav a{white-space:nowrap;min-height:40px;display:inline-flex;align-items:center;font-size:14.5px}
+  .who{order:4;flex:1 0 100%;display:none;margin-left:0;gap:10px;align-items:center;
+    padding:12px 0 4px;border-top:1px solid var(--line-soft)}
+  .adm-h[data-menu] .who{display:flex}
+  .who .btn{min-height:44px}
+  .who .theme-btn{width:40px;height:40px}
+
+  .adm-top{padding-block:20px 12px}
+  .adm-top h1{font-size:30px}
+  .adm-top .btn{min-height:44px}
+  .filters .tab{min-height:40px}
+  .filters select{margin-left:0;flex:1 0 100%;min-height:44px}
+
+  /* tables become cards */
+  .tbl-wrap{overflow:visible;border:0;background:transparent;border-radius:0}
+  table.posts,table.posts.users{min-width:0;width:100%;display:block}
+  .posts thead{display:none}
+  .posts tbody{display:flex;flex-direction:column;gap:10px}
+  .posts tr{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;
+    border:1px solid var(--line);border-radius:var(--r);background:var(--panel);padding:12px 14px}
+  .posts tr:hover td{background:transparent}
+  .posts td{display:block;flex:0 0 auto;padding:0;border:0;font-size:14px}
+  .posts td:not(:first-child){white-space:normal}
+  .posts tr:last-child td{border-bottom:0}
+  .posts td:first-child,.posts td:last-child{flex:1 0 100%}
+  .posts td[colspan]{text-align:center}
+  .p-title{grid-template-columns:64px minmax(0,1fr);gap:10px;align-items:start}
+  /* a grid child defaults to min-width:auto, so the one-line slug below would push the card wider than the screen */
+  .p-title>div{min-width:0}
+  /* a row without a cover (the songs) has one child, which would otherwise sit in the 64px cover column */
+  .p-title>div:only-child{grid-column:1/-1}
+  .p-title b{font-size:15px}
+  .p-title small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .posts td>.person,.posts td.meta{min-width:0;overflow-wrap:anywhere}
+  /* the author already reads "bởi …" in the last-edited line, so the separate author cell is dropped here */
+  .posts-bai td:nth-child(4),.posts-rac td:nth-child(4){display:none}
+  .posts-bai td:nth-child(5){font-size:12.5px;color:var(--faint)}
+  /* the preview player is inline in the markup, so it needs display:block before a width applies */
+  .posts audio{display:block;width:100%!important;max-width:none!important;height:40px!important}
+  .posts td:last-child .acts{flex-wrap:wrap;gap:8px}
+  .posts td:last-child .acts .btn{flex:1 1 auto;min-height:44px;font-size:14px}
+  .users .acts{flex-wrap:wrap}
+  .posts audio{width:100%;max-width:none}
+
+  /* editor */
+  .ed{padding-block:16px 28px;gap:18px}
+  .tb{top:var(--adm-h);gap:4px}
+  .tb button{min-height:38px;font-size:14px}
+  .side{position:static}
+  .ce{padding:16px 14px;min-height:320px}
+  .lib{grid-template-columns:repeat(3,1fr)}
+  .btns .btn{min-height:44px}
+}
 `;
 
 const PREVIEW_CSS = `.preview-flag{background:rgba(233,185,73,.14);border:1px solid rgba(233,185,73,.5);color:#e9b949;border-radius:8px;padding:10px 14px;margin-top:20px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center}
