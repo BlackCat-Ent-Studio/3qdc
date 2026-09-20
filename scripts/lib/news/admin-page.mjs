@@ -204,6 +204,17 @@ html[data-theme="light"] .btn-danger:hover{background:rgba(179,55,42,.08)}
   .users .acts{flex-wrap:wrap}
   .posts audio{width:100%;max-width:none}
 
+  /* a sideways swipe here changes section, so the browser must not read it as its own back/forward gesture
+     (the phone's system edge gesture still works — that one is outside the page) */
+  html,body{overscroll-behavior-x:contain}
+
+  /* the section that a sideways swipe brought in slides from the side the finger came from */
+  .adm-in-right{animation:adm-in-right .18s ease-out}
+  .adm-in-left{animation:adm-in-left .18s ease-out}
+  @keyframes adm-in-right{from{transform:translateX(18px);opacity:.4}to{transform:none;opacity:1}}
+  @keyframes adm-in-left{from{transform:translateX(-18px);opacity:.4}to{transform:none;opacity:1}}
+  @media (prefers-reduced-motion:reduce){.adm-in-right,.adm-in-left{animation:none}}
+
   /* editor */
   .ed{padding-block:16px 28px;gap:18px}
   .tb{top:var(--adm-h);gap:4px}

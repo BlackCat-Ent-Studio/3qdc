@@ -853,6 +853,50 @@ ${uploads.length ? `<div class="pop-row"><span class="lbl">Ảnh đã tải lên
     else renderList();
     lastHash = location.hash;
     window.scrollTo(0, 0);
+    afterRoute();
+  }
+
+  // ---------- sideways swipe between the sections (touch screens only) ----------
+  // The sections in tab order; a swipe moves one step and stops at either end rather than wrapping, so the tab strip
+  // stays the map of where you are. The editor is left out on purpose: a stray swipe must never drop unsaved text.
+  const SECTIONS = ['#/', '#/nhac', '#/thung-rac', '#/nguoi-dung'];
+  let slideFrom = '';
+
+  function afterRoute() {
+    const main = $('main') || app;
+    if (slideFrom) {
+      main.classList.add(slideFrom === 'right' ? 'adm-in-right' : 'adm-in-left');
+      slideFrom = '';
+    }
+    const on = $('.adm-nav a.on');
+    if (on && on.scrollIntoView) on.scrollIntoView({ block: 'nearest', inline: 'center' });
+  }
+
+  function bindSwipe() {
+    let x0 = 0, y0 = 0, t0 = 0, tracking = false;
+    const swipeable = () => me && me.role === 'manager'
+      && window.matchMedia('(max-width:820px)').matches
+      && !$('.ed'); // the editor keeps its own gestures
+    // a gesture that starts on one of these belongs to the control, not to the page
+    const owned = (el) => !!(el && el.closest && el.closest('input,textarea,select,audio,video,[contenteditable="true"],.adm-nav,.tb,.ce'));
+    document.addEventListener('touchstart', (e) => {
+      tracking = false;
+      if (e.touches.length !== 1 || !swipeable() || owned(e.target)) return;
+      x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; t0 = Date.now(); tracking = true;
+    }, { passive: true });
+    document.addEventListener('touchend', (e) => {
+      if (!tracking) return;
+      tracking = false;
+      const t = e.changedTouches[0];
+      const dx = t.clientX - x0, dy = t.clientY - y0;
+      // far enough sideways, clearly more sideways than down, and not a slow drag that was really a scroll
+      if (Date.now() - t0 > 700 || Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.6) return;
+      const here = SECTIONS.indexOf(location.hash || '#/');
+      const next = here + (dx < 0 ? 1 : -1);
+      if (here < 0 || next < 0 || next >= SECTIONS.length) return;
+      slideFrom = dx < 0 ? 'right' : 'left';
+      location.hash = SECTIONS[next];
+    }, { passive: true });
   }
   window.addEventListener('hashchange', () => {
     // a new set-password link pasted into the same tab: show the form for that token
@@ -867,6 +911,7 @@ ${uploads.length ? `<div class="pop-row"><span class="lbl">Ảnh đã tải lên
   window.addEventListener('pagehide', () => { if (leaving) { const f = leaving; leaving = null; f(); } });
 
   (async function boot() {
+    bindSwipe();
     if (location.pathname.replace(/\/+$/, '') === '/quan-tri/dat-mat-khau') return renderSetPassword();
     if (location.pathname.replace(/\/+$/, '') === '/quan-tri/dang-ky') return renderRegister();
     const r = await api('GET', '/toi');
