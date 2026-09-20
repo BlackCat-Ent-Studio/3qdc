@@ -132,10 +132,6 @@ html.hv2:not(.hv2-embed) #hv2-mascot-toggle.on:hover{color:#fff;background:#9a4a
   #hv2-mascot .hv2-m-tools{right:2px;bottom:auto;top:2px;opacity:1;gap:8px}
   #hv2-mascot .hv2-m-tools button{width:32px;height:32px;padding:7px;background:rgba(22,39,59,.92)}
   #hv2-mascot-talk{display:none}
-  /* she stands over the page, so she steps aside once the visitor starts reading and comes back at the top */
-  #hv2-mascot.hv2-m-away{transform:translateY(125%)}
-  /* a line still running when she steps aside would keep floating at the bottom of the screen */
-  #hv2-mascot.hv2-m-away .hv2-m-tips{opacity:0}
   /* a finger dragging across her must scroll the page, not be swallowed by the model */
   #hv2-mascot canvas{touch-action:pan-y}
   html.hv2:not(.hv2-embed) #hv2-mascot-toggle.on{bottom:96px;min-height:44px;padding:10px 7px}
@@ -262,8 +258,7 @@ export const MASCOT_JS = MASCOT.enabled ? `(function(){
     // draw only while the home layout shows the mascot (not hidden, not on another page of the app, screen tall enough)
     function sync(){
       if (!engine) return;
-      var on = document.documentElement.classList.contains('hv2') && !box.classList.contains('hv2-m-off')
-        && !box.classList.contains('hv2-m-away') && showing();
+      var on = document.documentElement.classList.contains('hv2') && !box.classList.contains('hv2-m-off') && showing();
       if (on) engine.run(); else engine.stop();
     }
 
@@ -301,22 +296,11 @@ export const MASCOT_JS = MASCOT.enabled ? `(function(){
       canvasEl.addEventListener('touchend', function(){ tapped = Date.now(); poked(); }, { passive: true });
       document.addEventListener('copy', function(){ if (started) say(CFG.MESSAGES.copy, 6000, 9); });
       document.addEventListener('visibilitychange', function(){ if (started && !document.hidden) say(CFG.MESSAGES.back, 6000, 9); });
-      // On a phone she covers whatever scrolls under her, and a tap on her is a tap on her, not on the page. So she
-      // slides away as soon as the visitor scrolls past the first screen and comes back at the top; drawing stops
-      // while she is away. The hide button is still the way to send her off for good.
-      var away = false, ticking = false;
-      function follow(){
-        ticking = false;
-        if (!api.compact()) { if (away) { away = false; box.classList.remove('hv2-m-away'); sync(); } return; }
-        var want = window.scrollY > window.innerHeight * 0.6;
-        if (want === away) return;
-        away = want;
-        box.classList.toggle('hv2-m-away', away);
-        sync();
-      }
-      window.addEventListener('scroll', function(){ if (!ticking) { ticking = true; requestAnimationFrame(follow); } }, { passive: true });
+      // She stays put while the page scrolls: the visitor decides when she goes, with the hide button, and brings her
+      // back with the tab. (An earlier version stepped aside past the first screen; the owner wants the choice made
+      // by hand, not by scrolling.)
       // the compact layout (tablet turned, window narrowed) hides the mascot by CSS; widening again starts it if needed
-      window.addEventListener('resize', function(){ if (!started) start(); follow(); sync(); });
+      window.addEventListener('resize', function(){ if (!started) start(); sync(); });
       // leaving the home page (hash navigation removes html.hv2) pauses drawing, coming back resumes it
       new MutationObserver(sync).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
       // the Cubism 2 loader zooms the model on mouse wheel and blocks page scrolling; stop the event before it gets there
