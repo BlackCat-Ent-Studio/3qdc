@@ -98,6 +98,8 @@ const MESSAGES = {
 const SOCIAL_BAR_H = 407;
 const GROW = 1.26;
 const MAX_BOX = Math.round(250 * GROW);
+// square side on a phone: about a third of a 393px screen, small enough to leave the page readable
+const PHONE_BOX = 130;
 
 export const MASCOT_CSS = MASCOT.enabled ? `
 #hv2-mascot,#hv2-mascot-toggle{display:none}
@@ -121,7 +123,23 @@ html.hv2:not(.hv2-embed) #hv2-mascot-toggle.on{display:block;position:fixed;left
   border:1px solid rgba(201,154,74,.8);border-left:0;border-radius:0 8px 8px 0;background:rgba(22,39,59,.92);color:#f3d9a0;
   font:13px/1 system-ui,sans-serif;writing-mode:vertical-rl;cursor:pointer}
 html.hv2:not(.hv2-embed) #hv2-mascot-toggle.on:hover{color:#fff;background:#9a4a12}
-@media ${COMPACT_MQ}{html.hv2:not(.hv2-embed) #hv2-mascot,html.hv2:not(.hv2-embed) #hv2-mascot-toggle.on{display:none}}
+/* Phones: the client asked for the mascot with her mouth moving and the speech bubble above her, nothing else.
+   She sits in the free bottom-left corner (the music button owns the bottom-right), the bubble goes over her head
+   because there is no room beside her, and the hide button stays visible since a finger cannot hover. */
+@media ${COMPACT_MQ}{
+  html.hv2:not(.hv2-embed) #hv2-mascot{--hv2-m:${PHONE_BOX}px;left:8px;bottom:8px}
+  #hv2-mascot .hv2-m-tips{left:0;right:auto;bottom:100%;width:min(62vw,240px);margin-bottom:8px;font-size:13.5px}
+  #hv2-mascot .hv2-m-tools{right:2px;bottom:auto;top:2px;opacity:1;gap:8px}
+  #hv2-mascot .hv2-m-tools button{width:32px;height:32px;padding:7px;background:rgba(22,39,59,.92)}
+  #hv2-mascot-talk{display:none}
+  /* she stands over the page, so she steps aside once the visitor starts reading and comes back at the top */
+  #hv2-mascot.hv2-m-away{transform:translateY(125%)}
+  /* a line still running when she steps aside would keep floating at the bottom of the screen */
+  #hv2-mascot.hv2-m-away .hv2-m-tips{opacity:0}
+  /* a finger dragging across her must scroll the page, not be swallowed by the model */
+  #hv2-mascot canvas{touch-action:pan-y}
+  html.hv2:not(.hv2-embed) #hv2-mascot-toggle.on{bottom:96px;min-height:44px;padding:10px 7px}
+}
 @media (max-height:600px){html.hv2:not(.hv2-embed) #hv2-mascot,html.hv2:not(.hv2-embed) #hv2-mascot-toggle.on{display:none}}
 @media (prefers-reduced-motion:reduce){#hv2-mascot,#hv2-mascot .hv2-m-tips{transition:none}}
 ` : '';
@@ -162,7 +180,9 @@ export const MASCOT_JS = MASCOT.enabled ? `(function(){
       });
       return out;
     }
-    function desktop(){ return !api.compact() && window.innerHeight > 600; }
+    // shown on phones too now; only a screen too short for her (a phone turned sideways) is left out, which is the
+    // same line the CSS draws with max-height:600px
+    function showing(){ return window.innerHeight > 600; }
 
     function build(){
       box = el('div', { id: 'hv2-mascot', 'data-home-v2': '', 'aria-label': 'Linh vật ' + CFG.MASCOT.name });
@@ -203,7 +223,7 @@ export const MASCOT_JS = MASCOT.enabled ? `(function(){
     }
     // loader + model are fetched once, the first time the mascot is actually shown
     function start(){
-      if (started || hidden() || !desktop()) return;
+      if (started || hidden() || !showing()) return;
       started = true;
       var url = CFG.MASCOT.model;
       fetch(url).then(function(r){ if (!r.ok) throw new Error('model ' + r.status); return r.json(); }).then(function(setting){
@@ -239,10 +259,11 @@ export const MASCOT_JS = MASCOT.enabled ? `(function(){
         box.style.display = 'none';
       });
     }
-    // draw only while the home layout shows the mascot (not hidden, not on another page of the app, not compact)
+    // draw only while the home layout shows the mascot (not hidden, not on another page of the app, screen tall enough)
     function sync(){
       if (!engine) return;
-      var on = document.documentElement.classList.contains('hv2') && !box.classList.contains('hv2-m-off') && desktop();
+      var on = document.documentElement.classList.contains('hv2') && !box.classList.contains('hv2-m-off')
+        && !box.classList.contains('hv2-m-away') && showing();
       if (on) engine.run(); else engine.stop();
     }
 
@@ -250,6 +271,9 @@ export const MASCOT_JS = MASCOT.enabled ? `(function(){
       var active = false, last = null, idle = null;
       window.addEventListener('mousemove', function(){ active = true; });
       window.addEventListener('keydown', function(){ active = true; });
+      // a phone has no mouse: without these she would count every visitor as idle and chatter every 20 seconds
+      window.addEventListener('touchstart', function(){ active = true; }, { passive: true });
+      window.addEventListener('scroll', function(){ active = true; }, { passive: true });
       setInterval(function(){
         if (active){ active = false; clearInterval(idle); idle = null; }
         else if (!idle) idle = setInterval(function(){
@@ -257,7 +281,9 @@ export const MASCOT_JS = MASCOT.enabled ? `(function(){
         }, 20000);
       }, 1000);
       document.addEventListener('mouseover', function(e){
-        if (!started || !e.target.closest) return;
+        // the lines below are for a mouse moving over the page; a tap also fires mouseover once, and on a phone the
+        // client only wants her to talk when she is tapped
+        if (!started || !e.target.closest || api.compact()) return;
         for (var i = 0; i < CFG.HOVER.length; i++){
           if (!e.target.closest(CFG.HOVER[i][0])) continue;
           if (last === CFG.HOVER[i][0]) return;
@@ -267,11 +293,30 @@ export const MASCOT_JS = MASCOT.enabled ? `(function(){
         }
         last = null;
       });
-      box.querySelector('canvas').addEventListener('click', function(){ say(CFG.CLICK, 4000, 8); });
+      // The Live2D loader handles the canvas's own touch events, and on a phone no click ever comes out of them, so
+      // listen for the touch as well; the flag keeps a tap from speaking twice where both events do arrive.
+      var canvasEl = box.querySelector('canvas'), tapped = 0;
+      function poked(){ say(CFG.CLICK, 4000, 8); }
+      canvasEl.addEventListener('click', function(){ if (Date.now() - tapped > 500) poked(); });
+      canvasEl.addEventListener('touchend', function(){ tapped = Date.now(); poked(); }, { passive: true });
       document.addEventListener('copy', function(){ if (started) say(CFG.MESSAGES.copy, 6000, 9); });
       document.addEventListener('visibilitychange', function(){ if (started && !document.hidden) say(CFG.MESSAGES.back, 6000, 9); });
+      // On a phone she covers whatever scrolls under her, and a tap on her is a tap on her, not on the page. So she
+      // slides away as soon as the visitor scrolls past the first screen and comes back at the top; drawing stops
+      // while she is away. The hide button is still the way to send her off for good.
+      var away = false, ticking = false;
+      function follow(){
+        ticking = false;
+        if (!api.compact()) { if (away) { away = false; box.classList.remove('hv2-m-away'); sync(); } return; }
+        var want = window.scrollY > window.innerHeight * 0.6;
+        if (want === away) return;
+        away = want;
+        box.classList.toggle('hv2-m-away', away);
+        sync();
+      }
+      window.addEventListener('scroll', function(){ if (!ticking) { ticking = true; requestAnimationFrame(follow); } }, { passive: true });
       // the compact layout (tablet turned, window narrowed) hides the mascot by CSS; widening again starts it if needed
-      window.addEventListener('resize', function(){ if (!started) start(); sync(); });
+      window.addEventListener('resize', function(){ if (!started) start(); follow(); sync(); });
       // leaving the home page (hash navigation removes html.hv2) pauses drawing, coming back resumes it
       new MutationObserver(sync).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
       // the Cubism 2 loader zooms the model on mouse wheel and blocks page scrolling; stop the event before it gets there
