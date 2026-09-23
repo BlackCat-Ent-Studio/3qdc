@@ -1,0 +1,291 @@
+/* single warm "war-scroll" world like the reference landing: parchment ground, lacquer-brown bars, vermilion + gold */
+:root{color-scheme:light;
+  --paper:#f7edd3;--paper-2:#fbf5e4;--paper-3:#efdcae;
+  --ink:#3b2412;--ink-2:#6b4a2b;--muted:#8a6a45;
+  --bar:#3a2410;--bar-2:#5b3a1a;
+  --red:#b3321e;--red-2:#8f2414;--gold:#d9a441;--gold-hi:#f6d98a;--gold-dk:#a8741f;
+  --jade:#2f7a5f;--wine:#5a1a12;
+  --brush:"Dancing Script","Segoe Script",cursive;--body:"Be Vietnam Pro","Segoe UI",system-ui,sans-serif;
+  --r:10px}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.55}
+/* images keep their own proportions: the width/height attributes only reserve space, height follows the width */
+img{max-width:100%;height:auto;display:block}
+button{font:inherit;color:inherit;cursor:pointer}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+.wrap{max-width:1200px;margin:0 auto;padding-inline:16px}
+
+/* ---------- header: lacquer bar, links either side of a medallion logo ---------- */
+.hd{position:sticky;top:env(safe-area-inset-top,0px);z-index:40;height:64px;
+  background:linear-gradient(180deg,var(--bar-2),var(--bar));box-shadow:0 2px 0 var(--gold-dk),0 6px 18px rgba(40,20,5,.35)}
+.hd .wrap{height:100%;display:grid;grid-template-columns:1fr 150px 1fr;align-items:center}
+.hd nav{display:flex;align-items:center;gap:0}
+.hd nav.l{justify-content:flex-end}
+.hd nav a,.hd nav button{background:none;border:0;padding:8px 22px;color:#f3e2bd;font-weight:600;font-size:16px;text-decoration:none;position:relative}
+.hd nav a:hover,.hd nav button:hover{color:var(--gold-hi)}
+.hd nav>*+*:before{content:"";position:absolute;left:0;top:30%;height:40%;width:1px;background:rgba(243,226,189,.35)}
+.medal{justify-self:center;align-self:start;margin-top:4px;width:132px;height:108px;border-radius:0 0 66px 66px;
+  background:radial-gradient(circle at 50% 40%,#6b4420,var(--bar) 70%);border:2px solid var(--gold-dk);border-top:0;
+  display:grid;place-items:center;box-shadow:0 8px 16px rgba(40,20,5,.35)}
+.medal img{width:112px}
+.who{display:inline-flex;align-items:center;gap:8px}
+.who i{font-style:normal;background:var(--gold);color:var(--bar);border-radius:999px;padding:2px 10px;font-size:13px;font-weight:700}
+.menu-btn{display:none}
+
+/* ---------- hero ---------- */
+.hero{position:relative;background:#e8c98a}
+/* at most one window tall (minus header and half the button row), trimming the sky, never the ribbon at the bottom */
+.hero img.kv{width:100%;height:auto;max-height:max(420px,min(816px,calc(100vh - 110px)));object-fit:cover;object-position:50% 100%}
+.hero .cta{position:absolute;left:0;right:0;bottom:5%;display:flex;justify-content:center;gap:clamp(12px,3vw,48px);padding-inline:16px;flex-wrap:wrap}
+.bar-btn{position:relative;display:inline-flex;align-items:center;gap:12px;min-height:64px;padding:10px 34px;border:0;border-radius:40px;
+  background:linear-gradient(180deg,#fff3c9,#f1c96b 55%,#d49b35);color:#5a2f0c;font-weight:800;font-size:clamp(16px,1.6vw,22px);
+  box-shadow:inset 0 0 0 2px #fff8dc,0 0 0 3px #8c5a1c,0 6px 14px rgba(60,30,5,.45);text-decoration:none;letter-spacing:.01em}
+.bar-btn:before,.bar-btn:after{content:"";position:absolute;top:50%;width:26px;height:26px;margin-top:-13px;border:3px solid #8c5a1c;border-radius:50%;background:var(--gold-hi)}
+.bar-btn:before{left:-16px}.bar-btn:after{right:-16px}
+.bar-btn:hover{filter:brightness(1.06)}
+.bar-btn svg{width:30px;height:30px;flex:none}
+/* the one call to action on the key visual: a larger bar that takes the visitor down to the sign-up steps */
+/* it straddles the bottom edge of the key visual, so the ribbon of text drawn into the art above stays readable */
+.hero{z-index:2}
+.hero .cta.one{bottom:0;transform:translateY(50%);align-items:center}
+.hero+.sec{padding-top:96px}
+.bar-btn.big{min-height:76px;padding:10px 72px;font-size:clamp(22px,2.2vw,32px);letter-spacing:.04em;text-transform:uppercase}
+.bar-btn.big:before,.bar-btn.big:after{width:32px;height:32px;margin-top:-16px}
+.bar-btn.big:before{left:-20px}.bar-btn.big:after{right:-20px}
+/* sections land below the sticky header when the page scrolls to them */
+main>section{scroll-margin-top:64px}
+
+/* ---------- section scaffolding ---------- */
+.sec{position:relative;padding-block:72px;overflow:hidden}
+.sec.alt{background:
+  radial-gradient(1200px 180px at 50% 0,rgba(240,188,90,.55),transparent 70%),
+  radial-gradient(600px 300px at 0 100%,rgba(47,122,95,.10),transparent 70%),
+  radial-gradient(600px 300px at 100% 60%,rgba(179,50,30,.08),transparent 70%),var(--paper-2)}
+.sec.plain{background:
+  radial-gradient(1200px 200px at 50% 0,rgba(240,188,90,.45),transparent 70%),
+  radial-gradient(500px 260px at 100% 100%,rgba(47,122,95,.10),transparent 70%),var(--paper)}
+.title{text-align:center;margin:0 auto 34px;max-width:960px}
+.title h2{margin:0;font-family:var(--brush);font-weight:700;font-size:clamp(34px,4.6vw,64px);line-height:1.1;text-wrap:balance;
+  color:#3a1f0b;text-shadow:0 2px 0 #f6d98a,0 4px 10px rgba(120,70,10,.35)}
+.title .orn{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:10px;color:var(--gold-dk)}
+.title .orn:before,.title .orn:after{content:"";height:3px;width:min(300px,30vw);border-radius:3px;background:linear-gradient(90deg,transparent,var(--gold) 40%,var(--gold-dk))}
+.title .orn:after{transform:scaleX(-1)}
+.title .orn b{width:12px;height:12px;transform:rotate(45deg);background:var(--red);box-shadow:0 0 0 3px var(--gold-hi)}
+.title p{margin:14px 0 0;font-size:clamp(17px,1.6vw,22px);font-weight:700;color:var(--ink-2)}
+.title p strong{color:var(--red);font-variant-numeric:tabular-nums}
+
+/* gift slots */
+.gifts{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+.gift{position:relative;width:70px;height:70px;border-radius:6px;background:linear-gradient(160deg,#9b6a3a,#6b4221);
+  box-shadow:inset 0 0 0 2px #c79858,inset 0 0 0 4px #5a3518,0 2px 4px rgba(60,30,5,.35);display:grid;place-items:center}
+.gift svg{width:44px;height:44px}
+.gift span{position:absolute;right:5px;bottom:2px;color:#fff;font-weight:800;font-size:14px;text-shadow:0 1px 0 #3a1f0b,1px 0 0 #3a1f0b,-1px 0 0 #3a1f0b,0 -1px 0 #3a1f0b;font-variant-numeric:tabular-nums}
+.gift.got{filter:grayscale(.2) brightness(.9)}
+.gift.got:after{content:"Đã nhận";position:absolute;inset:auto 0 0;height:20px;display:grid;place-items:center;background:rgba(47,122,95,.9);color:#fff;font-size:11px;font-weight:700;border-radius:0 0 6px 6px}
+
+/* claim button */
+.claim{min-width:112px;min-height:40px;padding:6px 20px;border-radius:999px;border:0;font-weight:800;letter-spacing:.04em;
+  background:linear-gradient(180deg,#fff0bf,#e8b650);color:#6a3a0a;box-shadow:0 0 0 2px #9b6424,0 3px 8px rgba(80,40,5,.35)}
+.claim.ready{animation:glow 1.6s ease-in-out infinite}
+@keyframes glow{50%{box-shadow:0 0 0 2px #9b6424,0 0 18px 4px rgba(246,201,100,.9)}}
+.claim:disabled{cursor:not-allowed;background:#e8dcc0;color:#a89372;box-shadow:0 0 0 2px #cdbb95;animation:none}
+.claim.done{background:var(--jade);color:#fff;box-shadow:0 0 0 2px #1f5a45}
+
+/* scroll-edged card (milestones, invites) */
+.card{position:relative;background:linear-gradient(180deg,#fff9e6,#f6e6bd);border:2px solid #d8a85a;border-radius:6px;padding:40px 12px 16px;
+  display:flex;flex-direction:column;align-items:center;gap:14px;box-shadow:0 6px 14px rgba(120,70,10,.18)}
+.card:before{content:"";position:absolute;left:-2px;right:-2px;top:-2px;height:26px;border-radius:6px 6px 0 0;
+  background:linear-gradient(180deg,#e2642c,#b3321e);box-shadow:inset 0 -3px 0 #f0b04a}
+.card h3{margin:0;font-family:var(--brush);font-size:clamp(22px,2.2vw,28px);line-height:1.1;color:#4a2610;text-align:center;text-wrap:balance}
+.card.reached{border-color:var(--gold-dk);box-shadow:0 0 0 3px rgba(246,217,138,.8),0 8px 18px rgba(120,70,10,.25)}
+
+/* ---------- pre-register: portrait + pavilion panel ---------- */
+.reg{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:24px;align-items:end}
+/* the hero stands as tall as the steps panel beside it, spilling a little past the column like the reference */
+.reg .portrait{align-self:end;margin-bottom:-72px;width:132%;max-width:none;margin-left:-26%}
+.pavilion{position:relative}
+.roof{position:absolute;left:-30px;right:-30px;top:-34px;height:46px;
+  background:linear-gradient(180deg,#e59a3a,#c0621d);clip-path:polygon(0 100%,4% 20%,12% 0,88% 0,96% 20%,100% 100%);
+  box-shadow:inset 0 -6px 0 #8c3a12}
+.roof:after{content:"";position:absolute;left:8%;right:8%;top:10px;height:8px;background:repeating-linear-gradient(90deg,#f7c96a 0 10px,#c0621d 10px 16px);opacity:.8}
+/* the owner's pavilion frame (cai khung.png, 960x1371): the tiled roof is their art, cropped to 815x271 (x72-887,
+   y30-301); the body below is drawn to the same measurements so it grows with the steps without stretching the roof.
+   In the art the body is 685 wide starting 62 in from the roof's left end, i.e. 84.05% of the roof, 7.61% in. */
+
+.pavilion .roof-art{display:block;width:calc(100% / .8405);max-width:none;margin-left:calc(-100% / .8405 * .0761);position:relative;z-index:1;margin-bottom:-2px}
+.panel{position:relative;background:#fdf6e3;border:2px solid #f8e3b1;border-top:0;padding:30px 26px 26px;box-shadow:0 12px 26px rgba(120,70,10,.18)}
+.panel:before{content:"";position:absolute;inset:0;border:6px solid #e4b058;border-top:0;pointer-events:none;
+  box-shadow:inset 2px 0 0 #ca9644,inset -2px 0 0 #ca9644,inset 0 -2px 0 #ca9644}
+.panel:after{content:"";position:absolute;left:0;right:0;top:0;height:1px;background:#c99a4d;pointer-events:none}
+.step{display:flex;flex-direction:column;align-items:center;gap:14px;padding-block:14px}
+.step+.step{border-top:1px dashed #d6ae6a}
+.step h3{margin:0;font-family:var(--brush);font-size:clamp(26px,2.6vw,36px);line-height:1.1;color:#4a2610;text-align:center}
+.step h3 em{font-style:normal;color:var(--red)}
+.step .state{font-size:13px;font-weight:700;color:var(--jade)}
+.phone{display:flex;gap:10px;width:100%;max-width:470px}
+.phone input{flex:1;min-width:0;height:50px;border-radius:999px;border:2px solid #e2c38c;background:#fffaf0;padding:0 20px;font:inherit;font-size:17px;color:var(--ink)}
+.phone input:focus{outline:none;border-color:var(--red)}
+.brush-btn{min-height:50px;padding:0 26px;border:0;font-weight:800;color:#fff8e6;font-size:16px;
+  background:linear-gradient(100deg,transparent 0 6px,#b98a3a 6px 12px,#7a4a18 12px);clip-path:polygon(8% 0,100% 0,94% 100%,0 100%);text-shadow:0 1px 1px #3a1f0b}
+.brush-btn:hover{filter:brightness(1.1)}
+.duo{display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
+.ribbon{min-height:46px;padding:0 30px;border:0;font-weight:800;font-size:15px;color:#fff;clip-path:polygon(6% 0,94% 0,100% 50%,94% 100%,6% 100%,0 50%);
+  text-shadow:0 1px 1px rgba(0,0,0,.5)}
+.ribbon.blue{background:linear-gradient(180deg,#5d8fd8,#2c5aa0)}
+.ribbon.red{background:linear-gradient(180deg,#e0704e,#a8321d)}
+.ribbon.pink{background:linear-gradient(180deg,#e77fa6,#b04173)}
+.ribbon.jade{background:linear-gradient(180deg,#5fb38f,#2f7a5f)}
+.ribbon[aria-pressed="true"]{filter:saturate(.4) brightness(.95)}
+.ribbon[aria-pressed="true"]:after{content:" ✓"}
+.err{min-height:1.4em;margin:-4px 0 0;color:var(--red);font-weight:600;font-size:14px;text-align:center}
+
+/* ---------- milestones ---------- */
+.track{position:relative;max-width:1040px;margin:0 auto 26px;height:56px}
+.track .rail{position:absolute;left:10%;right:10%;top:50%;height:10px;margin-top:-5px;border-radius:5px;background:#e6cf9c;box-shadow:inset 0 1px 2px rgba(0,0,0,.2)}
+.track .fill{position:absolute;left:0;top:0;bottom:0;border-radius:5px;background:linear-gradient(90deg,#f0a33a,#d04a1f,#b3321e)}
+.node{position:absolute;top:50%;width:48px;height:48px;margin:-24px 0 0 -24px;border-radius:50%;
+  background:radial-gradient(circle,#fff6d6 30%,#f0c46a 32%,#d99a34 60%,#8c5a1c 62%);box-shadow:0 2px 6px rgba(80,40,5,.4)}
+.node.on{background:radial-gradient(circle,#fffbe6 30%,#ffd76a 32%,#f39a24 60%,#b3321e 62%);box-shadow:0 0 16px rgba(246,160,50,.9)}
+.tiers{display:grid;grid-template-columns:repeat(var(--cols,5),minmax(0,1fr));gap:18px;max-width:1040px;margin:0 auto}
+.tiers .card h3{font-size:34px}
+.tiers .need{margin:-8px 0 0;font-size:12.5px;color:var(--muted);font-weight:600}
+
+/* ---------- invite ---------- */
+.inv-top{display:flex;flex-direction:column;align-items:center;gap:22px;position:relative;z-index:1}
+.scroll-bar{min-width:min(560px,100%);padding:10px 40px;text-align:center;border-radius:6px;color:#fbe8c2;font-weight:700;font-size:18px;
+  background:linear-gradient(180deg,#6e3a18,#3e1f0b);box-shadow:inset 0 0 0 2px #c08a42,0 4px 10px rgba(60,30,5,.35)}
+.scroll-bar b{color:var(--gold-hi);font-variant-numeric:tabular-nums}
+.trio{display:flex;gap:18px;flex-wrap:wrap;justify-content:center}
+.gold-btn{min-height:48px;min-width:170px;padding:0 24px;border:0;border-radius:10px;font-weight:800;color:#5a2f0c;
+  background:linear-gradient(180deg,#fff0bf,#eeb955 60%,#c88a2e);box-shadow:inset 0 0 0 2px #fff6d4,0 0 0 2px #8c5a1c,0 4px 10px rgba(60,30,5,.3)}
+.gold-btn:hover{filter:brightness(1.06)}
+.inv{position:relative}
+.inv .girl{position:absolute;right:-40px;bottom:-72px;width:min(420px,34vw);pointer-events:none}
+.inv-tiers{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;max-width:880px;margin:30px auto 0;position:relative;z-index:1}
+
+/* ---------- features ---------- */
+/* Two frames from the owner. The list sits in the small pavilion (cai khung 2.png, cropped to its 676x1142 painted
+   area): 9-slice at 160 top (roof + lintel), 92 sides (posts), 46 bottom (base beam), shown at --s of its size so
+   the roof never stretches and the posts grow with the list. The banner sits in their flat 9-slice body
+   (than-9slice.png, 1024, 48px corners at 1:1 so its 10px gold trim stays 10px). */
+/* Reference layout (quannhica at 1920): block 1081 wide, list column 211 + banner 835x525, the two touching (7px),
+   the list column as tall as the banner with its roof rising above the banner's top edge. Here the column is 250
+   (--s = 250/676; the owner's frame adds two posts), stretched to the banner's height, its roof lifted by the 145px
+   (scaled) that sits above the frame's window, and its right post (52px of beam overhang in, scaled) laid against
+   the banner frame. */
+.feat{display:grid;grid-template-columns:250px minmax(0,1fr);gap:0;align-items:stretch;max-width:1081px;margin:80px auto 0}
+.feat-nav{--s:.36982;position:relative;z-index:1;display:flex;flex-direction:column;justify-content:center;
+  width:250px;margin-top:calc(-145px * var(--s));border:0 solid transparent;
+  border-image:url("/3qdc-vi/dang-ky-som/khung-mai-dinh.webp") 160 92 46 92 fill / calc(160px * var(--s)) calc(92px * var(--s)) calc(46px * var(--s)) calc(92px * var(--s));
+  padding:calc(158px * var(--s)) calc(86px * var(--s)) calc(44px * var(--s))}
+.feat ol{list-style:none;margin:0;padding:6px 0;display:flex;flex-direction:column;gap:2px}
+.feat li button{width:100%;display:grid;grid-template-columns:34px minmax(0,1fr);gap:0 10px;align-items:center;text-align:left;
+  padding:10px 10px;background:none;border:0;border-radius:4px;color:var(--ink-2)}
+.feat li button:hover{background:rgba(228,176,88,.16)}
+.feat li button[aria-pressed="true"]{color:#4a2610;background:rgba(228,176,88,.32);box-shadow:inset 3px 0 0 var(--red)}
+.feat li i{grid-row:span 2;width:30px;height:30px;border-radius:50%;border:2px solid #c99645;color:#a8741f;display:grid;place-items:center;font-style:normal;font-weight:700}
+.feat li button[aria-pressed="true"] i{background:var(--red);border-color:var(--red);color:#fff}
+.feat li b{font-size:15px;line-height:1.25}
+.feat li small{font-size:11.5px;line-height:1.3;color:var(--muted)}
+.feat .view{border:0 solid transparent;border-image:url("/3qdc-vi/dang-ky-som/khung-than-9slice.png") 48 fill / 48px;padding:16px;margin-left:calc(-52px * .36982)}
+.feat .view img{width:100%;aspect-ratio:1000/562;object-fit:cover}
+
+/* ---------- top power ---------- */
+.rank{max-width:880px;margin:0 auto;border:2px solid #d8a85a;border-radius:8px;background:#fffaf0;overflow:hidden}
+.rank-tabs{display:flex;background:linear-gradient(180deg,#6e3a18,#3e1f0b)}
+.rank-tabs button{flex:1;min-height:46px;border:0;background:none;color:#e9d3a8;font-weight:700}
+.rank-tabs button[aria-selected="true"]{background:linear-gradient(180deg,#f1c96b,#d49b35);color:#4a2610}
+.rank-scroll{overflow-x:auto}
+.rank table{width:100%;border-collapse:collapse;min-width:520px}
+.rank th,.rank td{padding:11px 16px;text-align:left;border-bottom:1px solid #eedbb2;font-variant-numeric:tabular-nums}
+.rank th{font-size:12.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.rank td.n{width:64px;font-weight:800;color:var(--ink-2)}
+.rank tr:nth-child(-n+3) td.n{color:var(--red)}
+.rank td.wait{color:#b9a27a}
+.rank .note{margin:0;padding:14px 16px;background:#fbf0d4;color:var(--ink-2);font-weight:600;text-align:center}
+
+/* ---------- footer ---------- */
+.ft{background:radial-gradient(800px 200px at 50% 0,#6a2016,transparent),var(--wine);color:#f1d9b8;padding-block:36px 44px;text-align:center}
+.ft img{width:120px;margin:0 auto 12px}
+.ft p{margin:4px 0;font-size:14px}
+.ft .ph{display:inline-block;border:1px dashed rgba(241,217,184,.5);border-radius:4px;padding:0 6px;color:#e8c89c}
+.ft nav{margin-top:14px;display:flex;justify-content:center;flex-wrap:wrap;gap:4px 0}
+.ft nav a{padding:2px 12px;font-weight:700;text-decoration:none;color:var(--gold-hi)}
+.ft nav a+a{border-left:1px solid rgba(241,217,184,.4)}
+
+/* ---------- modal + toast + mock tag ---------- */
+.ov{position:fixed;inset:0;z-index:60;background:rgba(30,15,5,.55);display:grid;place-items:center;padding:16px}
+.modal{position:relative;width:min(520px,100%);max-height:86vh;overflow:auto;background:var(--paper-2);border:3px solid #e0a24a;border-radius:8px;
+  box-shadow:inset 0 0 0 6px #fbf1d2,0 20px 40px rgba(0,0,0,.4);padding:28px 24px 22px}
+.modal h3{margin:0 0 12px;font-family:var(--brush);font-size:36px;text-align:center;color:#4a2610}
+.modal .x{position:absolute;top:8px;right:10px;width:40px;height:40px;border:0;background:none;font-size:26px;color:var(--ink-2)}
+.modal ol,.modal ul{margin:0;padding-left:20px}
+.modal li{margin:6px 0}
+.modal .row{display:flex;gap:8px;margin-top:10px}
+.modal .row input{flex:1;min-width:0;height:46px;border:2px solid #e2c38c;border-radius:8px;background:#fffaf0;padding:0 12px;font:inherit}
+.modal .hint{font-size:13px;color:var(--muted);margin:10px 0 0}
+.modal .empty{text-align:center;color:var(--muted);padding:16px 0}
+.toast{position:fixed;left:50%;bottom:24px;z-index:70;transform:translate(-50%,20px);opacity:0;pointer-events:none;transition:.25s;
+  background:#3a2410;color:#fbe8c2;padding:10px 18px;border-radius:999px;font-weight:600;box-shadow:0 0 0 2px var(--gold-dk)}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* ---------- phones ---------- */
+@media (max-width:860px){
+  .hd{height:56px}
+  .hd .wrap{grid-template-columns:auto 1fr auto;gap:8px}
+  .medal{order:-1;justify-self:start;width:auto;height:auto;margin:0;border:0;background:none;box-shadow:none}
+  .medal img{width:64px}
+  .hd nav.l{display:none}
+  .hd nav.r{justify-content:flex-end;grid-column:3}
+  .hd nav.r a{display:none}
+  .hd nav.r>*+*:before{display:none}
+  .menu-btn{display:grid;place-items:center;grid-column:2;justify-self:end;width:44px;height:44px;border:1px solid rgba(243,226,189,.4);border-radius:8px;background:none;color:#f3e2bd}
+  .drawer{position:fixed;top:calc(56px + env(safe-area-inset-top,0px));left:0;right:0;z-index:39;background:var(--bar);display:flex;flex-direction:column;padding:8px 16px 14px}
+  .drawer a{padding:12px 4px;color:#f3e2bd;font-weight:600;text-decoration:none;border-bottom:1px solid rgba(243,226,189,.15)}
+  .hero .cta{position:static;padding-block:16px;background:linear-gradient(180deg,#e8c98a,var(--paper))}
+  .bar-btn{width:100%;max-width:360px;justify-content:center;min-height:56px}
+  .hero .cta.one{transform:none;padding-inline:32px}
+  .hero+.sec{padding-top:48px}
+  .bar-btn.big{min-height:60px;padding:10px 24px;order:-1}
+  .sec{padding-block:48px}
+  .reg{grid-template-columns:1fr}
+  .reg .portrait{display:none}
+  .panel{padding:24px 14px 18px}
+  /* the roof is 19% wider than the body: pull the frame in so the roof ends stay on screen */
+  .pavilion{margin-inline:9%}
+  .phone{flex-wrap:wrap}
+  .phone input{flex:1 0 100%}
+  .brush-btn{flex:1 0 100%}
+  .roof{left:-10px;right:-10px}
+  .gift{width:62px;height:62px}
+  .tiers{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .tiers .card:last-child:nth-child(odd){grid-column:1/-1}
+  .track{height:40px}
+  .node{width:32px;height:32px;margin:-16px 0 0 -16px}
+  .inv .girl{display:none}
+  .inv-tiers{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .feat{grid-template-columns:1fr}
+  /* banner first, the pavilion list under it at a fixed 340px so the roof keeps its size (--s = 340 / 676) */
+  .feat .view{order:-1;padding:14px;margin-left:0}
+  .feat{margin-top:40px}
+  .feat-nav{--s:.50296;width:min(340px,100%);justify-self:center;margin:24px 0 0}
+  .feat li button{min-height:48px}
+  .scroll-bar{padding:10px 16px;font-size:16px}
+}
+
+/* ---------- live page additions (not in the mock-up) ---------- */
+.sr-only{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+/* robots fill every field; people never see this one */
+.dks-hp{position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden}
+.dks-msg{min-height:1.4em;margin:-4px 0 0;font-weight:700;font-size:14px;text-align:center}
+.dks-msg.ok{color:var(--jade)}
+.dks-msg.err{color:var(--red)}
+/* the gifts are not announced yet: icons only, one line under them says so */
+.gift-note{margin:-4px 0 0;font-size:12.5px;color:var(--muted);text-align:center}
+.claim.soon{font-size:13px;letter-spacing:.02em}
+.ft-min p{margin:6px 0}
+.ft-min nav{margin-top:10px}
