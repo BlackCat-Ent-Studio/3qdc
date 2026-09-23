@@ -127,7 +127,9 @@ html.hv2:not(.hv2-embed) #hv2-mascot-toggle.on:hover{color:#fff;background:#9a4a
    She sits in the free bottom-left corner (the music button owns the bottom-right), the bubble goes over her head
    because there is no room beside her, and the hide button stays visible since a finger cannot hover. */
 @media ${COMPACT_MQ}{
-  html.hv2:not(.hv2-embed) #hv2-mascot{--hv2-m:${PHONE_BOX}px;left:8px;bottom:8px}
+  /* flush with the bottom edge: an 8px gap here reads as a dark strip under her feet on a dense phone screen
+     (about 22 device pixels on the owner's Redmi) */
+  html.hv2:not(.hv2-embed) #hv2-mascot{--hv2-m:${PHONE_BOX}px;left:8px;bottom:0}
   #hv2-mascot .hv2-m-tips{left:0;right:auto;bottom:100%;width:min(62vw,240px);margin-bottom:8px;font-size:13.5px}
   #hv2-mascot .hv2-m-tools{right:2px;bottom:auto;top:2px;opacity:1;gap:8px}
   #hv2-mascot .hv2-m-tools button{width:32px;height:32px;padding:7px;background:rgba(22,39,59,.92)}
