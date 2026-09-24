@@ -241,9 +241,9 @@ ${ICONS}
       <div class="inv-top">
         <div class="scroll-bar">Đã Mời <b>0</b>/10 Chúa Công</div>
         <div class="trio">
-          <button type="button" class="gold-btn" data-soon="${esc('Mời bạn mở khi game ra mắt — mỗi người bạn đăng ký qua link của bạn tính 1 lượt.')}">Mời Chúa Công</button>
-          <button type="button" class="gold-btn" id="btn-rules">Thể Lệ</button>
-          <button type="button" class="gold-btn" id="btn-history">Lịch Sử</button>
+          <button type="button" class="art-btn gold sm" data-soon="${esc('Mời bạn mở khi game ra mắt — mỗi người bạn đăng ký qua link của bạn tính 1 lượt.')}"><span>Mời Chúa Công</span></button>
+          <button type="button" class="art-btn gold sm" id="btn-rules"><span>Thể Lệ</span></button>
+          <button type="button" class="art-btn gold sm" id="btn-history"><span>Lịch Sử</span></button>
         </div>
       </div>
       <div class="inv-tiers">${invites}</div>
