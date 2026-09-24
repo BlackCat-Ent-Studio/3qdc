@@ -178,9 +178,9 @@ ${ICONS}
   <section class="hero" id="trang-chu" aria-label="3Q Đại Chiến">
     <img class="kv" src="${KV}" alt="3Q Đại Chiến — Một Bước Đăng Tiêu, Cùng Vui Tiệc Sao Trời" width="1756" height="896">
     <div class="cta one">
-      <button type="button" class="bar-btn" data-store="play">${PLAY_ICON}Đăng Ký Sớm Google Play</button>
-      <a class="bar-btn big" href="#dang-ky" id="go-register">Đăng Ký Sớm</a>
-      <button type="button" class="bar-btn" data-store="app">${APP_ICON}Đăng Ký Sớm App Store</button>
+      <button type="button" class="art-btn gold" data-store="play"><span>${PLAY_ICON}Đăng Ký Sớm Google Play</span></button>
+      <a class="art-btn green" href="#dang-ky" id="go-register"><span class="sr-only">Đăng Ký Sớm</span></a>
+      <button type="button" class="art-btn gold" data-store="app"><span>${APP_ICON}Đăng Ký Sớm App Store</span></button>
     </div>
   </section>
 

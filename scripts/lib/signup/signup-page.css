@@ -39,23 +39,26 @@ a{color:inherit}
 /* ---------- hero ---------- */
 .hero{position:relative;background:#e8c98a}
 /* at most one window tall (minus header and half the button row), trimming the sky, never the ribbon at the bottom */
-.hero img.kv{width:100%;height:auto;max-height:max(420px,min(816px,calc(100vh - 110px)));object-fit:cover;object-position:50% 100%}
+.hero img.kv{width:100%;height:auto;max-height:max(420px,min(816px,calc(100vh - 130px)));object-fit:cover;object-position:50% 100%}
 .hero .cta{position:absolute;left:0;right:0;bottom:5%;display:flex;justify-content:center;gap:clamp(12px,3vw,48px);padding-inline:16px;flex-wrap:wrap}
-.bar-btn{position:relative;display:inline-flex;align-items:center;gap:12px;min-height:64px;padding:10px 34px;border:0;border-radius:40px;
-  background:linear-gradient(180deg,#fff3c9,#f1c96b 55%,#d49b35);color:#5a2f0c;font-weight:800;font-size:clamp(16px,1.6vw,22px);
-  box-shadow:inset 0 0 0 2px #fff8dc,0 0 0 3px #8c5a1c,0 6px 14px rgba(60,30,5,.45);text-decoration:none;letter-spacing:.01em}
-.bar-btn:before,.bar-btn:after{content:"";position:absolute;top:50%;width:26px;height:26px;margin-top:-13px;border:3px solid #8c5a1c;border-radius:50%;background:var(--gold-hi)}
-.bar-btn:before{left:-16px}.bar-btn:after{right:-16px}
-.bar-btn:hover{filter:brightness(1.06)}
-.bar-btn svg{width:30px;height:30px;flex:none}
-/* the one call to action on the key visual: a larger bar that takes the visitor down to the sign-up steps */
+/* The three buttons on the key visual are the owner's art (overrides/dang-ky-som): the store buttons sit on the blank
+   gold dragon bar (nut-vang.webp, cropped 1777x323 -> 900 wide), their label laid on its body (39-91% of the height,
+   19-81% of the width, between the dragon heads); the middle one is the green bar with "Đăng Ký Sớm" drawn in
+   (nut-dang-ky-som.webp, cropped 1424x384 -> 900 wide), so its text is for screen readers only. */
+.art-btn{position:relative;display:block;flex:none;padding:0;border:0;background:none center/100% 100% no-repeat;cursor:pointer;
+  text-decoration:none;filter:drop-shadow(0 6px 10px rgba(40,20,5,.35));transition:transform .15s ease,filter .15s ease}
+.art-btn:hover{transform:translateY(-2px);filter:drop-shadow(0 8px 14px rgba(40,20,5,.4)) brightness(1.08)}
+.art-btn:focus-visible{outline-offset:4px}
+.art-btn.gold{background-image:url("/3qdc-vi/dang-ky-som/nut-vang.webp");width:clamp(250px,22vw,430px);aspect-ratio:1777/323;container-type:inline-size}
+/* the label scales with the bar (cqw), so it fits between the dragon heads at every width */
+.art-btn.gold span{position:absolute;left:17%;right:17%;top:39%;height:52%;display:flex;align-items:center;justify-content:center;gap:.35em;
+  color:#4a2a0c;font-weight:800;font-size:3.7cqw;white-space:nowrap;text-shadow:0 1px 0 rgba(255,246,220,.7)}
+.art-btn.gold svg{width:1.45em;height:1.45em;flex:none}
+.art-btn.green{background-image:url("/3qdc-vi/dang-ky-som/nut-dang-ky-som.webp");width:clamp(260px,23vw,440px);aspect-ratio:1424/384}
 /* it straddles the bottom edge of the key visual, so the ribbon of text drawn into the art above stays readable */
 .hero{z-index:2}
 .hero .cta.one{bottom:0;transform:translateY(50%);align-items:center}
-.hero+.sec{padding-top:96px}
-.bar-btn.big{min-height:76px;padding:10px 72px;font-size:clamp(22px,2.2vw,32px);letter-spacing:.04em;text-transform:uppercase}
-.bar-btn.big:before,.bar-btn.big:after{width:32px;height:32px;margin-top:-16px}
-.bar-btn.big:before{left:-20px}.bar-btn.big:after{right:-20px}
+.hero+.sec{padding-top:112px}
 /* sections land below the sticky header when the page scrolls to them */
 main>section{scroll-margin-top:64px}
 
@@ -237,6 +240,8 @@ main>section{scroll-margin-top:64px}
 @media (max-width:860px){
   .hd{height:56px}
   .hd .wrap{grid-template-columns:auto 1fr auto;gap:8px}
+  /* logo, menu button and Đăng Nhập share the one row (the button comes last in the markup but sits in column 2) */
+  .hd .wrap>*{grid-row:1}
   .medal{order:-1;justify-self:start;width:auto;height:auto;margin:0;border:0;background:none;box-shadow:none}
   .medal img{width:64px}
   .hd nav.l{display:none}
@@ -247,10 +252,11 @@ main>section{scroll-margin-top:64px}
   .drawer{position:fixed;top:calc(56px + env(safe-area-inset-top,0px));left:0;right:0;z-index:39;background:var(--bar);display:flex;flex-direction:column;padding:8px 16px 14px}
   .drawer a{padding:12px 4px;color:#f3e2bd;font-weight:600;text-decoration:none;border-bottom:1px solid rgba(243,226,189,.15)}
   .hero .cta{position:static;padding-block:16px;background:linear-gradient(180deg,#e8c98a,var(--paper))}
-  .bar-btn{width:100%;max-width:360px;justify-content:center;min-height:56px}
+  .hero .cta.one{flex-direction:column;align-items:center;gap:6px}
+  .art-btn.gold,.art-btn.green{width:min(340px,100%)}
   .hero .cta.one{transform:none;padding-inline:32px}
   .hero+.sec{padding-top:48px}
-  .bar-btn.big{min-height:60px;padding:10px 24px;order:-1}
+  .art-btn.green{order:-1}
   .sec{padding-block:48px}
   .reg{grid-template-columns:1fr}
   .reg .portrait{display:none}
