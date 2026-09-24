@@ -92,9 +92,11 @@ main>section{scroll-margin-top:64px}
 
 /* claim button: the owner's orange "Nhận" frame (nut-nhan-cam.png, 191x51, word drawn in), sized like the reference:
    141/119px at 1920, 100/85px at 1366 (7.34vw / 6.21vw), not below 85/82px on phones */
-.claim{display:block;width:clamp(85px,7.34vw,141px);max-width:100%;aspect-ratio:191/51;margin:0 auto;padding:0;border:0;
+.claim{display:block;width:clamp(85px,7.34vw,141px);max-width:100%;aspect-ratio:191/51;margin:auto auto 0;padding:0;border:0;
   background:url("/3qdc-vi/dang-ky-som/nut-nhan-cam.png") center/100% 100% no-repeat}
 .inv-tiers .claim{width:clamp(82px,6.21vw,119px)}
+/* "Mời 1 Chúa Công" fits one line, the others wrap to two: keep two lines for every title so gifts and buttons line up */
+.inv-tiers .card h3{min-height:2.2em;display:grid;place-items:center}
 .claim:disabled{cursor:not-allowed}
 
 /* scroll-edged card (milestones, invites) */
