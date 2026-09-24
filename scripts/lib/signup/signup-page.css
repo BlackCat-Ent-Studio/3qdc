@@ -19,12 +19,14 @@ a{color:inherit}
 :focus-visible{outline:3px solid var(--red);outline-offset:2px}
 .wrap{max-width:1200px;margin:0 auto;padding-inline:16px}
 
-/* ---------- header: lacquer bar, links either side of a medallion logo ---------- */
+/* ---------- header: see-through lacquer bar (blurs what scrolls under it), links either side of a medallion logo ---------- */
 .hd{position:sticky;top:env(safe-area-inset-top,0px);z-index:40;height:64px;
-  background:linear-gradient(180deg,var(--bar-2),var(--bar));box-shadow:0 2px 0 var(--gold-dk),0 6px 18px rgba(40,20,5,.35)}
+  background:linear-gradient(180deg,rgba(58,36,16,.78),rgba(58,36,16,.55));-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);box-shadow:0 2px 0 var(--gold-dk),0 6px 18px rgba(40,20,5,.35)}
 .hd .wrap{height:100%;display:grid;grid-template-columns:1fr 150px 1fr;align-items:center}
-.hd nav{display:flex;align-items:center;gap:0}
-.hd nav.l{justify-content:flex-end}
+/* the medallion is taller than the bar, so the links keep to the bar's own 64px instead of centring on the medallion */
+.hd nav{display:flex;align-items:center;gap:0;align-self:start;height:64px}
+.hd nav.l{justify-content:flex-end;padding-right:40px}
+.hd nav.r{padding-left:40px}
 .hd nav a,.hd nav button{background:none;border:0;padding:8px 22px;color:#f3e2bd;font-weight:600;font-size:16px;text-decoration:none;position:relative}
 .hd nav a:hover,.hd nav button:hover{color:var(--gold-hi)}
 .hd nav>*+*:before{content:"";position:absolute;left:0;top:30%;height:40%;width:1px;background:rgba(243,226,189,.35)}
@@ -249,7 +251,8 @@ main>section{scroll-margin-top:64px}
   .medal{order:-1;justify-self:start;width:auto;height:auto;margin:0;border:0;background:none;box-shadow:none}
   .medal img{width:64px}
   .hd nav.l{display:none}
-  .hd nav.r{justify-content:flex-end;grid-column:3}
+  .hd nav{align-self:center;height:auto}
+  .hd nav.r{justify-content:flex-end;grid-column:3;padding-left:0}
   .hd nav.r a{display:none}
   .hd nav.r>*+*:before{display:none}
   .menu-btn{display:grid;place-items:center;grid-column:2;justify-self:end;width:44px;height:44px;border:1px solid rgba(243,226,189,.4);border-radius:8px;background:none;color:#f3e2bd}
