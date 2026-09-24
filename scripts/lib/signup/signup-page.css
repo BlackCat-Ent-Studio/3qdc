@@ -97,7 +97,9 @@ main>section{scroll-margin-top:64px}
 .inv-tiers .claim{width:clamp(82px,6.21vw,119px)}
 /* "Mời 1 Chúa Công" fits one line, the others wrap to two: keep two lines for every title so gifts and buttons line up */
 .inv-tiers .card h3{min-height:2.2em;display:grid;place-items:center}
-.claim:disabled{cursor:not-allowed}
+.claim{cursor:pointer;transition:filter .15s,transform .1s}
+.claim:hover{filter:brightness(1.2)}
+.claim:active{transform:translateY(2px) scale(.97)}
 
 /* scroll-edged card (milestones, invites) */
 .card{position:relative;background:linear-gradient(180deg,#fff9e6,#f6e6bd);border:2px solid #d8a85a;border-radius:6px;padding:40px 12px 16px;
