@@ -56,6 +56,34 @@ const HOVER = [
   ['#hv2-news', ['Có tin gì mới không ta? Cùng xem nào!']],
   ['#hv2-heroes', ['Mỗi phe đều có những vị tướng rất mạnh đó!', 'Chúa công thích tướng phe nào nhất?']],
   ['#hv2-features', ['Tính năng nào cũng thú vị hết á!']],
+  // other pages (scoped by html.hv2-m-page so none of these fire on the home page)
+  // news pages (list and article; their body is .has-site-h): shared header, then the list, then the article
+  ['html.hv2-m-page .site-h .logo', ['Logo 3Q Đại Chiến đó, bấm vào là về trang chủ!']],
+  ['html.hv2-m-page .site-h .nav a[href="/"]', ['Quay về trang chủ nè!', 'Về trang chủ xem tướng với tính năng nào!']],
+  ['html.hv2-m-page .site-h .nav a[href="/tin-tuc"]', ['Tin mới nhất, sự kiện hot đều ở mục Tin tức!']],
+  ['html.hv2-m-page .site-h .theme-btn', ['Đổi giao diện sáng tối cho dễ đọc nè!']],
+  ['html.hv2-m-page .site-h .btn-fire', ['Tải game ngay để cùng ta chinh phạt thiên hạ!']],
+  ['html.hv2-m-page #news-app .tab', ['Chọn Thông báo, Sự kiện hay Cẩm nang để lọc tin nha!']],
+  ['html.hv2-m-page #news-app .search', ['Gõ từ khoá vào đây để tìm bài viết nè!']],
+  ['html.hv2-m-page .has-site-h .feat, html.hv2-m-page .has-site-h .card', ['Bài này hay lắm, bấm vào đọc thử đi!', 'Có tin gì mới không ta? Cùng xem nào!']],
+  ['html.hv2-m-page .has-site-h .share', ['Thấy hay thì chia sẻ cho bạn bè cùng đọc nha!']],
+  ['html.hv2-m-page .has-site-h .pn', ['Đọc tiếp bài trước hoặc bài sau nè.']],
+  ['html.hv2-m-page .has-site-h .aside', ['Mục lục của bài và các bài cùng chủ đề ở đây!']],
+  ['html.hv2-m-page .has-site-h .prose', ['Đọc kỹ nha, cẩm nang này giúp chúa công mạnh lên nhiều đó!']],
+  // early sign-up page
+  ['html.hv2-m-page .hd .medal', ['Logo 3Q Đại Chiến đó, bấm vào là về trang chủ!']],
+  ['html.hv2-m-page .hd nav.l a[href="/"]', ['Quay về trang chủ nè!']],
+  ['html.hv2-m-page .hd [data-soon]', ['Theo dõi Fanpage và Group để không lỡ quà tặng nha!']],
+  ['html.hv2-m-page #go-register', ['Bấm vào đây để đăng ký sớm nhận quà nè!']],
+  ['html.hv2-m-page .hero .art-btn.gold', ['Đăng ký sớm trên cửa hàng ứng dụng để nhận tướng nha!']],
+  ['html.hv2-m-page #dks-form', ['Nhập số điện thoại để đăng ký sớm, quà sẽ gửi theo số này!']],
+  ['html.hv2-m-page #dang-ky', ['Làm đủ 3 bước là nhận trọn quà đăng ký sớm đó!']],
+  ['html.hv2-m-page .claim', ['Đạt mốc rồi thì quà sẽ nhận ở đây nha!']],
+  ['html.hv2-m-page #moc', ['Càng nhiều người đăng ký, quà mốc càng to!', 'Cùng rủ bạn bè đăng ký để đạt mốc nào!']],
+  ['html.hv2-m-page #moi-ban', ['Mời bạn bè cùng đăng ký để nhận thêm quà nè!']],
+  ['html.hv2-m-page #tinh-nang', ['Những tính năng đặc sắc nhất của game đây!', 'Tính năng nào cũng thú vị hết á!']],
+  ['html.hv2-m-page #top', ['Bảng xếp hạng lực chiến sẽ có khi máy chủ mở nha!']],
+  ['html.hv2-m-page .site-f, html.hv2-m-page .ft', ['Cảm ơn chúa công đã ghé thăm nha!']],
 ];
 
 const CLICK = ['Á! Đừng chọc ta mà~', 'Hừ, ta giận đó nha!', 'Chúa công rảnh quá ha?', 'Nhột quá đi mất!', 'Ta sẽ mách Gia Cát Lượng đó!'];
