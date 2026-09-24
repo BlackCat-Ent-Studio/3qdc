@@ -1,8 +1,8 @@
 // signup-page.mjs — the /dang-ky-som landing page, laid out like the reference pre-registration landing the owner
 // picked (quannhica): key visual with three buttons, the three sign-up steps in the owner's tiled-roof frame, the
 // server-wide milestones, the invite block, the five feature banners in the owner's pavilion frame, top power.
-// Real today: the phone number form, the live count and the milestones (set in /quan-tri). Not yet: gifts, claiming,
-// invites, sign-in, store/community links — those controls say they open at launch, and no gift quantity is shown
+// Real today: the phone number form, the live count and the milestones (set in /quan-tri). Not yet: gifts, claiming
+// (the "Nhận" buttons are shown disabled), invites, sign-in, store/community links — those say they open at launch; no gift quantity is shown
 // (nothing is promised before the owner publishes the real rewards).
 // Styles live in signup-page.css next to this file (read once at start-up); pictures in overrides/dang-ky-som.
 import { readFileSync } from 'node:fs';
@@ -143,8 +143,10 @@ export function renderSignupPage({ count, milestones }) {
   const description = 'Đăng ký sớm 3Q Đại Chiến bằng số điện thoại để nhận quà ra mắt — càng nhiều người đăng ký, mốc quà càng lớn.';
   const n = milestones.length;
   const nodes = milestones.map((m, i) => `<span class="node${count >= m ? ' on' : ''}" data-moc="${m}" style="left:${(n < 2 ? 50 : 10 + (80 * i) / (n - 1)).toFixed(2)}%"></span>`).join('');
-  const tiers = milestones.map((m, i) => `<div class="card${count >= m ? ' reached' : ''}" data-moc="${m}"><h3>${shortNum(m)}</h3><p class="need">${fmt(m)} người đăng ký</p>${gifts(TIER_GIFTS[i % TIER_GIFTS.length])}<p class="gift-note">Quà công bố khi ra mắt</p><button type="button" class="claim soon" disabled>Nhận khi ra mắt</button></div>`).join('');
-  const invites = INVITES.map(([k, kinds]) => `<div class="card"><h3>Mời ${k} Chúa Công</h3>${gifts(kinds)}<button type="button" class="claim soon" disabled>Mở khi ra mắt</button></div>`).join('');
+  // the owner's "Nhận" art, disabled until claiming is real
+  const claim = '<button type="button" class="claim" disabled aria-label="Nhận (chưa mở)"></button>';
+  const tiers = milestones.map((m, i) => `<div class="card${count >= m ? ' reached' : ''}" data-moc="${m}"><h3>${shortNum(m)}</h3><p class="need">${fmt(m)} người đăng ký</p>${gifts(TIER_GIFTS[i % TIER_GIFTS.length])}<p class="gift-note">Quà công bố khi ra mắt</p>${claim}</div>`).join('');
+  const invites = INVITES.map(([k, kinds]) => `<div class="card"><h3>Mời ${k} Chúa Công</h3>${gifts(kinds)}${claim}</div>`).join('');
   const feats = FEATURES.map(([name, sub], i) => `<li><button type="button" data-feat="${i}" data-alt="${esc(`${name} · ${sub}`)}" aria-pressed="${i === 0}"><i>${i + 1}</i><b>${esc(name)}</b><small>${esc(sub)}</small></button></li>`).join('');
   const rows = Array.from({ length: 10 }, (_, i) => `<tr><td class="n">${i + 1}</td><td class="wait">Chờ mở máy chủ</td><td class="wait">—</td><td class="wait">—</td></tr>`).join('');
   const stepGifts = (i) => `${gifts(STEP_GIFTS[i])}<p class="gift-note">Quà công bố khi ra mắt</p>`;

@@ -90,13 +90,10 @@ main>section{scroll-margin-top:64px}
 .gift.got{filter:grayscale(.2) brightness(.9)}
 .gift.got:after{content:"Đã nhận";position:absolute;inset:auto 0 0;height:20px;display:grid;place-items:center;background:rgba(47,122,95,.9);color:#fff;font-size:11px;font-weight:700;border-radius:0 0 6px 6px}
 
-/* claim button */
-.claim{min-width:112px;min-height:40px;padding:6px 20px;border-radius:999px;border:0;font-weight:800;letter-spacing:.04em;
-  background:linear-gradient(180deg,#fff0bf,#e8b650);color:#6a3a0a;box-shadow:0 0 0 2px #9b6424,0 3px 8px rgba(80,40,5,.35)}
-.claim.ready{animation:glow 1.6s ease-in-out infinite}
-@keyframes glow{50%{box-shadow:0 0 0 2px #9b6424,0 0 18px 4px rgba(246,201,100,.9)}}
-.claim:disabled{cursor:not-allowed;background:#e8dcc0;color:#a89372;box-shadow:0 0 0 2px #cdbb95;animation:none}
-.claim.done{background:var(--jade);color:#fff;box-shadow:0 0 0 2px #1f5a45}
+/* claim button: the owner's gold "Nhận" frame (nut-nhan.png, 179x48, word drawn in), shown 1:1 so it stays sharp */
+.claim{display:block;width:179px;max-width:100%;aspect-ratio:179/48;margin:0 auto;padding:0;border:0;
+  background:url("/3qdc-vi/dang-ky-som/nut-nhan.png") center/100% 100% no-repeat}
+.claim:disabled{cursor:not-allowed}
 
 /* scroll-edged card (milestones, invites) */
 .card{position:relative;background:linear-gradient(180deg,#fff9e6,#f6e6bd);border:2px solid #d8a85a;border-radius:6px;padding:40px 12px 16px;
@@ -292,7 +289,5 @@ main>section{scroll-margin-top:64px}
 .dks-msg.ok{color:var(--jade)}
 .dks-msg.err{color:var(--red)}
 /* the gifts are not announced yet: icons only, one line under them says so */
-.gift-note{margin:-4px 0 0;font-size:12.5px;color:var(--muted);text-align:center}
-.claim.soon{font-size:13px;letter-spacing:.02em}
-.ft-min p{margin:6px 0}
+.gift-note{margin:-4px 0 0;font-size:12.5px;color:var(--muted);text-align:center}.ft-min p{margin:6px 0}
 .ft-min nav{margin-top:10px}
