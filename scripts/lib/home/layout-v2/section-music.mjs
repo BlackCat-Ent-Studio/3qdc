@@ -48,7 +48,8 @@ html.hv2 #hv2-music.hv2-mu-off{transform:translateX(0)}
 #hv2-music .hv2-mu-info{position:absolute;left:5px;top:15px;width:290px}
 #hv2-music .hv2-mu-row{display:flex;align-items:center;height:16px;margin-bottom:20px}
 #hv2-music .hv2-mu-row > span{display:flex;align-items:center;gap:4px;min-width:0}
-#hv2-music .hv2-mu-row .hv2-mu-l{flex:0 1 auto;max-width:140px}
+/* the song title, artist and album lines are left out (the owner's visitors asked); the title shows on the cover's tooltip */
+#hv2-music .hv2-mu-row .hv2-mu-l{display:none}
 #hv2-music .hv2-mu-row .hv2-mu-r{margin-left:auto;flex:0 0 auto}
 #hv2-music .hv2-mu-row b{font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #hv2-music .hv2-mu-row svg{width:12px;height:13px;flex:0 0 auto;fill:currentColor}
@@ -56,13 +57,14 @@ html.hv2 #hv2-music.hv2-mu-off{transform:translateX(0)}
 #hv2-music .hv2-mu-r.hv2-mu-btn:hover{color:#ffd9a0}
 #hv2-music .hv2-mu-r.on{color:#ffb15e}
 #hv2-music .hv2-mu-r.hv2-mu-dim{opacity:.5;cursor:default}
-/* cover in the middle, turning while the song plays, with the play button on it */
-#hv2-music .hv2-mu-disc{position:absolute;left:50%;top:36px;width:100px;height:100px;margin-left:-50px;border-radius:50%;
+/* cover on the left where the text lines were, turning while the song plays, with the play button on it */
+#hv2-music .hv2-mu-disc{position:absolute;left:14px;top:12px;width:124px;height:124px;border-radius:50%;
   border:3px solid rgba(255,255,255,.85);background:#0b0d18 center/cover no-repeat;
   animation:hv2-mu-spin 14s linear infinite;animation-play-state:paused}
 #hv2-music.hv2-mu-play .hv2-mu-disc{animation-play-state:running}
 @keyframes hv2-mu-spin{to{transform:rotate(360deg)}}
-#hv2-music .hv2-mu-status{position:absolute;left:50%;top:-47px;margin-left:-22px;width:44px;height:44px;padding:0;
+/* centred on the cover (124px, border included): 14 + 62 = 76px across, 12 + 62 = 74px down; the control row starts 111px down */
+#hv2-music .hv2-mu-status{position:absolute;left:76px;top:-59px;margin-left:-22px;width:44px;height:44px;padding:0;
   border:0;border-radius:50%;background:rgba(70,84,115,.5);color:#fff;cursor:pointer;line-height:0;z-index:2}
 #hv2-music .hv2-mu-status svg{width:40px;height:40px;fill:currentColor}
 #hv2-music .hv2-mu-ctl{position:absolute;left:0;bottom:0;width:300px;height:44px}
@@ -70,9 +72,10 @@ html.hv2 #hv2-music.hv2-mu-off{transform:translateX(0)}
   color:#fff;cursor:pointer;line-height:0}
 #hv2-music .hv2-mu-ctl button:not(.hv2-mu-status) svg{width:22px;height:22px;fill:currentColor}
 #hv2-music .hv2-mu-ctl button:hover{color:#ffd9a0}
-#hv2-music .hv2-mu-first{left:6px}
-#hv2-music .hv2-mu-back{left:67px}
-#hv2-music .hv2-mu-fwd{right:67px}
+/* the four buttons sit to the right of the cover, evenly spaced */
+#hv2-music .hv2-mu-first{left:152px}
+#hv2-music .hv2-mu-back{left:191px}
+#hv2-music .hv2-mu-fwd{right:48px}
 #hv2-music .hv2-mu-last{right:6px}
 /* white strip: playlist, repeat switch, progress, shuffle, volume */
 #hv2-music .hv2-mu-bottom{display:flex;align-items:center;gap:8px;height:25px;padding:0 8px;box-sizing:border-box;
@@ -308,6 +311,7 @@ export const MUSIC_JS = MUSIC.enabled ? `(function(){
         if (!audio.src) return;
         if (songs.length > 1 && ++badFiles < songs.length){ step(1, true); return; }
         title.textContent = 'Không phát được bài này';
+        disc.setAttribute('title', 'Không phát được bài này');
       });
       window.addEventListener('pagehide', saveTime);
       document.addEventListener('visibilitychange', function(){ if (document.hidden) saveTime(); });
@@ -372,6 +376,7 @@ export const MUSIC_JS = MUSIC.enabled ? `(function(){
       title.setAttribute('title', s.title);
       artist.textContent = s.artist || '—';
       album.textContent = s.title;
+      disc.setAttribute('title', s.artist ? s.title + ' – ' + s.artist : s.title);
       disc.style.backgroundImage = 'url("' + cover(s) + '")';
       bg.style.backgroundImage = 'url("' + cover(s) + '")';
       // on phones the collapsed player IS this cover (see --hv2-mu-cover in the compact rules)
