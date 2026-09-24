@@ -11,6 +11,7 @@ import { shareTags } from '../news/news-pages.mjs';
 import { SITE_ORIGIN, LOGO } from '../news/news-config.mjs';
 import { BANNERS } from '../home/layout-v2/section-features.mjs';
 import { MUSIC_PAGE_HTML } from '../home/layout-v2/section-music.mjs';
+import { MASCOT_PAGE_HTML } from '../home/layout-v2/section-mascot.mjs';
 
 const CSS = readFileSync(new URL('./signup-page.css', import.meta.url), 'utf8');
 const ART = '/3qdc-vi/dang-ky-som/';
@@ -292,6 +293,6 @@ ${ICONS}
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script type="application/json" id="dks-data">${data}</script>
 <script>(${signupApp.toString()})(${railPct.toString()});</script>
-${MUSIC_PAGE_HTML}
+${MUSIC_PAGE_HTML}${MASCOT_PAGE_HTML}
 </body></html>`;
 }

@@ -1,4 +1,5 @@
-// section-mascot.mjs — talking Live2D mascot in the bottom-left corner of the home page (desktop layout only).
+// section-mascot.mjs — talking Live2D mascot in the bottom-left corner of the home page, the news pages and the early
+// sign-up page (not /quan-tri, not the old wiki).
 // Behaviour follows the open-source live2d-widget (stevenjoezhang, GPL-3.0) the owner picked from another site: a Live2D
 // model that breathes and follows the mouse, a speech bubble (greeting by hour, a line for each part of the page under the
 // mouse, a line when the mascot is clicked, idle chatter, holidays, coming back to the tab, copying text), a "talk" button
@@ -21,6 +22,7 @@
 // hidden or the visitor is on another page of the app.
 
 import { COMPACT_MQ } from './compact.mjs';
+import { pageHostJs, alsoOnPages } from './page-host.mjs';
 
 export const MASCOT = {
   enabled: true,
@@ -101,7 +103,8 @@ const MAX_BOX = Math.round(250 * GROW);
 // square side on a phone: about a third of a 393px screen, small enough to leave the page readable
 const PHONE_BOX = 130;
 
-export const MASCOT_CSS = MASCOT.enabled ? `
+// the rules are written for the home page (html.hv2); alsoOnPages() gives each one to the other pages (html.hv2-m-page)
+export const MASCOT_CSS = MASCOT.enabled ? alsoOnPages(`
 #hv2-mascot,#hv2-mascot-toggle{display:none}
 html.hv2:not(.hv2-embed) #hv2-mascot{--hv2-m:min(${MAX_BOX}px,calc((100vh - ${SOCIAL_BAR_H}px) / 2 * ${GROW} - 8px));display:block;position:fixed;
   left:6px;bottom:0;width:var(--hv2-m);height:var(--hv2-m);z-index:11;pointer-events:none;transition:transform .5s ease}
@@ -140,16 +143,18 @@ html.hv2:not(.hv2-embed) #hv2-mascot-toggle.on:hover{color:#fff;background:#9a4a
 }
 @media (max-height:600px){html.hv2:not(.hv2-embed) #hv2-mascot,html.hv2:not(.hv2-embed) #hv2-mascot-toggle.on{display:none}}
 @media (prefers-reduced-motion:reduce){#hv2-mascot,#hv2-mascot .hv2-m-tips{transition:none}}
-` : '';
+`, 'hv2-m-page') : '';
 
 export const MASCOT_JS = MASCOT.enabled ? `(function(){
-  if (!window.__hv2 || document.documentElement.classList.contains('hv2-embed')) return;
+  if (document.documentElement.classList.contains('hv2-embed')) return;
+  // on the home page it uses the layout's helpers; on the news and early sign-up pages it runs on its own (page-host.mjs)
+  ${pageHostJs('hv2-m-page')}
   var CFG = ${JSON.stringify({ MASCOT, GREETINGS, HOVER, CLICK, TALK, HOLIDAYS, MESSAGES })};
   var HIDE_KEY = 'hv2-mascot-hidden';
   var ICON_TALK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3C6.5 3 2 6.6 2 11c0 2.2 1.1 4.2 3 5.6L4 21l4.6-2.6c1.1.3 2.2.4 3.4.4 5.5 0 10-3.6 10-8s-4.5-8-10-8z"/></svg>';
   var ICON_HIDE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.3 5.7a1 1 0 0 0-1.4 0L12 10.6 7.1 5.7a1 1 0 1 0-1.4 1.4l4.9 4.9-4.9 4.9a1 1 0 1 0 1.4 1.4l4.9-4.9 4.9 4.9a1 1 0 0 0 1.4-1.4L13.4 12l4.9-4.9a1 1 0 0 0 0-1.4z"/></svg>';
 
-  window.__hv2.onMount(function(api){
+  host.onMount(function(api){
     var el = api.el;
     var box, tips, toggle, started = false, timer = null, level = -1, engine = null;
 
@@ -260,7 +265,7 @@ export const MASCOT_JS = MASCOT.enabled ? `(function(){
     // draw only while the home layout shows the mascot (not hidden, not on another page of the app, screen tall enough)
     function sync(){
       if (!engine) return;
-      var on = document.documentElement.classList.contains('hv2') && !box.classList.contains('hv2-m-off') && showing();
+      var on = (PAGE || document.documentElement.classList.contains('hv2')) && !box.classList.contains('hv2-m-off') && showing();
       if (on) engine.run(); else engine.stop();
     }
 
@@ -274,7 +279,7 @@ export const MASCOT_JS = MASCOT.enabled ? `(function(){
       setInterval(function(){
         if (active){ active = false; clearInterval(idle); idle = null; }
         else if (!idle) idle = setInterval(function(){
-          if (document.documentElement.classList.contains('hv2')) say(CFG.TALK.concat(holidayLines()), 6000, 9);
+          if (PAGE || document.documentElement.classList.contains('hv2')) say(CFG.TALK.concat(holidayLines()), 6000, 9);
         }, 20000);
       }, 1000);
       document.addEventListener('mouseover', function(e){
@@ -316,3 +321,6 @@ export const MASCOT_JS = MASCOT.enabled ? `(function(){
     if (document.readyState === 'complete') go(); else window.addEventListener('load', go);
   });
 })();` : '';
+
+// The same mascot for the site's other pages (news, early sign-up; never /quan-tri, not the old wiki), in one piece.
+export const MASCOT_PAGE_HTML = MASCOT.enabled ? `<style>${MASCOT_CSS}</style><script>${MASCOT_JS}</script>` : '';

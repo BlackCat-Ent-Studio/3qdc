@@ -2,6 +2,7 @@
 // plus a light white theme the reader can switch to (html[data-theme="light"], remembered in this browser).
 import { LOGO } from './news-config.mjs';
 import { MUSIC_PAGE_HTML } from '../home/layout-v2/section-music.mjs';
+import { MASCOT_PAGE_HTML } from '../home/layout-v2/section-mascot.mjs';
 
 export const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -315,6 +316,6 @@ ${main}
 ${siteFooter()}
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script>${COPY_JS}</script><script>${THEME_JS}</script>${scripts}
-${MUSIC_PAGE_HTML}
+${MUSIC_PAGE_HTML}${MASCOT_PAGE_HTML}
 </body></html>`;
 }

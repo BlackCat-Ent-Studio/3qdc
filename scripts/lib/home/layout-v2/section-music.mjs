@@ -17,6 +17,7 @@
 // alone on later visits. preload="none" keeps the file unfetched until it actually plays (it is served from this VPS).
 // The song, its position, the volume, shuffle/repeat and the collapsed state are kept in the visitor's browser.
 import { COMPACT_MQ } from './compact.mjs';
+import { pageHostJs } from './page-host.mjs';
 
 export const MUSIC = {
   enabled: true,
@@ -159,20 +160,7 @@ export const MUSIC_JS = MUSIC.enabled ? `(function(){
   // On the home page the layout script hands over its helpers (window.__hv2). Every other page (news, early sign-up)
   // runs the same player on its own: the page is marked hv2-mu-page so the player's rules apply to it, and the
   // player is built once the body exists. The saved song and position make the music carry on from page to page.
-  var PAGE = !window.__hv2;
-  var host = window.__hv2 || {
-    el: function(tag, attrs, kids){
-      var n = document.createElement(tag);
-      if (attrs) for (var k in attrs){ if (k === 'text') n.textContent = attrs[k]; else n.setAttribute(k, attrs[k]); }
-      (kids || []).forEach(function(c){ if (c) n.appendChild(typeof c === 'string' ? document.createTextNode(c) : c); });
-      return n;
-    },
-    compact: function(){ return !!(window.matchMedia && matchMedia(${JSON.stringify(COMPACT_MQ)}).matches); },
-    onMount: function(fn){
-      var go = function(){ document.documentElement.classList.add('hv2-mu-page'); fn(host); };
-      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
-    }
-  };
+  ${pageHostJs('hv2-mu-page')}
   var CFG = ${JSON.stringify(MUSIC)};
   var K = { i: 'hv2-music-i', t: 'hv2-music-t', v: 'hv2-music-vol', off: 'hv2-music-off', sh: 'hv2-music-shuffle', rp: 'hv2-music-repeat', stop: 'hv2-music-stopped' };
   var SEEK = 10; // seconds the rewind / forward buttons jump
