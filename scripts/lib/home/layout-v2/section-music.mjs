@@ -33,11 +33,11 @@ const INK = '#38343e';       // icons on the white strip
 export const MUSIC_CSS = MUSIC.enabled ? `
 /* music player, bottom right (look measured on the reference page) */
 #hv2-music{display:none}
-html.hv2:not(.hv2-embed) #hv2-music{display:block;position:fixed;right:-300px;bottom:40px;width:300px;z-index:13;
+html.hv2:not(.hv2-embed) #hv2-music,html.hv2-mu-page #hv2-music{display:block;position:fixed;right:-300px;bottom:40px;width:300px;z-index:13;
   transform:translateX(-300px);transition:transform .3s ease;
   background:${BG};border-radius:5px;box-shadow:0 0 5px 5px rgba(0,0,0,.2);
   color:#fff;font-size:12px;line-height:16px;font-family:"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
-html.hv2 #hv2-music.hv2-mu-off{transform:translateX(0)}
+html.hv2 #hv2-music.hv2-mu-off,html.hv2-mu-page #hv2-music.hv2-mu-off{transform:translateX(0)}
 /* the tab hangs off the player's left edge, so it stays on screen when the player is slid away */
 #hv2-music .hv2-mu-tab{position:absolute;z-index:3;left:-20px;bottom:30px;width:20px;height:46px;padding:0;border:0;
   border-radius:5px 0 0 5px;background:${BG};color:#fff;cursor:pointer;line-height:0}
@@ -107,9 +107,9 @@ html.hv2 #hv2-music.hv2-mu-off{transform:translateX(0)}
    the lyrics item and the two 10-second seek buttons are left out there — too small to hit, and the page has little
    room to spare. */
 @media ${COMPACT_MQ}{
-  html.hv2:not(.hv2-embed) #hv2-music{right:12px;bottom:calc(12px + env(safe-area-inset-bottom));
+  html.hv2:not(.hv2-embed) #hv2-music,html.hv2-mu-page #hv2-music{right:12px;bottom:calc(12px + env(safe-area-inset-bottom));
     width:min(360px,calc(100vw - 24px));transform:none;transition:none;background:#28314a}
-  html.hv2 #hv2-music.hv2-mu-off{transform:none;width:auto;background:transparent;box-shadow:none}
+  html.hv2 #hv2-music.hv2-mu-off,html.hv2-mu-page #hv2-music.hv2-mu-off{transform:none;width:auto;background:transparent;box-shadow:none}
   #hv2-music.hv2-mu-off .hv2-mu-top,#hv2-music.hv2-mu-off .hv2-mu-bottom,#hv2-music.hv2-mu-off .hv2-mu-list{display:none}
   /* at rest: the turning cover is the button */
   #hv2-music .hv2-mu-tab{position:static;display:none;width:52px;height:52px;border-radius:50%;
@@ -155,7 +155,24 @@ html.hv2 #hv2-music.hv2-mu-off{transform:translateX(0)}
 ` : '';
 
 export const MUSIC_JS = MUSIC.enabled ? `(function(){
-  if (!window.__hv2 || document.documentElement.classList.contains('hv2-embed')) return;
+  if (document.documentElement.classList.contains('hv2-embed')) return;
+  // On the home page the layout script hands over its helpers (window.__hv2). Every other page (news, early sign-up)
+  // runs the same player on its own: the page is marked hv2-mu-page so the player's rules apply to it, and the
+  // player is built once the body exists. The saved song and position make the music carry on from page to page.
+  var PAGE = !window.__hv2;
+  var host = window.__hv2 || {
+    el: function(tag, attrs, kids){
+      var n = document.createElement(tag);
+      if (attrs) for (var k in attrs){ if (k === 'text') n.textContent = attrs[k]; else n.setAttribute(k, attrs[k]); }
+      (kids || []).forEach(function(c){ if (c) n.appendChild(typeof c === 'string' ? document.createTextNode(c) : c); });
+      return n;
+    },
+    compact: function(){ return !!(window.matchMedia && matchMedia(${JSON.stringify(COMPACT_MQ)}).matches); },
+    onMount: function(fn){
+      var go = function(){ document.documentElement.classList.add('hv2-mu-page'); fn(host); };
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
+    }
+  };
   var CFG = ${JSON.stringify(MUSIC)};
   var K = { i: 'hv2-music-i', t: 'hv2-music-t', v: 'hv2-music-vol', off: 'hv2-music-off', sh: 'hv2-music-shuffle', rp: 'hv2-music-repeat', stop: 'hv2-music-stopped' };
   var SEEK = 10; // seconds the rewind / forward buttons jump
@@ -185,9 +202,10 @@ export const MUSIC_JS = MUSIC.enabled ? `(function(){
     return m + ':' + (r < 10 ? '0' : '') + r;
   };
 
-  window.__hv2.onMount(function(api){
+  host.onMount(function(api){
     var el = api.el;
-    var songs = [], i = 0, saveAt = 0, autoOff = false;
+    // resumeAt: the saved position still waiting for the song to load (select() clears the stored one)
+    var songs = [], i = 0, saveAt = 0, autoOff = false, resumeAt = 0;
     var fetching = false, lastFetch = 0, badFiles = 0, dragging = false;
     var REFRESH_MS = 30000;
     var box, audio, bg, disc, status, title, artist, album, time, shuffleTop, listEl;
@@ -316,10 +334,10 @@ export const MUSIC_JS = MUSIC.enabled ? `(function(){
       window.addEventListener('pagehide', saveTime);
       document.addEventListener('visibilitychange', function(){ if (document.hidden) saveTime(); });
       // once the download sidebar slides in (same corner), the player tucks itself away unless the viewer opened it again;
-      // back at the top of the page it comes out. Leaving the home page stops the sound.
+      // back at the top of the page it comes out. Leaving the home page's own view (not the site) stops the sound.
       new MutationObserver(function(){
         var html = document.documentElement;
-        if (!html.classList.contains('hv2') && playing()) audio.pause();
+        if (!PAGE && !html.classList.contains('hv2') && playing()) audio.pause();
         // scrolling down tucks the player away (the download sidebar takes the same corner); coming back to the top does
         // NOT open it again — the viewer decides when it opens, and that choice is remembered
         var scrolled = html.classList.contains('hv2-scrolled');
@@ -365,7 +383,7 @@ export const MUSIC_JS = MUSIC.enabled ? `(function(){
       var now = Date.now();
       if (now - saveAt > 5000){ saveAt = now; saveTime(); }
     }
-    function saveTime(){ set(K.i, String(i)); set(K.t, String(Math.floor(audio.currentTime || 0))); }
+    function saveTime(){ set(K.i, String(i)); set(K.t, String(Math.floor(audio.readyState ? audio.currentTime || 0 : resumeAt))); }
 
     function select(n, play){
       if (!songs.length) return;
@@ -407,10 +425,12 @@ export const MUSIC_JS = MUSIC.enabled ? `(function(){
         audio.play().catch(function(){});
       };
       var arm = function(){
-        var once = function(){
+        var once = function(e){
           document.removeEventListener('pointerdown', once, true);
           document.removeEventListener('keydown', once, true);
           document.removeEventListener('touchstart', once, true);
+          // a first touch ON the play button is left to that button: starting here too would make its click pause again
+          if (e && e.target && status.contains(e.target)) return;
           go();
         };
         document.addEventListener('pointerdown', once, true);
@@ -437,12 +457,16 @@ export const MUSIC_JS = MUSIC.enabled ? `(function(){
     function fill(list){
       fillList(list);
       var saved = parseInt(get(K.i, '0'), 10);
-      select(isFinite(saved) && saved >= 0 && saved < songs.length ? saved : 0, false);
+      // read the position before select(), which resets the stored one to 0: this is what lets the music carry on
+      // where it was when the visitor moves to another page
       var t = parseInt(get(K.t, '0'), 10);
+      select(isFinite(saved) && saved >= 0 && saved < songs.length ? saved : 0, false);
       if (isFinite(t) && t > 0){
+        resumeAt = t;
         audio.addEventListener('loadedmetadata', function once(){
           audio.removeEventListener('loadedmetadata', once);
           if (t < audio.duration - 2) audio.currentTime = t;
+          resumeAt = 0;
         });
       }
       // phones start with just the disc so the page stays clear; on a mouse screen the panel is open
@@ -504,3 +528,7 @@ export const MUSIC_JS = MUSIC.enabled ? `(function(){
     else window.addEventListener('load', function(){ setTimeout(function(){ load(0); }, 800); });
   });
 })();` : '';
+
+// The same player for the site's other pages (news, early sign-up; never /quan-tri, not the old wiki): its rules and script in one
+// piece, to put anywhere in the page.
+export const MUSIC_PAGE_HTML = MUSIC.enabled ? `<style>${MUSIC_CSS}</style><script>${MUSIC_JS}</script>` : '';
