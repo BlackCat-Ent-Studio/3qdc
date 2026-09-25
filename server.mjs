@@ -9,6 +9,7 @@
 //   /              → home, the main site (build B, index.html, ROUTE_FORCE #/index, layout-v2), every device
 //   /home, /kho-bau → 302 /  (old home address; treasure is switched off)
 //   /tin-tuc, /tin-tuc/<slug>, /api/tin-tuc → the site's own news pages (scripts/lib/news, articles in data/news)
+//   /dang-ky-som, /api/dang-ky-som → early sign-up by phone number (scripts/lib/signup, list in data/dang-ky-som)
 //   /__internal/tin-tuc → old news section (build B #/main/news; kept for reference)
 //   /__internal/pc → old fab PC entry (build A; no longer linked, kept for reference)
 //   /__internal/m  → old fab mobile entry (+ UA-spoof shim)
@@ -42,6 +43,7 @@ import { NEUTER_HTML as WIKI_NEUTER } from './scripts/lib/wiki/neuter-links.mjs'
 import { NAV_SYNC_HTML } from './scripts/lib/nav-sync.mjs';
 // the site's own news pages
 import { handleNews } from './scripts/lib/news/news-routes.mjs';
+import { handleSignup } from './scripts/lib/signup/signup-routes.mjs';
 import { SITE_ORIGIN } from './scripts/lib/news/news-config.mjs';
 // Vietnamese title / description / share tags for the mirrored build-B entry page
 import { viHead } from './scripts/lib/site-head.mjs';
@@ -252,6 +254,8 @@ export function startServer(port = 8080) {
       }
       // the site's own news pages (/tin-tuc, /tin-tuc/<slug>, /api/tin-tuc)
       if (await handleNews(req, res, cleanPath, u)) return;
+      // the early sign-up page (/dang-ky-som, /api/dang-ky-som)
+      if (await handleSignup(req, res, cleanPath)) return;
       if (BUILDB_PATHS[cleanPath]) return sendHtml(res, await buildBEntry(BUILDB_PATHS[cleanPath], cleanPath));
       if (cleanPath === '/huong-dan' || cleanPath === '/wiki') return sendHtml(res, await wikiEntry());
 

@@ -13,7 +13,7 @@ const coverOf = (p) => (typeof p.cover === 'string' && /^\/(?![/\\])[^\s\\"'<>]*
 const abs = (path) => SITE_ORIGIN + path;
 const readMinutes = (html) => Math.max(1, Math.round(html.replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length / 220));
 
-function shareTags({ title, description, url, image, type }) {
+export function shareTags({ title, description, url, image, type }) {
   return [
     `<link rel="canonical" href="${esc(url)}">`,
     `<meta property="og:site_name" content="3Q Đại Chiến">`,

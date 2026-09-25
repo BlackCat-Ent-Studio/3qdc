@@ -15,7 +15,8 @@
 import { COMPACT_MQ } from './compact.mjs';
 
 const BANNER_DIR = '/3qdc-vi/home/';
-const BANNERS = [
+// also shown on the early sign-up page (signup-page.mjs), in its own framed viewer
+export const BANNERS = [
   'tinh-nang-1-vi.webp',
   'tinh-nang-2-vi.webp',
   'tinh-nang-3-vi.webp',
@@ -28,8 +29,8 @@ const BANNERS = [
 // bottom-right). The banner fills the frame's window (979x537 at 45,20 of the frame, a little wider than the banners'
 // 1211:680, so ~2% of their height is cropped), its corners cut by that site's window mask (tinh-nang-mat-na.png),
 // and the frame is drawn over it.
-const FRAME = { src: BANNER_DIR + 'tinh-nang-khung.webp', mask: BANNER_DIR + 'tinh-nang-mat-na.png', w: 1069, h: 577 };
-const WINDOW = { x: 45, y: 20, w: 979, h: 537 };
+export const FRAME = { src: BANNER_DIR + 'tinh-nang-khung.webp', mask: BANNER_DIR + 'tinh-nang-mat-na.png', w: 1069, h: 577 };
+export const WINDOW = { x: 45, y: 20, w: 979, h: 537 };
 const pct = (v, of) => `${((v / of) * 100).toFixed(3)}%`;
 
 // centre slide width as a fraction of the track; the track height follows the frame ratio
