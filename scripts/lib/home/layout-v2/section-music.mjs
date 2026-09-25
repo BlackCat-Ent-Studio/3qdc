@@ -162,7 +162,7 @@ export const MUSIC_JS = MUSIC.enabled ? `(function(){
   // player is built once the body exists. The saved song and position make the music carry on from page to page.
   ${pageHostJs('hv2-mu-page')}
   var CFG = ${JSON.stringify(MUSIC)};
-  var K = { i: 'hv2-music-i', t: 'hv2-music-t', v: 'hv2-music-vol', off: 'hv2-music-off', sh: 'hv2-music-shuffle', rp: 'hv2-music-repeat', stop: 'hv2-music-stopped' };
+  var K = { i: 'hv2-music-i', t: 'hv2-music-t', v: 'hv2-music-vol', off: 'hv2-music-off', sh: 'hv2-music-shuffle', rp: 'hv2-music-repeat', stop: 'hv2-music-stopped', load: 'hv2-music-load', feed: 'hv2-music-feed' };
   var SEEK = 10; // seconds the rewind / forward buttons jump
   var SVG = {
     note: '<svg viewBox="0 0 24 24"><path d="M12 3v10.6a4 4 0 1 0 2 3.4V7h5V3h-7z"/></svg>',
@@ -191,6 +191,19 @@ export const MUSIC_JS = MUSIC.enabled ? `(function(){
   };
 
   host.onMount(function(api){
+    // One player per browser, done the way the reference site (lyzwlkj / myhkw player) does it: the tab that has the
+    // player writes the time into localStorage every 500ms and clears the flag when it goes away; a tab opened while
+    // that heartbeat is under 1 second old builds no player at all (and stays without one until it is reloaded).
+    // Going to another page in the same tab clears the flag first (pagehide), so the next page gets the player back.
+    if (get(K.load, 'false') === 'true' && Date.now() - parseInt(get(K.feed, '0'), 10) < 1000) return;
+    var beat = function(){ set(K.feed, String(Date.now())); };
+    set(K.load, 'true'); beat();
+    setInterval(beat, 500);
+    var gone = function(){ set(K.load, 'false'); };
+    window.addEventListener('pagehide', gone, true);
+    window.addEventListener('beforeunload', gone, true);
+    // back from the browser's back/forward cache: this tab has the player again
+    window.addEventListener('pageshow', function(e){ if (e.persisted){ set(K.load, 'true'); beat(); } });
     var el = api.el;
     // resumeAt: the saved position still waiting for the song to load (select() clears the stored one)
     var songs = [], i = 0, saveAt = 0, autoOff = false, resumeAt = 0;
