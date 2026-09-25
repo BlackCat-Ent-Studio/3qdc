@@ -416,27 +416,24 @@ export const MUSIC_JS = MUSIC.enabled ? `(function(){
     }
 
     // Start the music by itself. Browsers only allow that after the visitor has touched the page, so: try once, and if
-    // the browser says no, wait for the first tap, click or key press anywhere and start then. A visitor who pressed
-    // pause before is left alone (K.stop).
+    // the browser says no, try again on every click, tap or key press anywhere until it plays. A visitor who pressed
+    // pause before is left alone (K.stop). Scrolling and moving the mouse never count for the browser.
     function autoPlay(){
       if (get(K.stop, '0') === '1') return;
-      var go = function(){
-        if (playing()) return;
-        if (!audio.src) select(i, false);
-        audio.play().catch(function(){});
-      };
+      // a finger going DOWN is not yet allowed to start sound, only the finger coming UP (pointerup / touchend / click)
+      // is; a mouse button or a key is allowed at once. So listen to all of them and stop only once the music plays.
+      var EVENTS = ['pointerdown', 'pointerup', 'touchend', 'click', 'keydown'];
       var arm = function(){
+        var off = function(){ EVENTS.forEach(function(n){ document.removeEventListener(n, once, true); }); };
         var once = function(e){
-          document.removeEventListener('pointerdown', once, true);
-          document.removeEventListener('keydown', once, true);
-          document.removeEventListener('touchstart', once, true);
-          // a first touch ON the play button is left to that button: starting here too would make its click pause again
-          if (e && e.target && status.contains(e.target)) return;
-          go();
+          // a touch ON the play button is left to that button: starting here too would make its click pause again
+          if (e && e.target && status.contains(e.target)){ off(); return; }
+          if (get(K.stop, '0') === '1' || playing()){ off(); return; }
+          if (!audio.src) select(i, false);
+          var p = audio.play();
+          if (p && p.then) p.then(off, function(){}); else off();
         };
-        document.addEventListener('pointerdown', once, true);
-        document.addEventListener('keydown', once, true);
-        document.addEventListener('touchstart', once, true);
+        EVENTS.forEach(function(n){ document.addEventListener(n, once, true); });
       };
       if (!audio.src) select(i, false);
       audio.play().then(function(){}, arm);
