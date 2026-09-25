@@ -127,10 +127,28 @@ const MUSIC_URL = OVERRIDES_URL + 'api/nhac';
 const TRACKER_PATHS = ['/r.png', '/beacon'];
 const API_HOST_DIRS = ['galaxias-api.lingxigames.com', 'game-ages-fx.lingxigames.com', 'p10488-bbs.ejoy.com'];
 
+// Mirror files whose name carries a content hash (umi.62525e29.js, p__index.3f2a9c1b.async.js) never change.
+const HASHED_NAME = /\.[0-9a-f]{8,}(\.async)?\.(js|css)$/i;
+
 // Stream file; honor HTTP Range (206) so <video>/<audio> (main bg + galleries) play.
+// Without `req` (API snapshots) nothing is cached. Otherwise the browser keeps the file but asks again every time
+// (ETag from size + change time → 304 when unchanged), so a deploy or a song/artwork swapped from /quan-tri shows at
+// once; hashed mirror files are kept for a year without asking.
 async function send(res, file, type, req) {
   const st = await stat(file);
   const h = { 'Content-Type': type, 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-store', 'Accept-Ranges': 'bytes' };
+  if (req) {
+    const tag = `W/"${st.size.toString(16)}-${Math.floor(st.mtimeMs).toString(16)}"`;
+    h['Cache-Control'] = !file.startsWith(OVERRIDES + sep) && HASHED_NAME.test(file) ? 'public, max-age=31536000, immutable' : 'no-cache';
+    h.ETag = tag;
+    h['Last-Modified'] = st.mtime.toUTCString();
+    const inm = req.headers['if-none-match'];
+    if (inm ? inm.split(',').some((t) => t.trim() === tag) : req.headers['if-modified-since'] && Date.parse(req.headers['if-modified-since']) >= Math.floor(st.mtimeMs / 1000) * 1000) {
+      delete h['Content-Type'];
+      res.writeHead(304, h);
+      return res.end();
+    }
+  }
   const range = req && req.headers && req.headers.range;
   if (range) {
     const m = /bytes=(\d*)-(\d*)/.exec(range);
