@@ -64,7 +64,7 @@ export function adminApp() {
 
   function header(active) {
     const nav = me.role === 'manager'
-      ? `<nav class="adm-nav" aria-label="Mục quản trị">${[['posts', '#/', 'Bài viết'], ['music', '#/nhac', 'Nhạc nền'], ['signup', '#/dang-ky-som', 'Đăng ký sớm'], ['trash', '#/thung-rac', 'Thùng rác'], ['users', '#/nguoi-dung', 'Người dùng']]
+      ? `<nav class="adm-nav" aria-label="Mục quản trị">${[['posts', '#/', 'Bài viết'], ['music', '#/nhac', 'Nhạc nền'], ['trash', '#/thung-rac', 'Thùng rác'], ['users', '#/nguoi-dung', 'Người dùng']]
         .map(([key, href, label]) => `<a href="${href}"${(active || 'posts') === key ? ' class="on" aria-current="page"' : ''}>${label}</a>`).join('')}</nav>`
       : '';
     // On phones the account row is folded behind this button (CSS hides .who until the header carries data-menu).
@@ -451,67 +451,6 @@ ${items.length ? '' : '<tr><td colspan="5" class="meta" style="text-align:center
       }));
     };
     draw(r.data.items, '');
-  }
-
-  // ---------- early sign-ups (managers) ----------
-  // Phone numbers left on /dang-ky-som, newest first: search by digits, page through, download everything as CSV (the
-  // gifts are sent by hand for now), and set the milestones the page shows.
-  const fmtNum = (n) => Number(n || 0).toLocaleString('vi-VN');
-
-  async function renderSignups() {
-    cleanupEditor();
-    const mine = screen;
-    const view = { q: '', page: 1 };
-    app.innerHTML = `${header('signup')}<main class="wrap"><p class="meta" style="padding:40px 0">Đang tải danh sách đăng ký…</p></main>`;
-    bindHeader();
-
-    const load = async () => {
-      const r = await api('GET', `/dang-ky-som?q=${encodeURIComponent(view.q)}&trang=${view.page}`);
-      if (mine !== screen || !me) return null;
-      if (!r.ok) { if (r.status !== 401) $('main').innerHTML = `<div class="err" style="margin:40px 0">${esc(r.data.error)}</div>`; return null; }
-      return r.data;
-    };
-
-    const draw = (d) => {
-      $('main').innerHTML = `<div class="adm-top"><div><h1>Đăng ký sớm</h1>
-<p>Số điện thoại khách để lại ở trang <a href="/dang-ky-som" target="_blank" rel="noopener">/dang-ky-som</a>. Quà chưa phát tự động — tải CSV để gửi tay.</p></div>
-<a class="btn btn-fire" href="/quan-tri/api/dang-ky-som/csv" download>Tải CSV (${fmtNum(d.total)} số)</a></div>
-<form class="dks-find" id="s-find"><input class="inp" id="s-q" type="search" inputmode="numeric" placeholder="Tìm theo số, ví dụ 0912" value="${esc(view.q)}" aria-label="Tìm theo số điện thoại">
-<button type="submit" class="btn btn-ghost">Tìm</button>${view.q ? '<button type="button" class="btn btn-ghost" id="s-clear">Bỏ lọc</button>' : ''}
-<span class="meta">${view.q ? `${fmtNum(d.count)} / ${fmtNum(d.total)} số khớp` : `Tổng ${fmtNum(d.total)} số`}</span></form>
-<div class="tbl-wrap"><table class="posts posts-dks"><thead><tr><th>Số điện thoại</th><th>STT</th><th>Thời gian</th><th>Nguồn</th><th>IP</th></tr></thead><tbody>
-${d.items.map((s) => `<tr><td><b>${esc(s.sdt)}</b></td><td class="meta">#${s.stt}</td><td class="meta">${fmtTime(s.luc)}</td><td class="meta">${esc(s.nguon || '—')}</td><td class="meta">${esc(s.ip || '—')}</td></tr>`).join('')}
-${d.items.length ? '' : `<tr><td colspan="5" class="meta" style="text-align:center;padding:30px">${view.q ? 'Không có số nào khớp.' : 'Chưa có ai đăng ký.'}</td></tr>`}
-</tbody></table></div>
-${d.pages > 1 ? `<div class="dks-pager"><button type="button" class="btn btn-ghost btn-sm" id="s-prev"${d.page <= 1 ? ' disabled' : ''}>‹ Mới hơn</button>
-<span class="meta">Trang ${d.page} / ${d.pages}</span><button type="button" class="btn btn-ghost btn-sm" id="s-next"${d.page >= d.pages ? ' disabled' : ''}>Cũ hơn ›</button></div>` : ''}
-<div class="box dks-moc"><h3>Mốc hiện trên trang đăng ký</h3>
-<p class="meta">Các số người đăng ký, tăng dần, cách nhau bằng dấu phẩy (tối đa 8 mốc). Trang đăng ký đổi theo ngay.</p>
-<form class="row" id="s-moc-form"><input class="inp" id="s-moc" value="${esc(d.milestones.join(', '))}" aria-label="Các mốc"><button type="submit" class="btn btn-ghost">Lưu mốc</button></form>
-<div class="err" id="s-moc-err" role="alert" hidden></div></div>`;
-
-      const again = async () => { const nd = await load(); if (nd) draw(nd); };
-      $('#s-find').addEventListener('submit', (e) => { e.preventDefault(); view.q = $('#s-q').value.replace(/\D/g, ''); view.page = 1; again(); });
-      if ($('#s-clear')) $('#s-clear').addEventListener('click', () => { view.q = ''; view.page = 1; again(); });
-      if ($('#s-prev')) $('#s-prev').addEventListener('click', () => { view.page = d.page - 1; again(); });
-      if ($('#s-next')) $('#s-next').addEventListener('click', () => { view.page = d.page + 1; again(); });
-      $('#s-moc-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const err = $('#s-moc-err');
-        // "10.000" is ten thousand here: dots are thousand separators, commas/semicolons/spaces separate milestones
-        const list = $('#s-moc').value.replace(/\./g, '').split(/[,;\s]+/).filter(Boolean).map(Number);
-        const mine2 = screen;
-        const res = await api('POST', '/dang-ky-som/moc', { milestones: list });
-        if (mine2 !== screen) return;
-        if (!res.ok) { if (res.status !== 401) { err.textContent = res.data.error || 'Không lưu được mốc.'; err.hidden = false; } return; }
-        err.hidden = true;
-        $('#s-moc').value = res.data.milestones.join(', ');
-        toast('Đã lưu mốc: ' + res.data.milestones.map(fmtNum).join(' · '));
-      });
-    };
-
-    const d = await load();
-    if (d) draw(d);
   }
 
   // ---------- picture upload (cover, pictures in the text) ----------
@@ -909,7 +848,6 @@ ${uploads.length ? `<div class="pop-row"><span class="lbl">Ảnh đã tải lên
     if (h === '/viet-bai') renderEditor(null);
     else if ((m = h.match(/^\/sua\/(\d+)$/))) renderEditor(+m[1]);
     else if (h === '/nhac' && me.role === 'manager') renderMusic();
-    else if (h === '/dang-ky-som' && me.role === 'manager') renderSignups();
     else if (h === '/nguoi-dung' && me.role === 'manager') renderUsers();
     else if (h === '/thung-rac' && me.role === 'manager') renderTrash();
     else renderList();
@@ -921,7 +859,7 @@ ${uploads.length ? `<div class="pop-row"><span class="lbl">Ảnh đã tải lên
   // ---------- sideways swipe between the sections (touch screens only) ----------
   // The sections in tab order; a swipe moves one step and stops at either end rather than wrapping, so the tab strip
   // stays the map of where you are. The editor is left out on purpose: a stray swipe must never drop unsaved text.
-  const SECTIONS = ['#/', '#/nhac', '#/dang-ky-som', '#/thung-rac', '#/nguoi-dung'];
+  const SECTIONS = ['#/', '#/nhac', '#/thung-rac', '#/nguoi-dung'];
   let slideFrom = '';
 
   function afterRoute() {

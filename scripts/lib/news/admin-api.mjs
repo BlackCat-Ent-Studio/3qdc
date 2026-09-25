@@ -5,7 +5,6 @@ import { signIn, endSession, setPassword, currentUser, sameOrigin, sessionCookie
 import { change, allPosts, listRevisions, readRevision, stampAfter, isVisible, listTrash, TRASH_NAME_RE } from './news-store.mjs';
 import { saveUpload, recentUploads } from './news-uploads.mjs';
 import { listSongs, saveSong, removeSong, SONG_MAX, FOLDER_MAX } from '../home/music-store.mjs';
-import { listSignups, signupsCsv, readMilestones, writeMilestones, cleanMilestones } from '../signup/signup-store.mjs';
 import { decide, mayDelete, summaryOf } from './news-workflow.mjs';
 import { register, listUsers, manageUser } from './admin-users.mjs';
 import { USERNAME_RE } from './admin-auth.mjs';
@@ -162,35 +161,6 @@ async function route(req, res, path) {
       if (r.error) return oops(res, r.status, r.error);
       console.log(`[news] ${siteNow()} ${user.username} deleted song ${decodeURIComponent(nm[1])}`);
       return send(res, 200, { items: await listSongs() });
-    }
-    return oops(res, 404, 'Không có địa chỉ này.');
-  }
-
-  // early sign-ups from /dang-ky-som (managers only: phone numbers are personal data): one page of the list with a
-  // number search, the whole list as CSV (gifts are sent by hand for now), and the milestones the page shows
-  if (path === '/dang-ky-som' || path.startsWith('/dang-ky-som/')) {
-    if (user.role !== 'manager') return oops(res, 403, 'Chỉ Quản lý mới xem được danh sách đăng ký sớm.');
-    if (method === 'GET' && path === '/dang-ky-som') {
-      const q = new URL(req.url, 'http://x').searchParams;
-      const list = await listSignups({ q: q.get('q') || '', page: parseInt(q.get('trang') || '1', 10) });
-      return send(res, 200, { ...list, milestones: await readMilestones() });
-    }
-    if (method === 'GET' && path === '/dang-ky-som/csv') {
-      const csv = await signupsCsv();
-      const stamp = siteNow().slice(0, 16).replace(/-/g, '').replace('T', '-').replace(':', '');
-      console.log(`[news] ${siteNow()} ${user.username} downloaded the early sign-up list (${csv.rows} numbers)`);
-      res.writeHead(200, {
-        'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': `attachment; filename="dang-ky-som-${stamp}.csv"`,
-        'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', 'X-Robots-Tag': 'noindex, nofollow',
-      });
-      return res.end(csv.text);
-    }
-    if (method === 'POST' && path === '/dang-ky-som/moc') {
-      const list = cleanMilestones(body.milestones);
-      if (!list) return oops(res, 400, 'Mốc phải là 1 đến 8 số nguyên tăng dần, mỗi số từ 1 đến 10.000.000.');
-      await writeMilestones(list);
-      console.log(`[news] ${siteNow()} ${user.username} set the early sign-up milestones to ${list.join(', ')}`);
-      return send(res, 200, { milestones: list });
     }
     return oops(res, 404, 'Không có địa chỉ này.');
   }

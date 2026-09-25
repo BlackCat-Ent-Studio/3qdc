@@ -1,5 +1,4 @@
-// section-mascot.mjs — talking Live2D mascot in the bottom-left corner of the home page, the news pages and the early
-// sign-up page (not /quan-tri, not the old wiki).
+// section-mascot.mjs — talking Live2D mascot in the bottom-left corner of the home page (desktop layout only).
 // Behaviour follows the open-source live2d-widget (stevenjoezhang, GPL-3.0) the owner picked from another site: a Live2D
 // model that breathes and follows the mouse, a speech bubble (greeting by hour, a line for each part of the page under the
 // mouse, a line when the mascot is clicked, idle chatter, holidays, coming back to the tab, copying text), a "talk" button
@@ -22,7 +21,6 @@
 // hidden or the visitor is on another page of the app.
 
 import { COMPACT_MQ } from './compact.mjs';
-import { pageHostJs, alsoOnPages } from './page-host.mjs';
 
 export const MASCOT = {
   enabled: true,
@@ -56,34 +54,6 @@ const HOVER = [
   ['#hv2-news', ['Có tin gì mới không ta? Cùng xem nào!']],
   ['#hv2-heroes', ['Mỗi phe đều có những vị tướng rất mạnh đó!', 'Chúa công thích tướng phe nào nhất?']],
   ['#hv2-features', ['Tính năng nào cũng thú vị hết á!']],
-  // other pages (scoped by html.hv2-m-page so none of these fire on the home page)
-  // news pages (list and article; their body is .has-site-h): shared header, then the list, then the article
-  ['html.hv2-m-page .site-h .logo', ['Logo 3Q Đại Chiến đó, bấm vào là về trang chủ!']],
-  ['html.hv2-m-page .site-h .nav a[href="/"]', ['Quay về trang chủ nè!', 'Về trang chủ xem tướng với tính năng nào!']],
-  ['html.hv2-m-page .site-h .nav a[href="/tin-tuc"]', ['Tin mới nhất, sự kiện hot đều ở mục Tin tức!']],
-  ['html.hv2-m-page .site-h .theme-btn', ['Đổi giao diện sáng tối cho dễ đọc nè!']],
-  ['html.hv2-m-page .site-h .btn-fire', ['Tải game ngay để cùng ta chinh phạt thiên hạ!']],
-  ['html.hv2-m-page #news-app .tab', ['Chọn Thông báo, Sự kiện hay Cẩm nang để lọc tin nha!']],
-  ['html.hv2-m-page #news-app .search', ['Gõ từ khoá vào đây để tìm bài viết nè!']],
-  ['html.hv2-m-page .has-site-h .feat, html.hv2-m-page .has-site-h .card', ['Bài này hay lắm, bấm vào đọc thử đi!', 'Có tin gì mới không ta? Cùng xem nào!']],
-  ['html.hv2-m-page .has-site-h .share', ['Thấy hay thì chia sẻ cho bạn bè cùng đọc nha!']],
-  ['html.hv2-m-page .has-site-h .pn', ['Đọc tiếp bài trước hoặc bài sau nè.']],
-  ['html.hv2-m-page .has-site-h .aside', ['Mục lục của bài và các bài cùng chủ đề ở đây!']],
-  ['html.hv2-m-page .has-site-h .prose', ['Đọc kỹ nha, cẩm nang này giúp chúa công mạnh lên nhiều đó!']],
-  // early sign-up page
-  ['html.hv2-m-page .hd .medal', ['Logo 3Q Đại Chiến đó, bấm vào là về trang chủ!']],
-  ['html.hv2-m-page .hd nav.l a[href="/"]', ['Quay về trang chủ nè!']],
-  ['html.hv2-m-page .hd [data-soon]', ['Theo dõi Fanpage và Group để không lỡ quà tặng nha!']],
-  ['html.hv2-m-page #go-register', ['Bấm vào đây để đăng ký sớm nhận quà nè!']],
-  ['html.hv2-m-page .hero .art-btn.gold', ['Đăng ký sớm trên cửa hàng ứng dụng để nhận tướng nha!']],
-  ['html.hv2-m-page #dks-form', ['Nhập số điện thoại để đăng ký sớm, quà sẽ gửi theo số này!']],
-  ['html.hv2-m-page #dang-ky', ['Làm đủ 3 bước là nhận trọn quà đăng ký sớm đó!']],
-  ['html.hv2-m-page .claim', ['Đạt mốc rồi thì quà sẽ nhận ở đây nha!']],
-  ['html.hv2-m-page #moc', ['Càng nhiều người đăng ký, quà mốc càng to!', 'Cùng rủ bạn bè đăng ký để đạt mốc nào!']],
-  ['html.hv2-m-page #moi-ban', ['Mời bạn bè cùng đăng ký để nhận thêm quà nè!']],
-  ['html.hv2-m-page #tinh-nang', ['Những tính năng đặc sắc nhất của game đây!', 'Tính năng nào cũng thú vị hết á!']],
-  ['html.hv2-m-page #top', ['Bảng xếp hạng lực chiến sẽ có khi máy chủ mở nha!']],
-  ['html.hv2-m-page .site-f, html.hv2-m-page .ft', ['Cảm ơn chúa công đã ghé thăm nha!']],
 ];
 
 const CLICK = ['Á! Đừng chọc ta mà~', 'Hừ, ta giận đó nha!', 'Chúa công rảnh quá ha?', 'Nhột quá đi mất!', 'Ta sẽ mách Gia Cát Lượng đó!'];
@@ -131,8 +101,7 @@ const MAX_BOX = Math.round(250 * GROW);
 // square side on a phone: about a third of a 393px screen, small enough to leave the page readable
 const PHONE_BOX = 130;
 
-// the rules are written for the home page (html.hv2); alsoOnPages() gives each one to the other pages (html.hv2-m-page)
-export const MASCOT_CSS = MASCOT.enabled ? alsoOnPages(`
+export const MASCOT_CSS = MASCOT.enabled ? `
 #hv2-mascot,#hv2-mascot-toggle{display:none}
 html.hv2:not(.hv2-embed) #hv2-mascot{--hv2-m:min(${MAX_BOX}px,calc((100vh - ${SOCIAL_BAR_H}px) / 2 * ${GROW} - 8px));display:block;position:fixed;
   left:6px;bottom:0;width:var(--hv2-m);height:var(--hv2-m);z-index:11;pointer-events:none;transition:transform .5s ease}
@@ -171,18 +140,16 @@ html.hv2:not(.hv2-embed) #hv2-mascot-toggle.on:hover{color:#fff;background:#9a4a
 }
 @media (max-height:600px){html.hv2:not(.hv2-embed) #hv2-mascot,html.hv2:not(.hv2-embed) #hv2-mascot-toggle.on{display:none}}
 @media (prefers-reduced-motion:reduce){#hv2-mascot,#hv2-mascot .hv2-m-tips{transition:none}}
-`, 'hv2-m-page') : '';
+` : '';
 
 export const MASCOT_JS = MASCOT.enabled ? `(function(){
-  if (document.documentElement.classList.contains('hv2-embed')) return;
-  // on the home page it uses the layout's helpers; on the news and early sign-up pages it runs on its own (page-host.mjs)
-  ${pageHostJs('hv2-m-page')}
+  if (!window.__hv2 || document.documentElement.classList.contains('hv2-embed')) return;
   var CFG = ${JSON.stringify({ MASCOT, GREETINGS, HOVER, CLICK, TALK, HOLIDAYS, MESSAGES })};
   var HIDE_KEY = 'hv2-mascot-hidden';
   var ICON_TALK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3C6.5 3 2 6.6 2 11c0 2.2 1.1 4.2 3 5.6L4 21l4.6-2.6c1.1.3 2.2.4 3.4.4 5.5 0 10-3.6 10-8s-4.5-8-10-8z"/></svg>';
   var ICON_HIDE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.3 5.7a1 1 0 0 0-1.4 0L12 10.6 7.1 5.7a1 1 0 1 0-1.4 1.4l4.9 4.9-4.9 4.9a1 1 0 1 0 1.4 1.4l4.9-4.9 4.9 4.9a1 1 0 0 0 1.4-1.4L13.4 12l4.9-4.9a1 1 0 0 0 0-1.4z"/></svg>';
 
-  host.onMount(function(api){
+  window.__hv2.onMount(function(api){
     var el = api.el;
     var box, tips, toggle, started = false, timer = null, level = -1, engine = null;
 
@@ -293,7 +260,7 @@ export const MASCOT_JS = MASCOT.enabled ? `(function(){
     // draw only while the home layout shows the mascot (not hidden, not on another page of the app, screen tall enough)
     function sync(){
       if (!engine) return;
-      var on = (PAGE || document.documentElement.classList.contains('hv2')) && !box.classList.contains('hv2-m-off') && showing();
+      var on = document.documentElement.classList.contains('hv2') && !box.classList.contains('hv2-m-off') && showing();
       if (on) engine.run(); else engine.stop();
     }
 
@@ -307,7 +274,7 @@ export const MASCOT_JS = MASCOT.enabled ? `(function(){
       setInterval(function(){
         if (active){ active = false; clearInterval(idle); idle = null; }
         else if (!idle) idle = setInterval(function(){
-          if (PAGE || document.documentElement.classList.contains('hv2')) say(CFG.TALK.concat(holidayLines()), 6000, 9);
+          if (document.documentElement.classList.contains('hv2')) say(CFG.TALK.concat(holidayLines()), 6000, 9);
         }, 20000);
       }, 1000);
       document.addEventListener('mouseover', function(e){
@@ -349,6 +316,3 @@ export const MASCOT_JS = MASCOT.enabled ? `(function(){
     if (document.readyState === 'complete') go(); else window.addEventListener('load', go);
   });
 })();` : '';
-
-// The same mascot for the site's other pages (news, early sign-up; never /quan-tri, not the old wiki), in one piece.
-export const MASCOT_PAGE_HTML = MASCOT.enabled ? `<style>${MASCOT_CSS}</style><script>${MASCOT_JS}</script>` : '';

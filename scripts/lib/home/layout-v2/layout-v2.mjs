@@ -41,13 +41,13 @@ const KV_IMAGE = '/3qdc-vi/home/anh-nen-slogan-vi.webp';
 const KV = { width: 1756, height: 896, eventFrameBottom: 785 };
 
 // Vietnamese download buttons (omg3q-style artwork in overrides/home) in display order, filling a 2-column grid row by
-// row. An entry without `href` is shown in place but not clickable; give it a URL to make it a link (opens in a new
-// tab, or in the same tab with `sameTab` for the site's own pages). The original Chinese download links are not used.
+// row. The site has no links of its own yet: an entry without `href` is shown in place but not clickable; give it the
+// 3qdc URL to make it a link (opens in a new tab). The original Chinese download links of the app are not used.
 const DL_ART = [
   { href: null, src: '/3qdc-vi/home/nut-tai-appstore.png', label: 'Tải trên App Store' },
   { href: null, src: '/3qdc-vi/home/nut-tai-file-apk.png', label: 'Tải file APK' },
   { href: null, src: '/3qdc-vi/home/nut-tai-google-play.png', label: 'Tải trên Google Play' },
-  { href: '/dang-ky-som', sameTab: true, src: '/3qdc-vi/home/nut-dang-ky-nhanh.png', label: 'Đăng ký nhanh' },
+  { href: null, src: '/3qdc-vi/home/nut-dang-ky-nhanh.png', label: 'Đăng ký nhanh' },
 ];
 const DL_TOPUP = '/3qdc-vi/home/nut-nap-the.webp';
 // the site's own download QR (200x200, decorated; links to the download-links article through q.me-qr.com), shown in the
@@ -420,7 +420,7 @@ const JS = `(function(){
   function dlLinks(){
     return DL_ART.map(function(art){
       var attrs = { 'aria-label': art.label };
-      if (art.href) { attrs.href = art.href; if (!art.sameTab) { attrs.target = '_blank'; attrs.rel = 'noopener'; } }
+      if (art.href) { attrs.href = art.href; attrs.target = '_blank'; attrs.rel = 'noopener'; }
       else { attrs['class'] = 'hv2-dl-soon'; attrs.role = 'link'; attrs['aria-disabled'] = 'true'; }
       return el('a', attrs, [el('img', { src: art.src, alt: art.label })]);
     });

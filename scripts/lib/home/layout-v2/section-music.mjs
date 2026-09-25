@@ -17,7 +17,6 @@
 // alone on later visits. preload="none" keeps the file unfetched until it actually plays (it is served from this VPS).
 // The song, its position, the volume, shuffle/repeat and the collapsed state are kept in the visitor's browser.
 import { COMPACT_MQ } from './compact.mjs';
-import { pageHostJs } from './page-host.mjs';
 
 export const MUSIC = {
   enabled: true,
@@ -34,11 +33,11 @@ const INK = '#38343e';       // icons on the white strip
 export const MUSIC_CSS = MUSIC.enabled ? `
 /* music player, bottom right (look measured on the reference page) */
 #hv2-music{display:none}
-html.hv2:not(.hv2-embed) #hv2-music,html.hv2-mu-page #hv2-music{display:block;position:fixed;right:-300px;bottom:40px;width:300px;z-index:13;
+html.hv2:not(.hv2-embed) #hv2-music{display:block;position:fixed;right:-300px;bottom:40px;width:300px;z-index:13;
   transform:translateX(-300px);transition:transform .3s ease;
   background:${BG};border-radius:5px;box-shadow:0 0 5px 5px rgba(0,0,0,.2);
   color:#fff;font-size:12px;line-height:16px;font-family:"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
-html.hv2 #hv2-music.hv2-mu-off,html.hv2-mu-page #hv2-music.hv2-mu-off{transform:translateX(0)}
+html.hv2 #hv2-music.hv2-mu-off{transform:translateX(0)}
 /* the tab hangs off the player's left edge, so it stays on screen when the player is slid away */
 #hv2-music .hv2-mu-tab{position:absolute;z-index:3;left:-20px;bottom:30px;width:20px;height:46px;padding:0;border:0;
   border-radius:5px 0 0 5px;background:${BG};color:#fff;cursor:pointer;line-height:0}
@@ -49,8 +48,7 @@ html.hv2 #hv2-music.hv2-mu-off,html.hv2-mu-page #hv2-music.hv2-mu-off{transform:
 #hv2-music .hv2-mu-info{position:absolute;left:5px;top:15px;width:290px}
 #hv2-music .hv2-mu-row{display:flex;align-items:center;height:16px;margin-bottom:20px}
 #hv2-music .hv2-mu-row > span{display:flex;align-items:center;gap:4px;min-width:0}
-/* the song title, artist and album lines are left out (the owner's visitors asked); the title shows on the cover's tooltip */
-#hv2-music .hv2-mu-row .hv2-mu-l{display:none}
+#hv2-music .hv2-mu-row .hv2-mu-l{flex:0 1 auto;max-width:140px}
 #hv2-music .hv2-mu-row .hv2-mu-r{margin-left:auto;flex:0 0 auto}
 #hv2-music .hv2-mu-row b{font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #hv2-music .hv2-mu-row svg{width:12px;height:13px;flex:0 0 auto;fill:currentColor}
@@ -58,14 +56,13 @@ html.hv2 #hv2-music.hv2-mu-off,html.hv2-mu-page #hv2-music.hv2-mu-off{transform:
 #hv2-music .hv2-mu-r.hv2-mu-btn:hover{color:#ffd9a0}
 #hv2-music .hv2-mu-r.on{color:#ffb15e}
 #hv2-music .hv2-mu-r.hv2-mu-dim{opacity:.5;cursor:default}
-/* cover on the left where the text lines were, turning while the song plays, with the play button on it */
-#hv2-music .hv2-mu-disc{position:absolute;left:14px;top:12px;width:124px;height:124px;border-radius:50%;
+/* cover in the middle, turning while the song plays, with the play button on it */
+#hv2-music .hv2-mu-disc{position:absolute;left:50%;top:36px;width:100px;height:100px;margin-left:-50px;border-radius:50%;
   border:3px solid rgba(255,255,255,.85);background:#0b0d18 center/cover no-repeat;
   animation:hv2-mu-spin 14s linear infinite;animation-play-state:paused}
 #hv2-music.hv2-mu-play .hv2-mu-disc{animation-play-state:running}
 @keyframes hv2-mu-spin{to{transform:rotate(360deg)}}
-/* centred on the cover (124px, border included): 14 + 62 = 76px across, 12 + 62 = 74px down; the control row starts 111px down */
-#hv2-music .hv2-mu-status{position:absolute;left:76px;top:-59px;margin-left:-22px;width:44px;height:44px;padding:0;
+#hv2-music .hv2-mu-status{position:absolute;left:50%;top:-47px;margin-left:-22px;width:44px;height:44px;padding:0;
   border:0;border-radius:50%;background:rgba(70,84,115,.5);color:#fff;cursor:pointer;line-height:0;z-index:2}
 #hv2-music .hv2-mu-status svg{width:40px;height:40px;fill:currentColor}
 #hv2-music .hv2-mu-ctl{position:absolute;left:0;bottom:0;width:300px;height:44px}
@@ -73,10 +70,9 @@ html.hv2 #hv2-music.hv2-mu-off,html.hv2-mu-page #hv2-music.hv2-mu-off{transform:
   color:#fff;cursor:pointer;line-height:0}
 #hv2-music .hv2-mu-ctl button:not(.hv2-mu-status) svg{width:22px;height:22px;fill:currentColor}
 #hv2-music .hv2-mu-ctl button:hover{color:#ffd9a0}
-/* the four buttons sit to the right of the cover, evenly spaced */
-#hv2-music .hv2-mu-first{left:152px}
-#hv2-music .hv2-mu-back{left:191px}
-#hv2-music .hv2-mu-fwd{right:48px}
+#hv2-music .hv2-mu-first{left:6px}
+#hv2-music .hv2-mu-back{left:67px}
+#hv2-music .hv2-mu-fwd{right:67px}
 #hv2-music .hv2-mu-last{right:6px}
 /* white strip: playlist, repeat switch, progress, shuffle, volume */
 #hv2-music .hv2-mu-bottom{display:flex;align-items:center;gap:8px;height:25px;padding:0 8px;box-sizing:border-box;
@@ -108,9 +104,9 @@ html.hv2 #hv2-music.hv2-mu-off,html.hv2-mu-page #hv2-music.hv2-mu-off{transform:
    the lyrics item and the two 10-second seek buttons are left out there — too small to hit, and the page has little
    room to spare. */
 @media ${COMPACT_MQ}{
-  html.hv2:not(.hv2-embed) #hv2-music,html.hv2-mu-page #hv2-music{right:12px;bottom:calc(12px + env(safe-area-inset-bottom));
+  html.hv2:not(.hv2-embed) #hv2-music{right:12px;bottom:calc(12px + env(safe-area-inset-bottom));
     width:min(360px,calc(100vw - 24px));transform:none;transition:none;background:#28314a}
-  html.hv2 #hv2-music.hv2-mu-off,html.hv2-mu-page #hv2-music.hv2-mu-off{transform:none;width:auto;background:transparent;box-shadow:none}
+  html.hv2 #hv2-music.hv2-mu-off{transform:none;width:auto;background:transparent;box-shadow:none}
   #hv2-music.hv2-mu-off .hv2-mu-top,#hv2-music.hv2-mu-off .hv2-mu-bottom,#hv2-music.hv2-mu-off .hv2-mu-list{display:none}
   /* at rest: the turning cover is the button */
   #hv2-music .hv2-mu-tab{position:static;display:none;width:52px;height:52px;border-radius:50%;
@@ -156,11 +152,7 @@ html.hv2 #hv2-music.hv2-mu-off,html.hv2-mu-page #hv2-music.hv2-mu-off{transform:
 ` : '';
 
 export const MUSIC_JS = MUSIC.enabled ? `(function(){
-  if (document.documentElement.classList.contains('hv2-embed')) return;
-  // On the home page the layout script hands over its helpers (window.__hv2). Every other page (news, early sign-up)
-  // runs the same player on its own: the page is marked hv2-mu-page so the player's rules apply to it, and the
-  // player is built once the body exists. The saved song and position make the music carry on from page to page.
-  ${pageHostJs('hv2-mu-page')}
+  if (!window.__hv2 || document.documentElement.classList.contains('hv2-embed')) return;
   var CFG = ${JSON.stringify(MUSIC)};
   var K = { i: 'hv2-music-i', t: 'hv2-music-t', v: 'hv2-music-vol', off: 'hv2-music-off', sh: 'hv2-music-shuffle', rp: 'hv2-music-repeat', stop: 'hv2-music-stopped' };
   var SEEK = 10; // seconds the rewind / forward buttons jump
@@ -190,10 +182,9 @@ export const MUSIC_JS = MUSIC.enabled ? `(function(){
     return m + ':' + (r < 10 ? '0' : '') + r;
   };
 
-  host.onMount(function(api){
+  window.__hv2.onMount(function(api){
     var el = api.el;
-    // resumeAt: the saved position still waiting for the song to load (select() clears the stored one)
-    var songs = [], i = 0, saveAt = 0, autoOff = false, resumeAt = 0;
+    var songs = [], i = 0, saveAt = 0, autoOff = false;
     var fetching = false, lastFetch = 0, badFiles = 0, dragging = false;
     var REFRESH_MS = 30000;
     var box, audio, bg, disc, status, title, artist, album, time, shuffleTop, listEl;
@@ -317,15 +308,14 @@ export const MUSIC_JS = MUSIC.enabled ? `(function(){
         if (!audio.src) return;
         if (songs.length > 1 && ++badFiles < songs.length){ step(1, true); return; }
         title.textContent = 'Không phát được bài này';
-        disc.setAttribute('title', 'Không phát được bài này');
       });
       window.addEventListener('pagehide', saveTime);
       document.addEventListener('visibilitychange', function(){ if (document.hidden) saveTime(); });
       // once the download sidebar slides in (same corner), the player tucks itself away unless the viewer opened it again;
-      // back at the top of the page it comes out. Leaving the home page's own view (not the site) stops the sound.
+      // back at the top of the page it comes out. Leaving the home page stops the sound.
       new MutationObserver(function(){
         var html = document.documentElement;
-        if (!PAGE && !html.classList.contains('hv2') && playing()) audio.pause();
+        if (!html.classList.contains('hv2') && playing()) audio.pause();
         // scrolling down tucks the player away (the download sidebar takes the same corner); coming back to the top does
         // NOT open it again — the viewer decides when it opens, and that choice is remembered
         var scrolled = html.classList.contains('hv2-scrolled');
@@ -371,7 +361,7 @@ export const MUSIC_JS = MUSIC.enabled ? `(function(){
       var now = Date.now();
       if (now - saveAt > 5000){ saveAt = now; saveTime(); }
     }
-    function saveTime(){ set(K.i, String(i)); set(K.t, String(Math.floor(audio.readyState ? audio.currentTime || 0 : resumeAt))); }
+    function saveTime(){ set(K.i, String(i)); set(K.t, String(Math.floor(audio.currentTime || 0))); }
 
     function select(n, play){
       if (!songs.length) return;
@@ -382,7 +372,6 @@ export const MUSIC_JS = MUSIC.enabled ? `(function(){
       title.setAttribute('title', s.title);
       artist.textContent = s.artist || '—';
       album.textContent = s.title;
-      disc.setAttribute('title', s.artist ? s.title + ' – ' + s.artist : s.title);
       disc.style.backgroundImage = 'url("' + cover(s) + '")';
       bg.style.backgroundImage = 'url("' + cover(s) + '")';
       // on phones the collapsed player IS this cover (see --hv2-mu-cover in the compact rules)
@@ -413,12 +402,10 @@ export const MUSIC_JS = MUSIC.enabled ? `(function(){
         audio.play().catch(function(){});
       };
       var arm = function(){
-        var once = function(e){
+        var once = function(){
           document.removeEventListener('pointerdown', once, true);
           document.removeEventListener('keydown', once, true);
           document.removeEventListener('touchstart', once, true);
-          // a first touch ON the play button is left to that button: starting here too would make its click pause again
-          if (e && e.target && status.contains(e.target)) return;
           go();
         };
         document.addEventListener('pointerdown', once, true);
@@ -445,16 +432,12 @@ export const MUSIC_JS = MUSIC.enabled ? `(function(){
     function fill(list){
       fillList(list);
       var saved = parseInt(get(K.i, '0'), 10);
-      // read the position before select(), which resets the stored one to 0: this is what lets the music carry on
-      // where it was when the visitor moves to another page
-      var t = parseInt(get(K.t, '0'), 10);
       select(isFinite(saved) && saved >= 0 && saved < songs.length ? saved : 0, false);
+      var t = parseInt(get(K.t, '0'), 10);
       if (isFinite(t) && t > 0){
-        resumeAt = t;
         audio.addEventListener('loadedmetadata', function once(){
           audio.removeEventListener('loadedmetadata', once);
           if (t < audio.duration - 2) audio.currentTime = t;
-          resumeAt = 0;
         });
       }
       // phones start with just the disc so the page stays clear; on a mouse screen the panel is open
@@ -516,7 +499,3 @@ export const MUSIC_JS = MUSIC.enabled ? `(function(){
     else window.addEventListener('load', function(){ setTimeout(function(){ load(0); }, 800); });
   });
 })();` : '';
-
-// The same player for the site's other pages (news, early sign-up; never /quan-tri, not the old wiki): its rules and script in one
-// piece, to put anywhere in the page.
-export const MUSIC_PAGE_HTML = MUSIC.enabled ? `<style>${MUSIC_CSS}</style><script>${MUSIC_JS}</script>` : '';

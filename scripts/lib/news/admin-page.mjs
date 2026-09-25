@@ -82,15 +82,6 @@ table.posts{border-collapse:collapse;width:100%;min-width:860px}
 @media (max-width:980px){.side{position:static}}
 .box{border:1px solid var(--line);border-radius:var(--r);background:var(--panel);padding:16px}
 .box h3{margin:0 0 12px;font-size:14px;font-weight:600;color:var(--gold-hi)}
-/* early sign-ups: search row, pager, milestones box */
-.dks-find{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
-.dks-find .inp{flex:1 1 220px;max-width:320px}
-.dks-find .meta{margin-left:auto}
-.dks-pager{display:flex;gap:10px;align-items:center;justify-content:center;margin:16px 0}
-.dks-moc{margin:24px 0 40px}
-.dks-moc .row{display:flex;gap:8px;flex-wrap:wrap}
-.dks-moc .inp{flex:1 1 260px;max-width:480px}
-.posts-dks td:first-child b{font-variant-numeric:tabular-nums;letter-spacing:.03em}
 .radios{display:flex;flex-direction:column;gap:8px}
 .radios label{display:flex;gap:8px;align-items:center;cursor:pointer;font-size:14px}
 .radios input,.chk input{accent-color:var(--ember)}
@@ -211,9 +202,6 @@ html[data-theme="light"] .btn-danger:hover{background:rgba(179,55,42,.08)}
   .posts td:last-child .acts{flex-wrap:wrap;gap:8px}
   .posts td:last-child .acts .btn{flex:1 1 auto;min-height:44px;font-size:14px}
   .users .acts{flex-wrap:wrap}
-  .dks-find .inp,.dks-moc .inp{max-width:none;min-height:44px}
-  .dks-find .meta{margin-left:0;flex:1 0 100%}
-  .dks-find .btn,.dks-pager .btn,.dks-moc .btn{min-height:44px}
   .posts audio{width:100%;max-width:none}
 
   /* a sideways swipe here changes section, so the browser must not read it as its own back/forward gesture
