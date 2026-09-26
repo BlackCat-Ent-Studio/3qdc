@@ -19,6 +19,7 @@ import { HEROES_MOBILE_CSS, HEROES_MOBILE_JS } from './section-heroes-mobile.mjs
 import { COMPACT_MQ, COMPACT_HEADER_H } from './compact.mjs';
 import { MASCOT_CSS, MASCOT_JS } from './section-mascot.mjs';
 import { MUSIC_CSS, MUSIC_JS } from './section-music.mjs';
+import { SNOW_CSS, SNOW_JS } from './section-snow.mjs';
 
 const HEADER_H = 88;
 // the blurred header background runs this far down, fading out below the 88px bar
@@ -801,7 +802,7 @@ const JS = `(function(){
 
 // Section scripts come after the layout script so window.__hv2 exists when they register.
 export const LAYOUT_V2_HTML =
-  `<style data-home-v2>${CSS}${NEWS_CSS}${HEROES_CSS}${HEROES_MOBILE_CSS}${FEATURES_CSS}${SHOW_TREASURE ? TREASURE_CSS : TREASURE_OFF_CSS}${MASCOT_CSS}${MUSIC_CSS}</style>` +
+  `<style data-home-v2>${CSS}${NEWS_CSS}${HEROES_CSS}${HEROES_MOBILE_CSS}${FEATURES_CSS}${SHOW_TREASURE ? TREASURE_CSS : TREASURE_OFF_CSS}${MASCOT_CSS}${MUSIC_CSS}${SNOW_CSS}</style>` +
   `<script data-home-v2>${JS}</script>` +
   `<script data-home-v2>${NEWS_JS}</script>` +
   `<script data-home-v2>${HEROES_JS}</script>` +
@@ -809,4 +810,5 @@ export const LAYOUT_V2_HTML =
   `<script data-home-v2>${FEATURES_JS}</script>` +
   (MASCOT_JS ? `<script data-home-v2>${MASCOT_JS}</script>` : '') +
   (MUSIC_JS ? `<script data-home-v2>${MUSIC_JS}</script>` : '') +
+  (SNOW_JS ? `<script data-home-v2>${SNOW_JS}</script>` : '') +
   (SHOW_TREASURE ? `<script data-home-v2>${TREASURE_JS}</script>` : '');
