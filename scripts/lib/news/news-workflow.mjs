@@ -4,7 +4,7 @@
 //  role     | may
 //  editor   | create and edit drafts · send a draft for review · take a pending article back to draft
 //  manager  | everything on every article: save, publish now, schedule, send back with a note, unpublish, pin, delete
-import { SLUG_RE, SLUG_MAX, isCat, IMAGE_PATH_RE, TITLE_MAX, SUMMARY_MAX, CONTENT_MAX } from './news-config.mjs';
+import { SLUG_RE, SLUG_MAX, isCat, IMAGE_PATH_RE, TITLE_MAX, SUMMARY_MAX, CONTENT_MAX, SPLIT_SITES, isSite, siteOf } from './news-config.mjs';
 import { cleanContent, textOf } from './news-sanitize.mjs';
 import { PUBLISH_AT_RE, isValid } from './news-store.mjs';
 
@@ -30,11 +30,15 @@ export function readFields(input, { posts, id }) {
   const summary = plain(input.summary);
   if (summary.length > SUMMARY_MAX) return fail(400, `Tóm tắt dài quá ${SUMMARY_MAX} ký tự.`);
   if (!isCat(input.category)) return fail(400, 'Chọn mục cho bài.');
+  if (SPLIT_SITES && !isSite(input.site)) return fail(400, 'Chọn trang đăng bài: Trang chính hoặc Trang phụ.');
   const cover = String(input.cover ?? '');
   if (cover && !IMAGE_PATH_RE.test(cover)) return fail(400, 'Ảnh bìa không hợp lệ.');
   const content = cleanContent(input.content);
   if (content.length > CONTENT_MAX) return fail(413, 'Nội dung quá dài.');
-  return { fields: { title, slug, summary, category: input.category, cover, content } };
+  const fields = { title, slug, summary, category: input.category, cover, content };
+  // with the split switched off an article keeps whatever site it had
+  if (SPLIT_SITES) fields.site = input.site;
+  return { fields };
 }
 
 // What a visitor-facing article must have before it is sent for review or published.
@@ -94,7 +98,7 @@ export function decide(user, cur, input, ctx) {
   if (read.error) return read;
   const base = cur || { id: ctx.newId, author: user.name, authorUser: user.username, createdAt: ctx.nowText, status: 'draft', publishAt: null, pinned: false, reviewNote: '' };
   const post = { ...base, ...read.fields, updatedBy: user.name, updatedAt: ctx.nowText };
-  // only a manager pins; one pinned article per section
+  // only a manager pins; one pinned article per section of each site
   post.pinned = manager && input.pinned === true;
 
   switch (action) {
@@ -131,7 +135,9 @@ export function decide(user, cur, input, ctx) {
     if (missing) return missing;
   }
   if (!isValid(post)) return fail(400, 'Dữ liệu bài không hợp lệ.');
-  const unpin = post.pinned ? ctx.posts.filter((p) => p.pinned && p.id !== post.id && p.category === post.category).map((p) => p.id) : [];
+  const unpin = post.pinned
+    ? ctx.posts.filter((p) => p.pinned && p.id !== post.id && p.category === post.category && siteOf(p) === siteOf(post)).map((p) => p.id)
+    : [];
   return { post, unpin };
 }
 
@@ -141,7 +147,7 @@ export const mayDelete = (user) => user.role === 'manager';
 // The list the editor pages show (no article bodies).
 export function summaryOf(p) {
   return {
-    id: p.id, slug: p.slug, title: p.title, category: p.category, cover: p.cover || '', status: p.status,
+    id: p.id, slug: p.slug, title: p.title, category: p.category, site: siteOf(p), cover: p.cover || '', status: p.status,
     publishAt: p.publishAt || null, pinned: !!p.pinned, author: p.author || '', updatedBy: p.updatedBy || '',
     updatedAt: p.updatedAt || '', reviewNote: p.reviewNote || '',
   };

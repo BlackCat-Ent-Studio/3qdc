@@ -11,6 +11,13 @@ export function adminApp() {
   const $$ = (s, r) => Array.prototype.slice.call((r || document).querySelectorAll(s));
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const catName = (id) => (CATS.find((c) => c.id === id) || {}).name || '';
+  // sites an article can go to (empty when the split is switched off: then there is nothing to choose)
+  const SITES = DATA.sites || [];
+  const siteName = (id) => (SITES.find((s) => s.id === id) || {}).name || '';
+  // articles saved before the choice existed belong to the main site
+  const siteOfPost = (p) => (p.site === 'phu' ? 'phu' : 'chinh');
+  // where a reader finds the article: its address on the main site, or its reader link on the side site
+  const addrPrefix = (site) => (SITES.length && site === 'phu' ? '3qdaichien.wanmeivn.com/#tin/' : `${HOST}/tin-tuc/`);
   const fmtTime = (iso) => (iso ? `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)} ${iso.slice(11, 16)}` : '—');
   const slugify = (s) => String(s).normalize('NFD').replace(/\p{M}/gu, '').replace(/đ/g, 'd').replace(/Đ/g, 'D')
     .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80).replace(/-+$/, '');
@@ -266,7 +273,7 @@ ${rows.map((u) => {
   }
 
   // ---------- article list ----------
-  const listView = { state: 'all', cat: 'all' };
+  const listView = { state: 'all', cat: 'all', site: 'all' };
 
   async function renderList() {
     cleanupEditor();
@@ -279,7 +286,8 @@ ${rows.map((u) => {
     const posts = r.data.items;
     let pendingBar = '';
     const draw = () => {
-      const rows = posts.filter((p) => (listView.state === 'all' || stateOf(p) === listView.state) && (listView.cat === 'all' || p.category === listView.cat))
+      const rows = posts.filter((p) => (listView.state === 'all' || stateOf(p) === listView.state) && (listView.cat === 'all' || p.category === listView.cat)
+          && (listView.site === 'all' || siteOfPost(p) === listView.site))
         .sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)));
       const n = (s) => posts.filter((p) => s === 'all' || stateOf(p) === s).length;
       const hint = me.role === 'manager'
@@ -287,14 +295,15 @@ ${rows.map((u) => {
         : 'Viết xong bấm <b>Gửi duyệt</b> — Quản lý sẽ xem và đăng. Bài đã gửi thì rút về nháp mới sửa được.';
       $('main').innerHTML = `${pendingBar}<div class="adm-top"><div><h1>Bài viết</h1><p>${hint}</p></div><a class="btn btn-fire" href="#/viet-bai">+ Viết bài mới</a></div>
 <div class="filters">${['all', 'published', 'scheduled', 'pending', 'draft'].map((s) => `<button type="button" class="tab${listView.state === s ? ' on' : ''}" data-st="${s}">${s === 'all' ? 'Tất cả' : STATE[s]}<small>${n(s)}</small></button>`).join('')}
-<select id="fcat" aria-label="Lọc theo mục"><option value="all">Mọi mục</option>${CATS.map((c) => `<option value="${c.id}"${listView.cat === c.id ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select></div>
+<select id="fcat" aria-label="Lọc theo mục"><option value="all">Mọi mục</option>${CATS.map((c) => `<option value="${c.id}"${listView.cat === c.id ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select>
+${SITES.length ? `<select id="fsite" aria-label="Lọc theo trang"><option value="all">Mọi trang</option>${SITES.map((s) => `<option value="${s.id}"${listView.site === s.id ? ' selected' : ''}>${esc(s.name)}</option>`).join('')}</select>` : ''}</div>
 <div class="tbl-wrap"><table class="posts posts-bai"><thead><tr><th>Bài viết</th><th>Mục</th><th>Trạng thái</th><th>Người viết</th><th>Sửa lần cuối</th><th></th></tr></thead><tbody>
 ${rows.map((p) => {
     const st = stateOf(p);
     const canEdit = me.role === 'manager' || p.status === 'draft';
     return `<tr data-id="${p.id}">
-<td><div class="p-title">${p.cover ? `<img class="cover" src="${esc(p.cover)}" alt="" loading="lazy">` : '<div class="cover"></div>'}<div><b>${esc(p.title)}</b><small>/tin-tuc/${esc(p.slug)}</small>${p.pinned ? ' <span class="pin">Ghim</span>' : ''}${p.lockedBy ? `<div class="lock">● ${esc(p.lockedBy)} đang sửa bài này</div>` : ''}${p.status === 'draft' && p.reviewNote ? `<div class="lock">↩ Trả lại: ${esc(p.reviewNote)}</div>` : ''}</div></div></td>
-<td><span class="chip c-${esc(p.category)}">${esc(catName(p.category))}</span></td>
+<td><div class="p-title">${p.cover ? `<img class="cover" src="${esc(p.cover)}" alt="" loading="lazy">` : '<div class="cover"></div>'}<div><b>${esc(p.title)}</b><small>${SITES.length && siteOfPost(p) === 'phu' ? '3qdaichien/#tin/' : '/tin-tuc/'}${esc(p.slug)}</small>${p.pinned ? ' <span class="pin">Ghim</span>' : ''}${p.lockedBy ? `<div class="lock">● ${esc(p.lockedBy)} đang sửa bài này</div>` : ''}${p.status === 'draft' && p.reviewNote ? `<div class="lock">↩ Trả lại: ${esc(p.reviewNote)}</div>` : ''}</div></div></td>
+<td><span class="chip c-${esc(p.category)}">${esc(catName(p.category))}</span>${SITES.length ? `<div style="margin-top:6px"><span class="chip c-${siteOfPost(p)}">${esc(siteName(siteOfPost(p)))}</span></div>` : ''}</td>
 <td><span class="pill s-${st}">${STATE[st]}</span>${st === 'scheduled' || st === 'published' ? `<div class="meta" style="margin-top:4px">${fmtTime(p.publishAt)}</div>` : ''}</td>
 <td><div class="person">${avatar(p.author)}${esc(p.author)}</div></td>
 <td class="meta">${fmtTime(p.updatedAt)}<br>bởi ${esc(p.updatedBy)}</td>
@@ -304,6 +313,7 @@ ${rows.length ? '' : `<tr><td colspan="6" class="meta" style="text-align:center;
 </tbody></table></div>`;
       $$('[data-st]').forEach((b) => b.addEventListener('click', () => { listView.state = b.getAttribute('data-st'); draw(); }));
       $('#fcat').addEventListener('change', (e) => { listView.cat = e.target.value; draw(); });
+      if ($('#fsite')) $('#fsite').addEventListener('change', (e) => { listView.site = e.target.value; draw(); });
       // managers delete straight from the list: first click asks, second click (within 4 s) moves it to the trash
       $$('[data-del]').forEach((b) => b.addEventListener('click', async () => {
         const id = +b.getAttribute('data-del');
@@ -565,6 +575,8 @@ ${d.pages > 1 ? `<div class="dks-pager"><button type="button" class="btn btn-gho
     const st = post ? stateOf(post) : 'draft';
     const live = !!post && st === 'published';
     const editable = manager || !post || post.status === 'draft';
+    // a new article has no site until the writer picks one; an existing one shows where it is now
+    const site0 = post ? siteOfPost(post) : '';
     let slugTouched = !!post;
     const mode0 = st === 'scheduled' ? 'scheduled' : st === 'published' ? 'now' : 'draft';
     const defaultWhen = post && st === 'scheduled' ? post.publishAt.slice(0, 16) : siteNowLocal(Date.now() + 86400e3).slice(0, 11) + '20:00';
@@ -606,7 +618,7 @@ ${post ? `<p><span class="pill s-${st}">${STATE[st]}</span>${post.publishAt ? ` 
 <div class="ed">
 <div>
 <div class="field"><label for="e-title">Tiêu đề</label><textarea id="e-title" class="inp t-inp" rows="2" maxlength="150" placeholder="Ví dụ: Khai mở máy chủ S2 Trường Bản">${esc(p.title)}</textarea></div>
-<div class="field" style="margin-top:-8px"><div class="slug"><span>${esc(HOST)}/tin-tuc/</span><input id="e-slug" value="${esc(p.slug)}" aria-label="Đường dẫn bài" placeholder="tu-dong-tao-tu-tieu-de" maxlength="80" spellcheck="false"></div></div>
+<div class="field" style="margin-top:-8px"><div class="slug"><span id="e-addr">${esc(addrPrefix(site0 || 'chinh'))}</span><input id="e-slug" value="${esc(p.slug)}" aria-label="Đường dẫn bài" placeholder="tu-dong-tao-tu-tieu-de" maxlength="80" spellcheck="false"></div></div>
 <div class="field"><label for="e-sum">Tóm tắt <span class="lbl-note">— hiện trên thẻ bài và khi chia sẻ</span></label>
 <textarea id="e-sum" class="inp" rows="2" maxlength="220" placeholder="Một hai câu nói bài này có gì cho người chơi">${esc(p.summary)}</textarea><span class="count" id="e-count"></span></div>
 <div class="field"><span class="lbl">Nội dung</span>
@@ -623,6 +635,8 @@ ${post ? `<p><span class="pill s-${st}">${STATE[st]}</span>${post.publishAt ? ` 
 <div class="side">
 <div class="box"><h3>Đăng bài</h3>${publishBox}<div class="err" id="e-err" role="alert" hidden></div></div>
 ${reviewBox}
+${SITES.length ? `<div class="box"><h3>Đăng lên</h3><div class="cats sites" role="radiogroup" aria-label="Đăng lên trang">${SITES.map((s) => `<label class="c-${s.id}" title="${esc(s.hint)}"><input type="radio" name="e-site" value="${s.id}"${site0 === s.id ? ' checked' : ''}${editable ? '' : ' disabled'}><span>${esc(s.name)}</span></label>`).join('')}</div>
+<p class="meta small" style="margin:8px 0 0">${site0 ? esc((SITES.find((s) => s.id === site0) || {}).hint || '') : 'Chọn một trang — bài chỉ hiện ở trang đó.'}</p></div>` : ''}
 <div class="box"><h3>Mục</h3><div class="cats">${CATS.map((c) => `<label class="c-${c.id}"><input type="radio" name="e-cat" value="${c.id}"${p.category === c.id ? ' checked' : ''}${editable ? '' : ' disabled'}><span>${esc(c.name)}</span></label>`).join('')}</div></div>
 <div class="box"><h3>Ảnh bìa</h3>
 <img class="cover" id="e-cover" src="${esc(p.cover)}" alt=""${p.cover ? '' : ' hidden'}>
@@ -642,10 +656,17 @@ ${dangerBox}
     [title, slug, sum].forEach((el) => { el.disabled = !editable; });
     const mode = () => { const r = $('input[name="e-mode"]:checked'); return r ? r.value : 'draft'; };
     const cat = () => $('input[name="e-cat"]:checked').value;
+    const siteVal = () => { const r = $('input[name="e-site"]:checked'); return r ? r.value : null; };
     const collect = () => ({
       title: title.value.trim(), slug: slug.value || slugify(title.value), summary: sum.value.trim(), content: body.innerHTML,
-      category: cat(), cover: p.cover || '', pinned: !!($('#e-pin') && $('#e-pin').checked),
+      category: cat(), site: siteVal(), cover: p.cover || '', pinned: !!($('#e-pin') && $('#e-pin').checked),
     });
+    // the hint under "Đăng lên" follows the choice
+    $$('input[name="e-site"]').forEach((r) => r.addEventListener('change', () => {
+      const s = SITES.find((x) => x.id === siteVal()); const hint = $('.sites') && $('.sites').nextElementSibling;
+      if (hint && s) hint.textContent = s.hint;
+      if ($('#e-addr')) $('#e-addr').textContent = addrPrefix(siteVal());
+    }));
     let saved = JSON.stringify(collect());
     dirty = () => editable && JSON.stringify(collect()) !== saved;
 
@@ -878,6 +899,7 @@ ${uploads.length ? `<div class="pop-row"><span class="lbl">Ảnh đã tải lên
       const old = r.data.revision.post;
       title.value = old.title; slug.value = old.slug; sum.value = old.summary || ''; body.innerHTML = old.content;
       const c = $(`input[name="e-cat"][value="${old.category}"]`); if (c) c.checked = true;
+      const s = $(`input[name="e-site"][value="${siteOfPost(old)}"]`); if (s) s.checked = true;
       if (old.cover) setCover(old.cover);
       syncFb();
       toast(`Đã nạp bản lúc ${fmtTime(r.data.revision.savedAt)} — bấm Lưu để giữ bản này`);

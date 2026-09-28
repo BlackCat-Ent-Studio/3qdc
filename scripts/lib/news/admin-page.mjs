@@ -2,7 +2,7 @@
 // an article (any state, signed-in accounts only) and the JSON API (admin-api.mjs).
 // These pages are never indexed, never framed, and run only scripts carrying this response's nonce.
 import { randomBytes } from 'node:crypto';
-import { CATS, IMAGE_LIBRARY, LOGO, SITE_ORIGIN } from './news-config.mjs';
+import { CATS, IMAGE_LIBRARY, LOGO, SITE_ORIGIN, SPLIT_SITES, SITES, onSite, siteOf } from './news-config.mjs';
 import { NEWS_CSS, THEME_BUTTON, THEME_HEAD_JS, THEME_JS, esc } from './news-theme.mjs';
 import { handleAdminApi } from './admin-api.mjs';
 import { currentUser } from './admin-auth.mjs';
@@ -101,6 +101,9 @@ table.posts{border-collapse:collapse;width:100%;min-width:860px}
 .cats input:checked+span{border-color:var(--c);color:var(--c);background:rgba(255,255,255,.04)}
 html[data-theme="light"] .cats input:checked+span{background:rgba(0,0,0,.04)}
 .cats input:focus-visible+span{outline:2px solid var(--gold-hi);outline-offset:2px}
+.c-chinh{--c:var(--gold-hi)}.c-phu{--c:#4fb6e8}
+.sites{margin-bottom:4px}
+.sites.need span{border-color:var(--ember)}
 .chk{display:flex;gap:8px;align-items:center;font-size:14px;margin-top:12px;cursor:pointer}
 .btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
 .btns .btn-fire{flex:1}
@@ -271,7 +274,7 @@ function sendHtml(req, res, status, html, nonce) {
 }
 
 function appPage(nonce) {
-  const data = { cats: CATS, library: IMAGE_LIBRARY, host: SITE_ORIGIN.replace(/^https?:\/\//, ''), logo: LOGO, roles: ROLES, themeButton: THEME_BUTTON };
+  const data = { cats: CATS, sites: SPLIT_SITES ? SITES : [], library: IMAGE_LIBRARY, host: SITE_ORIGIN.replace(/^https?:\/\//, ''), logo: LOGO, roles: ROLES, themeButton: THEME_BUTTON };
   return `<!doctype html><html lang="vi"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
@@ -295,7 +298,8 @@ function appPage(nonce) {
 async function previewPage(id, nonce) {
   const post = (await allPosts()).find((p) => p.id === id);
   if (!post) return null;
-  const visible = await visiblePosts();
+  // "more articles" in the preview come from the article's own site
+  const visible = onSite(await visiblePosts(), siteOf(post));
   const others = visible.filter((p) => p.id !== post.id);
   const html = renderDetailPage(post, [post, ...others]);
   const state = post.status === 'published' && Date.parse(post.publishAt) > Date.now() ? 'Hẹn giờ' : STATE_WORDS[post.status];

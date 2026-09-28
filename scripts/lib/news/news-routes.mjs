@@ -1,6 +1,6 @@
 // news-routes.mjs — answers /tin-tuc, /tin-tuc/<slug>, /api/tin-tuc and the editor pages under /quan-tri;
 // returns false for every other request.
-import { CATS, SLUG_RE, SLUG_MAX, isCat } from './news-config.mjs';
+import { CATS, SLUG_RE, SLUG_MAX, isCat, siteOfHost, onSite } from './news-config.mjs';
 import { visiblePosts } from './news-store.mjs';
 import { renderListPage, renderDetailPage, renderNotFound } from './news-pages.mjs';
 import { handleAdmin } from './admin-page.mjs';
@@ -23,17 +23,20 @@ export async function handleNews(req, res, cleanPath, u) {
   // pictures uploaded for articles (/tin-tuc-anh/YYYY/MM/<name>)
   if (await serveUpload(req, res, cleanPath)) return true;
   if (req.method !== 'GET' && req.method !== 'HEAD') return false;
+  // only the articles of the site this address belongs to (main site or 3qdaichien, see SITES)
+  const sitePosts = async () => onSite(await visiblePosts(), siteOfHost(req.headers.host));
 
   if (cleanPath === '/tin-tuc') {
     const want = u.searchParams.get('muc');
-    sendPage(req, res, 200, renderListPage(await visiblePosts(), isCat(want) ? want : CATS[0].id));
+    sendPage(req, res, 200, renderListPage(await sitePosts(), isCat(want) ? want : CATS[0].id));
     return true;
   }
 
-  // every address below /tin-tuc/ belongs to the news pages: an unknown, unpublished or malformed one is a 404 page
+  // every address below /tin-tuc/ belongs to the news pages: an unknown, unpublished, other-site or malformed one is a
+  // 404 page
   if (cleanPath.startsWith('/tin-tuc/')) {
     const slug = cleanPath.slice('/tin-tuc/'.length);
-    const visible = await visiblePosts();
+    const visible = await sitePosts();
     const post = slug.length <= SLUG_MAX && SLUG_RE.test(slug) ? visible.find((p) => p.slug === slug) : null;
     if (post) sendPage(req, res, 200, renderDetailPage(post, visible));
     else sendPage(req, res, 404, renderNotFound());
@@ -45,7 +48,7 @@ export async function handleNews(req, res, cleanPath, u) {
     const muc = u.searchParams.get('muc');
     const n = parseInt(u.searchParams.get('limit') || '4', 10);
     const limit = Number.isFinite(n) ? Math.min(50, Math.max(1, n)) : 4;
-    const items = (await visiblePosts())
+    const items = (await sitePosts())
       .filter((p) => !isCat(muc) || p.category === muc)
       .slice(0, limit)
       .map((p) => ({ slug: p.slug, title: p.title, category: p.category, summary: p.summary || '', cover: p.cover || '', publishAt: p.publishAt, pinned: !!p.pinned }));

@@ -25,6 +25,28 @@ export const LOGO = '/3qdc-vi/home/logo-3qdc.webp';
 export const catName = (id) => (CATS.find((c) => c.id === id) || {}).name || '';
 export const isCat = (id) => CATS.some((c) => c.id === id);
 
+// Which site an article appears on, for the game-test period: the main site (3qdc: home page block, /tin-tuc, article
+// pages) or the one-page site 3qdaichien.wanmeivn.com (its Caddy block passes /api/tin-tuc and /tin-tuc/* here with its
+// own Host). Every article belongs to exactly one; articles saved before this existed belong to the main site.
+// SPLIT_SITES = false removes the choice from the editor and shows every article on both addresses again.
+export const SPLIT_SITES = true;
+export const SITES = [
+  { id: 'chinh', name: 'Trang chính', hint: '3qdc.wanmeivn.com — trang chủ, /tin-tuc' },
+  { id: 'phu', name: 'Trang phụ', hint: '3qdaichien.wanmeivn.com' },
+];
+const SIDE_HOSTS = ['3qdaichien.wanmeivn.com'];
+export const isSite = (id) => SITES.some((s) => s.id === id);
+export const siteName = (id) => (SITES.find((s) => s.id === id) || SITES[0]).name;
+// the site an article shows on
+export const siteOf = (p) => (SPLIT_SITES && p.site === 'phu' ? 'phu' : 'chinh');
+// the site a request is for, from its Host header
+export function siteOfHost(host) {
+  const h = String(host || '').toLowerCase().replace(/:\d+$/, '');
+  return SPLIT_SITES && SIDE_HOSTS.includes(h) ? 'phu' : 'chinh';
+}
+// articles of one site; with the split switched off every site gets every article
+export const onSite = (posts, site) => (SPLIT_SITES ? posts.filter((p) => siteOf(p) === site) : posts);
+
 // --- editor pages (/quan-tri) ---
 // Pages allowed to send changes (the Origin header of every POST); the draft server lists its own address here.
 export const ALLOWED_ORIGINS = (process.env.NEWS_ALLOWED_ORIGINS || SITE_ORIGIN).split(',').map((s) => s.trim().replace(/\/+$/, '')).filter(Boolean);

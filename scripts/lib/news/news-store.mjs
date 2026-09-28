@@ -6,7 +6,7 @@
 // restored from there as a draft.
 import { readdir, readFile, mkdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
-import { DATA_DIR, SLUG_RE, SLUG_MAX, isCat } from './news-config.mjs';
+import { DATA_DIR, SLUG_RE, SLUG_MAX, isCat, isSite } from './news-config.mjs';
 import { writeJsonAtomic, siteNow } from './news-files.mjs';
 
 const STATUSES = new Set(['draft', 'pending', 'published']);
@@ -23,6 +23,7 @@ export function isValid(p) {
     && typeof p.slug === 'string' && p.slug.length <= SLUG_MAX && SLUG_RE.test(p.slug)
     && typeof p.title === 'string' && p.title.trim() !== ''
     && isCat(p.category) && STATUSES.has(p.status)
+    && (p.site == null || isSite(p.site))
     && typeof p.content === 'string'
     && (p.publishAt == null || (typeof p.publishAt === 'string' && PUBLISH_AT_RE.test(p.publishAt)));
 }
