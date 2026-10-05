@@ -276,6 +276,8 @@ export function startServer(port = 8080) {
       if (await handleSignup(req, res, cleanPath)) return;
       if (BUILDB_PATHS[cleanPath]) return sendHtml(res, await buildBEntry(BUILDB_PATHS[cleanPath], cleanPath));
       if (cleanPath === '/huong-dan' || cleanPath === '/wiki') return sendHtml(res, await wikiEntry());
+      // the privacy policy (linked from the game and the App Store / TestFlight listing)
+      if (cleanPath === '/privacy' || cleanPath === '/chinh-sach-bao-mat') return await send(res, join(OVERRIDES, 'privacy', 'index.html'), MIME['.html'], req);
 
       // --- the home page's music player asks for the song list here ---
       if (pathname === MUSIC_URL) {
