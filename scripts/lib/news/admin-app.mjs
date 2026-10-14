@@ -71,7 +71,7 @@ export function adminApp() {
 
   function header(active) {
     const nav = me.role === 'manager'
-      ? `<nav class="adm-nav" aria-label="Mục quản trị">${[['posts', '#/', 'Bài viết'], ['music', '#/nhac', 'Nhạc nền'], ['signup', '#/dang-ky-som', 'Đăng ký sớm'], ['trash', '#/thung-rac', 'Thùng rác'], ['users', '#/nguoi-dung', 'Người dùng']]
+      ? `<nav class="adm-nav" aria-label="Mục quản trị">${[['posts', '#/', 'Bài viết'], ['music', '#/nhac', 'Nhạc nền'], ['signup', '#/dang-ky-som', 'Đăng ký sớm'], ['phieu', '#/phieu-be-ngoan', 'Phiếu Bé Ngoan'], ['trash', '#/thung-rac', 'Thùng rác'], ['users', '#/nguoi-dung', 'Người dùng']]
         .map(([key, href, label]) => `<a href="${href}"${(active || 'posts') === key ? ' class="on" aria-current="page"' : ''}>${label}</a>`).join('')}</nav>`
       : '';
     // On phones the account row is folded behind this button (CSS hides .who until the header carries data-menu).
@@ -524,6 +524,67 @@ ${d.pages > 1 ? `<div class="dks-pager"><button type="button" class="btn btn-gho
     if (d) draw(d);
   }
 
+  // ---------- gift tickets from Phiếu Bé Ngoan (managers) ----------
+  // Players ask for gifts on phieubengoan.3qdc.wanmeivn.com, one ticket a day. Give the gifts in the game, then mark the
+  // ticket given (or refused) here with an optional reply: the player sees both in their history.
+  const PHIEU_ST = { cho: 'Đang chờ', tra: 'Đã trả', tu: 'Từ chối' };
+  const phieuView = { ngay: 'hom-nay', st: 'all' };
+
+  async function renderPhieu() {
+    cleanupEditor();
+    const mine = screen;
+    app.innerHTML = `${header('phieu')}<main class="wrap"><p class="meta" style="padding:40px 0">Đang tải phiếu…</p></main>`;
+    bindHeader();
+    const qs = () => `ngay=${phieuView.ngay}&st=${phieuView.st}`;
+
+    const load = async () => {
+      const r = await api('GET', `/phieu-be-ngoan?${qs()}`);
+      if (mine !== screen || !me) return null;
+      if (!r.ok) { if (r.status !== 401) $('main').innerHTML = `<div class="err" style="margin:40px 0">${esc(r.data.error)}</div>`; return null; }
+      return r.data;
+    };
+
+    const draw = (d) => {
+      const c = d.counts;
+      $('main').innerHTML = `<div class="adm-top"><div><h1>Phiếu Bé Ngoan</h1>
+<p>Người chơi gửi phiếu ở <a href="https://phieubengoan.3qdc.wanmeivn.com/" target="_blank" rel="noopener">phieubengoan.3qdc.wanmeivn.com</a>. Trả quà trong game xong thì bấm <b>Đã trả</b>, người chơi sẽ thấy trong lịch sử.</p></div>
+<a class="btn btn-fire" href="/quan-tri/api/phieu-be-ngoan/csv?${qs()}" download>Xuất CSV</a></div>
+<div class="filters">${['all', 'cho', 'tra', 'tu'].map((s) => `<button type="button" class="tab${phieuView.st === s ? ' on' : ''}" data-pst="${s}">${s === 'all' ? 'Tất cả' : PHIEU_ST[s]}<small>${fmtNum(c[s])}</small></button>`).join('')}
+<select id="fngay" aria-label="Ngày gửi">${[['hom-nay', 'Hôm nay'], ['hom-qua', 'Hôm qua'], ['tat-ca', 'Mọi ngày']].map(([v, l]) => `<option value="${v}"${phieuView.ngay === v ? ' selected' : ''}>${l}</option>`).join('')}</select>
+<span class="meta">${fmtNum(d.cho)} phiếu đang chờ (mọi ngày)</span></div>
+<div class="tbl-wrap"><table class="posts posts-phieu"><thead><tr><th>Phiếu</th><th>Tài khoản game</th><th>Quà muốn nhận</th><th>Ghi chú</th><th>Trạng thái</th><th>Xử lý</th></tr></thead><tbody>
+${d.items.map((t) => `<tr data-id="${esc(t.id)}">
+<td><b>${esc(t.email)}</b><div class="meta">${fmtTime(t.luc)}</div></td>
+<td><b>${esc(t.acc)}</b><div class="meta">Server ${esc(t.server)}</div></td>
+<td><ul class="phieu-qua">${t.qua.map((g) => `<li>${esc(g)}</li>`).join('')}</ul></td>
+<td class="meta">${esc(t.ghiChu) || '—'}</td>
+<td><span class="pill s-phieu-${esc(t.st)}">${PHIEU_ST[t.st] || esc(t.st)}</span>${t.xuLyBoi ? `<div class="meta" style="margin-top:4px">${esc(t.xuLyBoi)} · ${fmtTime(t.xuLyLuc)}</div>` : ''}</td>
+<td>${t.st === 'cho'
+    ? `<div class="phieu-act"><input class="inp" maxlength="160" placeholder="Phản hồi cho người chơi (không bắt buộc)" aria-label="Phản hồi" data-reply="${esc(t.id)}"><div class="acts"><button type="button" class="btn btn-fire btn-sm" data-set="tra" data-id="${esc(t.id)}">Đã trả</button><button type="button" class="btn btn-danger btn-sm" data-set="tu" data-id="${esc(t.id)}">Từ chối</button></div></div>`
+    : `<div class="meta">${t.phanHoi ? esc(t.phanHoi) : 'Không có phản hồi.'}</div><button type="button" class="btn btn-ghost btn-xs" data-set="cho" data-id="${esc(t.id)}" style="margin-top:6px">Đưa về Đang chờ</button>`}</td></tr>`).join('')}
+${d.items.length ? '' : `<tr><td colspan="6" class="meta" style="text-align:center;padding:30px">${c.all ? 'Không có phiếu nào khớp bộ lọc.' : 'Chưa có phiếu nào trong ngày này.'}</td></tr>`}
+</tbody></table></div>`;
+
+      const again = async () => { const nd = await load(); if (nd) draw(nd); };
+      $$('[data-pst]').forEach((b) => b.addEventListener('click', () => { phieuView.st = b.getAttribute('data-pst'); again(); }));
+      $('#fngay').addEventListener('change', (e) => { phieuView.ngay = e.target.value; again(); });
+      $$('[data-set]').forEach((b) => b.addEventListener('click', async () => {
+        const id = b.getAttribute('data-id');
+        const st = b.getAttribute('data-set');
+        const box = $(`[data-reply="${id}"]`);
+        b.disabled = true;
+        const r = await api('POST', `/phieu-be-ngoan/${id}`, { st, phanHoi: box ? box.value : '' });
+        if (mine !== screen) return;
+        if (!r.ok) { b.disabled = false; if (r.status !== 401) toast(r.data.error || 'Không đổi được trạng thái.'); return; }
+        toast(st === 'cho' ? 'Đã đưa phiếu về Đang chờ' : `Đã đánh dấu: ${PHIEU_ST[st]}`);
+        again();
+      }));
+    };
+
+    const d = await load();
+    if (d) draw(d);
+  }
+
   // ---------- picture upload (cover, pictures in the text) ----------
   const UPLOAD_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
   // Sends one picture file; resolves its /tin-tuc-anh/… address, or null after showing why it failed.
@@ -932,6 +993,7 @@ ${uploads.length ? `<div class="pop-row"><span class="lbl">Ảnh đã tải lên
     else if ((m = h.match(/^\/sua\/(\d+)$/))) renderEditor(+m[1]);
     else if (h === '/nhac' && me.role === 'manager') renderMusic();
     else if (h === '/dang-ky-som' && me.role === 'manager') renderSignups();
+    else if (h === '/phieu-be-ngoan' && me.role === 'manager') renderPhieu();
     else if (h === '/nguoi-dung' && me.role === 'manager') renderUsers();
     else if (h === '/thung-rac' && me.role === 'manager') renderTrash();
     else renderList();
@@ -943,7 +1005,7 @@ ${uploads.length ? `<div class="pop-row"><span class="lbl">Ảnh đã tải lên
   // ---------- sideways swipe between the sections (touch screens only) ----------
   // The sections in tab order; a swipe moves one step and stops at either end rather than wrapping, so the tab strip
   // stays the map of where you are. The editor is left out on purpose: a stray swipe must never drop unsaved text.
-  const SECTIONS = ['#/', '#/nhac', '#/dang-ky-som', '#/thung-rac', '#/nguoi-dung'];
+  const SECTIONS = ['#/', '#/nhac', '#/dang-ky-som', '#/phieu-be-ngoan', '#/thung-rac', '#/nguoi-dung'];
   let slideFrom = '';
 
   function afterRoute() {

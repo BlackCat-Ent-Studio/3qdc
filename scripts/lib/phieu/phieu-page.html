@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Phiếu Bé Ngoan · 3Q Đại Chiến</title>
+<meta name="description" content="Chúa Công muốn nhận quà gì thì ghi vào phiếu. Mỗi ngày một phiếu, quà trả vào hòm thư trong game ngày hôm sau.">
+<link rel="icon" href="/3qdc-vi/home/favicon-3qdc.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap">
+<style>
+@font-face { font-family: "HanSerifViet"; src: url("/3qdc-vi/home/han-serif-viet.woff") format("woff"); font-display: swap; }
+/* one centred column like a Google Form, dressed in the night-blue + gold of 3qdc.wanmeivn.com */
+:root {
+  --bg: #0b0f1e; --panel: #141a2e; --panel-2: #1b2340; --line: #2c3557;
+  --gold: #c9a45c; --gold-hi: #e9c983; --ink: #ece5d3; --muted: #a7a08d;
+  --red: #e2765f; --ok: #6fc49a; --wait: #e9c983;
+  --font-display: "HanSerifViet", "Noto Serif", Georgia, serif;
+  --font-body: "Be Vietnam Pro", "Segoe UI", system-ui, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.6 var(--font-body); min-height: 100vh;
+  background-image: radial-gradient(1200px 500px at 50% -120px, #1d2a55 0%, transparent 70%); }
+.wrap { max-width: 760px; margin: 0 auto; padding-block: 18px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1 { font: 400 clamp(30px, 6vw, 44px)/1.15 var(--font-display); color: var(--gold-hi); margin: 0 0 6px; text-wrap: balance; }
+.linkbtn { background: none; border: 0; color: var(--gold-hi); font: inherit; cursor: pointer; text-decoration: underline; padding: 4px; }
+
+/* sign-in: form left, Điêu Thuyền + typed quote right */
+.login { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); min-height: 100vh; }
+.login-l { display: flex; align-items: center; justify-content: center; padding-block: 40px; padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: 24px; }
+.login-box { width: 100%; max-width: 400px; display: grid; gap: 18px; text-align: center; }
+.login-box .logo { width: 132px; height: auto; margin: 0 auto -4px; }
+.login-box h1 { margin: 0; font-size: clamp(34px, 4vw, 46px); }
+.lead { margin: -6px 0 6px; color: var(--muted); }
+.g-slot { display: flex; justify-content: center; min-height: 44px; }
+.btn-gw { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; background: #fff; color: #1f1f1f; border: 1px solid #fff;
+  border-radius: 12px; padding: 13px 18px; font: 600 15px var(--font-body); cursor: pointer; }
+.btn-gw:hover { box-shadow: 0 0 0 3px #c9a45c55; }
+.btn-gw svg { width: 20px; height: 20px; }
+.thu { display: grid; gap: 8px; text-align: left; }
+.thu input { background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; color: var(--ink); padding: 10px 12px; font: inherit; }
+.login-rules { list-style: none; margin: 4px 0 0; padding: 14px 0 0; border-top: 1px solid var(--line); display: grid; gap: 6px; font-size: 14px; color: var(--muted); text-align: left; }
+.login-rules li { display: flex; gap: 10px; align-items: baseline; }
+.login-rules li::before { content: "◆"; color: var(--gold); font-size: 10px; }
+.login-rules strong { color: var(--ink); font-weight: 600; }
+.login-note { font-size: 12px; color: var(--muted); margin: 0; }
+.login-err { color: var(--red); font-size: 14px; margin: 0; }
+.login-r { position: relative; overflow: hidden; border-left: 1px solid #c9a45c55; background: radial-gradient(60% 55% at 55% 45%, #6b4a1c 0%, #2a1f2f 45%, #0b0f1e 100%); }
+.dt { position: absolute; left: 50%; bottom: 120px; width: min(92%, 760px); height: auto; transform: translateX(-50%); filter: drop-shadow(0 18px 30px #000a); animation: float 7s ease-in-out infinite; }
+@keyframes float { 0%, 100% { transform: translate(-50%, 0) rotate(-.6deg); } 50% { transform: translate(-50%, -14px) rotate(.6deg); } }
+.quote { position: absolute; left: 0; right: 0; bottom: 34px; text-align: center; padding: 0 24px; }
+.quote q { font: 400 clamp(20px, 1.9vw, 27px)/1.35 var(--font-display); color: var(--gold-hi); quotes: "“" "”"; text-shadow: 0 2px 10px #000c; }
+.caret { display: inline-block; width: 2px; height: 1em; background: var(--gold-hi); margin-left: 3px; vertical-align: -0.12em; animation: blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.quote cite { display: block; margin-top: 6px; font: italic 500 14px var(--font-body); color: var(--muted); }
+
+/* header card */
+.hero { border: 1px solid var(--gold); border-radius: 12px; overflow: hidden; background: var(--panel); }
+.hero-art { position: relative; aspect-ratio: 1200 / 362; max-width: 100%; background: #000 url("/3qdc-vi/phieu-be-ngoan/banner.webp") center / cover no-repeat; }
+.hero-art::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 55%, var(--panel) 100%); }
+.hero-art img { position: absolute; left: 18px; top: 14px; width: 112px; height: auto; z-index: 1; filter: drop-shadow(0 2px 6px #000a); }
+.hero-body { padding: 4px 26px 22px; }
+.hero p { margin: 0; max-width: 62ch; }
+.rules { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.rule { font-size: 13px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 3px 11px; }
+.rule strong { color: var(--ink); font-weight: 600; }
+.who { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; justify-content: space-between; border-top: 1px solid var(--line); margin-top: 18px; padding-top: 12px; font-size: 14px; color: var(--muted); }
+.who .email { color: var(--ink); font-weight: 600; }
+
+/* question cards */
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px 24px; margin-top: 12px; transition: border-color .15s; }
+.card:focus-within { border-color: var(--gold); box-shadow: inset 4px 0 0 var(--gold); }
+.card.err { border-color: var(--red); }
+.q { font-weight: 600; font-size: 16px; margin: 0 0 4px; display: block; }
+.star { color: var(--red); margin-left: 3px; }
+.hint { color: var(--muted); font-size: 13px; margin: 0 0 12px; }
+input[type=text], textarea, select { width: 100%; background: transparent; color: var(--ink); font: inherit; border: 0; border-bottom: 1px solid var(--line); padding: 8px 2px; outline: none; border-radius: 0; }
+input[type=text]:focus, textarea:focus, select:focus { border-bottom: 2px solid var(--gold); padding-bottom: 7px; }
+select { background: var(--panel); cursor: pointer; }
+textarea { resize: vertical; min-height: 44px; }
+.errmsg { color: var(--red); font-size: 13px; margin-top: 8px; }
+.gifts { display: grid; gap: 6px; }
+.gift { display: grid; grid-template-columns: 26px 1fr 34px; align-items: center; gap: 8px; }
+.gift .n { color: var(--gold); font-variant-numeric: tabular-nums; font-size: 13px; text-align: right; }
+.x { width: 34px; height: 34px; border-radius: 50%; border: 0; background: transparent; color: var(--muted); font-size: 20px; cursor: pointer; line-height: 1; }
+.x:hover { background: var(--panel-2); color: var(--ink); }
+.add { margin-top: 10px; display: inline-flex; align-items: center; gap: 8px; background: transparent; border: 1px dashed var(--gold); color: var(--gold-hi); font: 600 14px var(--font-body); padding: 8px 14px; border-radius: 8px; cursor: pointer; }
+.add:hover { background: #c9a45c18; }
+.add:disabled { opacity: .45; cursor: not-allowed; }
+.actions { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; justify-content: space-between; margin-top: 18px; }
+.btn-scroll { position: relative; width: min(300px, 100%); aspect-ratio: 640 / 183; border: 0; cursor: pointer; background: url("/3qdc-vi/phieu-be-ngoan/nut-vang.webp") center / contain no-repeat; font: 400 22px var(--font-display); color: #3a2208; padding: 0; transition: transform .12s, filter .12s; }
+.btn-scroll:hover { filter: brightness(1.08); }
+.btn-scroll:active { transform: translateY(2px) scale(.99); }
+.btn-scroll:disabled { filter: grayscale(.6) brightness(.8); cursor: wait; }
+.clear { background: none; border: 0; color: var(--gold-hi); font: 600 14px var(--font-body); cursor: pointer; padding: 6px; }
+.form-err { color: var(--red); margin: 12px 0 0; }
+.done { border-color: var(--gold); text-align: center; padding: 28px 24px; }
+.done h2 { font: 400 28px var(--font-display); color: var(--gold-hi); margin: 0 0 6px; }
+.done p { margin: 4px auto; max-width: 52ch; }
+.clock { font-variant-numeric: tabular-nums; color: var(--gold-hi); font-weight: 700; }
+
+/* history */
+.sec-title { font: 400 24px var(--font-display); color: var(--gold-hi); margin: 34px 0 4px; }
+.sec-sub { color: var(--muted); font-size: 13px; margin: 0 0 10px; }
+.tk { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 18px; margin-top: 10px; display: grid; gap: 6px; }
+.tk-top { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; justify-content: space-between; }
+.tk-date { font-weight: 600; font-variant-numeric: tabular-nums; }
+.tk ul { margin: 0; padding-left: 20px; }
+.tk .reply { font-size: 13px; color: var(--muted); border-left: 2px solid var(--line); padding-left: 10px; }
+.pill { font-size: 12px; font-weight: 700; border-radius: 999px; padding: 2px 10px; white-space: nowrap; }
+.pill.cho { color: #1a1406; background: var(--wait); }
+.pill.tra { color: #06170e; background: var(--ok); }
+.pill.tu { color: #200a05; background: var(--red); }
+.empty { color: var(--muted); text-align: center; padding: 22px; border: 1px dashed var(--line); border-radius: 12px; margin-top: 10px; }
+.loading { text-align: center; color: var(--muted); padding: 120px 16px; }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
+
+@media (max-width: 860px) { .login { grid-template-columns: 1fr; } .login-r { display: none; } }
+@media (max-width: 720px) { .card { padding: 16px; } .hero-body { padding: 2px 16px 18px; } .hero-art img { width: 84px; left: 12px; top: 10px; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } .dt { animation: none; } .caret { display: none; } }
+</style>
+</head>
+<body>
+<p class="loading" id="loading">Đang tải…</p>
+
+<section id="login" class="login" aria-labelledby="login-ttl" hidden>
+  <div class="login-l">
+    <div class="login-box">
+      <img class="logo" src="/3qdc-vi/home/logo-3qdc.webp" alt="3Q Đại Chiến">
+      <h1 id="login-ttl">Phiếu Bé Ngoan</h1>
+      <p class="lead">Đăng nhập để gửi phiếu nhận quà và xem lại các phiếu đã gửi.</p>
+      <div class="g-slot" id="g-slot"></div>
+      <form class="thu" id="thu" hidden>
+        <label class="hint" for="thu-email" style="margin:0">Đăng nhập thử (chỉ có trên bản nháp)</label>
+        <input id="thu-email" type="email" placeholder="email@gmail.com" autocomplete="email" required>
+        <button class="btn-gw" type="submit">Đăng nhập thử</button>
+      </form>
+      <p class="login-err" id="login-err" role="alert" hidden></p>
+      <ul class="login-rules">
+        <li><span><strong>1 phiếu</strong> mỗi tài khoản mỗi ngày</span></li>
+        <li><span>Phiếu mới mở lại lúc <strong>00:00</strong> (giờ Việt Nam)</span></li>
+        <li><span>Quà được trả vào hòm thư <strong>ngày hôm sau</strong></span></li>
+      </ul>
+      <p class="login-note">Chỉ dùng email Google để nhận biết bạn, không đăng bài hay đọc thư của bạn.</p>
+    </div>
+  </div>
+  <div class="login-r" aria-hidden="true">
+    <img class="dt" src="/3qdc-vi/phieu-be-ngoan/dieu-thuyen.webp" alt="" loading="lazy" width="1100" height="901">
+    <div class="quote"><q><span id="typed"></span><span class="caret"></span></q><cite>— Điêu Thuyền</cite></div>
+  </div>
+</section>
+
+<main id="player" class="wrap" hidden>
+  <section class="hero" aria-labelledby="ttl">
+    <div class="hero-art" role="img" aria-label="Ảnh nền 3Q Đại Chiến"><img src="/3qdc-vi/home/logo-3qdc.webp" alt="3Q Đại Chiến"></div>
+    <div class="hero-body">
+      <h1 id="ttl">Phiếu Bé Ngoan</h1>
+      <p>Chúa Công muốn nhận quà gì thì ghi vào phiếu. Mỗi ngày được gửi một phiếu, quà sẽ được trả vào hòm thư trong game vào ngày hôm sau.</p>
+      <div class="rules">
+        <span class="rule"><strong>1 phiếu</strong> / tài khoản / ngày</span>
+        <span class="rule">Mở phiếu mới lúc <strong>00:00</strong> (giờ Việt Nam)</span>
+        <span class="rule">Trả quà <strong>ngày hôm sau</strong></span>
+      </div>
+      <div class="who"><span>Đang dùng <span class="email" id="me"></span></span><button class="linkbtn" id="out" type="button">Đổi tài khoản</button></div>
+    </div>
+  </section>
+  <div id="area"></div>
+  <h2 class="sec-title">Lịch sử phiếu của tôi</h2>
+  <p class="sec-sub">Trạng thái được cập nhật khi quà đã trả.</p>
+  <div id="hist"></div>
+</main>
+
+<script>
+(function () {
+  "use strict";
+  var MAX = 10;
+  var ST = { cho: "Đang chờ", tra: "Đã trả", tu: "Từ chối" };
+  var QUOTES = ["Chúa Công ngoan ngoãn, quà sẽ về tận hòm thư.", "Mỗi ngày một phiếu, Chúa Công nhớ ghé thăm thiếp nhé.", "Trăng sáng đêm nay, quà của Chúa Công cũng sắp tới rồi."];
+  var $ = function (s) { return document.querySelector(s); };
+  var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
+  var me = null, draft = { acc: "", server: "S1", qua: [""], ghiChu: "" }, errs = {}, justSent = false, sending = false;
+
+  function api(method, path, body) {
+    return fetch("/api/phieu" + path, {
+      method: method, credentials: "same-origin",
+      headers: body ? { "Content-Type": "application/json" } : {},
+      body: body ? JSON.stringify(body) : undefined
+    }).then(function (r) { return r.json().catch(function () { return {}; }).then(function (d) { d._status = r.status; return d; }); });
+  }
+
+  // "2026-10-15T10:12:00+07:00" → "15/10/2026 10:12"
+  function fmt(iso) { var m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(iso || ""); return m ? m[3] + "/" + m[2] + "/" + m[1] + " " + m[4] + ":" + m[5] : esc(iso); }
+  function untilMidnight() {
+    var n = new Date(Date.now() + 7 * 3600e3), m = new Date(n); m.setUTCHours(24, 0, 0, 0);
+    var s = Math.max(0, Math.floor((m - n) / 1000)), p = function (x) { return String(x).padStart(2, "0"); };
+    return p(Math.floor(s / 3600)) + ":" + p(Math.floor((s % 3600) / 60)) + ":" + p(s % 60);
+  }
+
+  // ---------- sign-in ----------
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var qi = 0, qc = 0, qDel = false, typing = false;
+  function typeTick() {
+    var el = $("#typed"); if (!el || $("#login").hidden) { typing = false; return; }
+    if (reduce) { el.textContent = QUOTES[0]; typing = false; return; }
+    var full = QUOTES[qi];
+    if (!qDel) { qc++; el.textContent = full.slice(0, qc); if (qc >= full.length) { qDel = true; return setTimeout(typeTick, 2600); } return setTimeout(typeTick, 55); }
+    qc -= 2; el.textContent = full.slice(0, Math.max(0, qc));
+    if (qc <= 0) { qDel = false; qc = 0; qi = (qi + 1) % QUOTES.length; return setTimeout(typeTick, 450); }
+    setTimeout(typeTick, 22);
+  }
+  function loginError(msg) { var e = $("#login-err"); e.textContent = msg || ""; e.hidden = !msg; }
+
+  function showLogin(info) {
+    $("#loading").hidden = true; $("#player").hidden = true; $("#login").hidden = false;
+    if (!typing) { typing = true; typeTick(); }
+    if (info.clientId) {
+      var s = document.createElement("script");
+      s.src = "https://accounts.google.com/gsi/client"; s.async = true;
+      s.onload = function () {
+        google.accounts.id.initialize({ client_id: info.clientId, callback: function (r) {
+          loginError("");
+          api("POST", "/dang-nhap", { credential: r.credential }).then(function (d) { if (d.ok) boot(); else loginError(d.error || "Đăng nhập không thành công."); });
+        } });
+        google.accounts.id.renderButton($("#g-slot"), { theme: "outline", size: "large", shape: "pill", text: "signin_with", width: 360, locale: "vi" });
+      };
+      s.onerror = function () { loginError("Không tải được nút đăng nhập Google. Kiểm tra mạng rồi tải lại trang."); };
+      document.head.appendChild(s);
+    } else if (!info.thu) {
+      loginError("Đăng nhập Google đang được cài đặt. Bạn quay lại sau nhé.");
+    }
+    $("#thu").hidden = !info.thu;
+  }
+  $("#thu").addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    api("POST", "/dang-nhap-thu", { email: $("#thu-email").value }).then(function (d) { if (d.ok) boot(); else loginError(d.error); });
+  });
+
+  // ---------- the form ----------
+  function renderArea() {
+    var a = $("#area");
+    if (me.homNay) {
+      a.innerHTML = '<div class="card done">' + (justSent ? '<h2>Đã nhận phiếu của Chúa Công</h2><p>Quà sẽ được trả vào hòm thư trong game vào ngày mai.</p>' : '<h2>Hôm nay Chúa Công đã gửi phiếu</h2>') +
+        '<p>Phiếu mới mở lại lúc 00:00, còn <span class="clock" id="clock">' + untilMidnight() + '</span>.</p></div>';
+      return;
+    }
+    var d = draft, err = function (k) { return errs[k] ? '<div class="errmsg" role="alert">⚠ ' + esc(errs[k]) + '</div>' : ""; };
+    var rows = d.qua.map(function (g, i) {
+      return '<div class="gift"><span class="n">' + (i + 1) + '.</span><input type="text" id="gift-' + i + '" data-i="' + i + '" value="' + esc(g) + '" placeholder="Tên quà, ví dụ: Tướng Điêu Thuyền" maxlength="80" aria-label="Quà thứ ' + (i + 1) + '">' +
+        (d.qua.length > 1 ? '<button type="button" class="x" data-rm="' + i + '" aria-label="Xoá quà thứ ' + (i + 1) + '">×</button>' : "<span></span>") + "</div>";
+    }).join("");
+    var servers = (me.servers || [{ id: "S1", name: "S1" }]).map(function (s) { return '<option value="' + esc(s.id) + '"' + (s.id === d.server ? " selected" : "") + ">" + esc(s.name) + "</option>"; }).join("");
+    a.innerHTML = '<form id="f" novalidate>' +
+      '<div class="card' + (errs.acc ? " err" : "") + '"><label class="q" for="acc">Tên tài khoản game<span class="star">*</span></label>' +
+      '<p class="hint">Tên đăng nhập trong game 3Q Đại Chiến, quà sẽ được gửi vào tài khoản này.</p>' +
+      '<input type="text" id="acc" value="' + esc(d.acc) + '" placeholder="Câu trả lời của bạn" maxlength="32" autocomplete="off">' + err("acc") + "</div>" +
+      '<div class="card' + (errs.server ? " err" : "") + '"><label class="q" for="srv">Server<span class="star">*</span></label><p class="hint">Server có nhân vật nhận quà.</p><select id="srv">' + servers + "</select>" + err("server") + "</div>" +
+      '<div class="card' + (errs.qua ? " err" : "") + '"><p class="q">Quà muốn nhận<span class="star">*</span></p><p class="hint">Ghi mỗi món quà một dòng. Không cần ghi số lượng.</p><div class="gifts">' + rows + "</div>" +
+      '<button type="button" class="add" id="add"' + (d.qua.length >= MAX ? " disabled" : "") + ">+ Thêm quà</button>" +
+      (d.qua.length >= MAX ? '<p class="hint" style="margin-top:8px">Tối đa ' + MAX + " món mỗi phiếu.</p>" : "") + err("qua") + "</div>" +
+      '<div class="card' + (errs.ghiChu ? " err" : "") + '"><label class="q" for="note">Ghi chú</label><p class="hint">Không bắt buộc.</p><textarea id="note" rows="2" maxlength="300" placeholder="Câu trả lời của bạn">' + esc(d.ghiChu) + "</textarea>" + err("ghiChu") + "</div>" +
+      '<p class="form-err" id="form-err" role="alert"' + (errs._ ? "" : " hidden") + ">" + esc(errs._ || "") + "</p>" +
+      '<div class="actions"><button type="submit" class="btn-scroll"' + (sending ? " disabled" : "") + "><span>" + (sending ? "Đang gửi…" : "Gửi phiếu") + '</span></button><button type="button" class="clear" id="clear">Xoá hết câu trả lời</button></div></form>';
+    var clearErr = function (el, k) { if (!errs[k]) return; delete errs[k]; var c = el.closest(".card"); c.classList.remove("err"); var m = c.querySelector(".errmsg"); if (m) m.remove(); };
+    $("#acc").oninput = function (e) { d.acc = e.target.value; clearErr(e.target, "acc"); };
+    $("#srv").onchange = function (e) { d.server = e.target.value; };
+    $("#note").oninput = function (e) { d.ghiChu = e.target.value; clearErr(e.target, "ghiChu"); };
+    a.querySelectorAll(".gift input").forEach(function (inp) { inp.oninput = function (e) { d.qua[+e.target.dataset.i] = e.target.value; clearErr(e.target, "qua"); }; });
+    a.querySelectorAll("[data-rm]").forEach(function (b) { b.onclick = function () { d.qua.splice(+b.dataset.rm, 1); renderArea(); }; });
+    $("#add").onclick = function () { if (d.qua.length < MAX) { d.qua.push(""); renderArea(); var el = $("#gift-" + (d.qua.length - 1)); if (el) el.focus(); } };
+    $("#clear").onclick = function () { draft = { acc: "", server: "S1", qua: [""], ghiChu: "" }; errs = {}; renderArea(); };
+    $("#f").onsubmit = function (ev) {
+      ev.preventDefault();
+      if (sending) return;
+      var qua = d.qua.map(function (g) { return g.trim(); }).filter(Boolean);
+      errs = {};
+      if (!d.acc.trim()) errs.acc = "Đây là câu hỏi bắt buộc.";
+      if (!qua.length) errs.qua = "Ghi ít nhất một món quà.";
+      if (Object.keys(errs).length) { renderArea(); var f = document.querySelector(".card.err input"); if (f) f.focus(); return; }
+      sending = true; renderArea();
+      api("POST", "/gui", { acc: d.acc.trim(), server: d.server, qua: qua, ghiChu: d.ghiChu.trim() }).then(function (r) {
+        sending = false;
+        if (r._status === 201 || r._status === 409) { justSent = r._status === 201; draft.qua = [""]; draft.ghiChu = ""; return boot(); }
+        if (r._status === 401) return boot();
+        errs = {}; errs[r.field || "_"] = r.error || "Không gửi được phiếu. Thử lại sau ít phút.";
+        renderArea();
+      }, function () { sending = false; errs = { _: "Mất kết nối. Kiểm tra mạng rồi gửi lại." }; renderArea(); });
+    };
+  }
+
+  function renderHist() {
+    var list = me.lichSu || [];
+    $("#hist").innerHTML = list.length ? list.map(function (t) {
+      return '<article class="tk"><div class="tk-top"><span class="tk-date">' + fmt(t.luc) + '</span><span class="pill ' + esc(t.st) + '">' + (ST[t.st] || "") + "</span></div>" +
+        "<div><ul>" + t.qua.map(function (g) { return "<li>" + esc(g) + "</li>"; }).join("") + "</ul></div>" +
+        '<div class="hint" style="margin:0">Tài khoản: ' + esc(t.acc) + " · Server " + esc(t.server) + "</div>" +
+        (t.ghiChu ? "<div>Ghi chú: " + esc(t.ghiChu) + "</div>" : "") +
+        (t.phanHoi ? '<div class="reply">Phản hồi: ' + esc(t.phanHoi) + "</div>" : "") + "</article>";
+    }).join("") : '<p class="empty">Chưa có phiếu nào. Phiếu đầu tiên sẽ hiện ở đây.</p>';
+  }
+
+  function showPlayer() {
+    $("#loading").hidden = true; $("#login").hidden = true; $("#player").hidden = false;
+    $("#me").textContent = me.email;
+    if (!draft.acc && me.lichSu && me.lichSu[0]) draft.acc = me.lichSu[0].acc; // the account they used last time
+    renderArea(); renderHist();
+  }
+  $("#out").onclick = function () { api("POST", "/dang-xuat", {}).then(function () { justSent = false; boot(); }); };
+
+  function boot() {
+    return api("GET", "/toi").then(function (d) {
+      if (d.dangNhap) { me = d; showPlayer(); } else { me = null; showLogin(d); }
+    }, function () { $("#loading").textContent = "Không tải được trang. Kiểm tra mạng rồi tải lại."; });
+  }
+  setInterval(function () { var c = $("#clock"); if (c) c.textContent = untilMidnight(); }, 1000);
+  boot();
+})();
+</script>
+</body>
+</html>

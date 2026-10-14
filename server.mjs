@@ -44,6 +44,7 @@ import { NAV_SYNC_HTML } from './scripts/lib/nav-sync.mjs';
 // the site's own news pages
 import { handleNews } from './scripts/lib/news/news-routes.mjs';
 import { handleSignup } from './scripts/lib/signup/signup-routes.mjs';
+import { handlePhieu } from './scripts/lib/phieu/phieu-routes.mjs';
 import { SITE_ORIGIN } from './scripts/lib/news/news-config.mjs';
 // Vietnamese title / description / share tags for the mirrored build-B entry page
 import { viHead } from './scripts/lib/site-head.mjs';
@@ -257,6 +258,9 @@ export function startServer(port = 8080) {
         res.writeHead(204, { 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-store' });
         return res.end();
       }
+
+      // Phiếu Bé Ngoan has its own host name (phieubengoan.3qdc.wanmeivn.com): every address on it is answered there
+      if (await handlePhieu(req, res, pathname)) return;
 
       // --- section entries (real-path → native build entry) ---
       // The home page (layout-v2) is the main site at /, for every device (it replaced the old fab landing).

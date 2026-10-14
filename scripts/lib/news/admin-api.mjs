@@ -6,6 +6,8 @@ import { change, allPosts, listRevisions, readRevision, stampAfter, isVisible, l
 import { saveUpload, recentUploads } from './news-uploads.mjs';
 import { listSongs, saveSong, removeSong, SONG_MAX, FOLDER_MAX } from '../home/music-store.mjs';
 import { listSignups, signupsCsv, readMilestones, writeMilestones, cleanMilestones } from '../signup/signup-store.mjs';
+import { listPhieu, setStatus, phieuCsv } from '../phieu/phieu-store.mjs';
+import { STATES, REPLY_MAX } from '../phieu/phieu-config.mjs';
 import { decide, mayDelete, summaryOf } from './news-workflow.mjs';
 import { register, listUsers, manageUser } from './admin-users.mjs';
 import { USERNAME_RE } from './admin-auth.mjs';
@@ -191,6 +193,37 @@ async function route(req, res, path) {
       await writeMilestones(list);
       console.log(`[news] ${siteNow()} ${user.username} set the early sign-up milestones to ${list.join(', ')}`);
       return send(res, 200, { milestones: list });
+    }
+    return oops(res, 404, 'Không có địa chỉ này.');
+  }
+
+  // gift tickets from Phiếu Bé Ngoan (managers only: they carry players' email addresses): the list for one day and
+  // state, marking a ticket given / refused / waiting again with a reply the player sees, and the list as CSV
+  if (path === '/phieu-be-ngoan' || path.startsWith('/phieu-be-ngoan/')) {
+    if (user.role !== 'manager') return oops(res, 403, 'Chỉ Quản lý mới xem được Phiếu Bé Ngoan.');
+    const q = new URL(req.url, 'http://x').searchParams;
+    const filter = { ngay: ['hom-nay', 'hom-qua', 'tat-ca'].includes(q.get('ngay')) ? q.get('ngay') : 'hom-nay', st: Object.hasOwn(STATES, q.get('st') || '') ? q.get('st') : 'all' };
+    if (method === 'GET' && path === '/phieu-be-ngoan') return send(res, 200, await listPhieu(filter));
+    if (method === 'GET' && path === '/phieu-be-ngoan/csv') {
+      const csv = await phieuCsv(filter);
+      const stamp = siteNow().slice(0, 16).replace(/-/g, '').replace('T', '-').replace(':', '');
+      console.log(`[news] ${siteNow()} ${user.username} downloaded the gift tickets (${csv.rows})`);
+      res.writeHead(200, {
+        'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': `attachment; filename="phieu-be-ngoan-${stamp}.csv"`,
+        'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', 'X-Robots-Tag': 'noindex, nofollow',
+      });
+      return res.end(csv.text);
+    }
+    const pm = path.match(/^\/phieu-be-ngoan\/([a-z0-9]{6,20})$/);
+    if (method === 'POST' && pm) {
+      const st = String(body.st || '');
+      if (!Object.hasOwn(STATES, st)) return oops(res, 400, 'Trạng thái không hợp lệ.');
+      const phanHoi = String(body.phanHoi || '').trim();
+      if (phanHoi.length > REPLY_MAX) return oops(res, 400, `Phản hồi tối đa ${REPLY_MAX} ký tự.`);
+      const t = await setStatus(pm[1], st, phanHoi, user.username);
+      if (!t) return oops(res, 404, 'Không tìm thấy phiếu này.');
+      console.log(`[news] ${siteNow()} ${user.username} set ticket ${t.id} to ${st}`);
+      return send(res, 200, { item: t });
     }
     return oops(res, 404, 'Không có địa chỉ này.');
   }
