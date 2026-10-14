@@ -1,0 +1,23 @@
+{
+  "savedAt": "2026-09-17T22:51:41.181+07:00",
+  "action": "luu",
+  "actor": "hieule",
+  "post": {
+    "id": 19,
+    "author": "hieule",
+    "authorUser": "hieule05072003",
+    "createdAt": "2026-09-17T22:51:41.181+07:00",
+    "status": "draft",
+    "publishAt": null,
+    "pinned": false,
+    "reviewNote": "",
+    "title": "[Phần 2 – Bồi dưỡng Võ tướng] Bồi dưỡng 9: Mệnh cách",
+    "slug": "boi-duong-9-menh-cach",
+    "summary": "Mệnh cách tăng một chỉ số 10% và giảm một chỉ số 10%: cách đọc bảng, các Mệnh cách đã ghi nhận và chọn thẻ phù hợp trước khi bồi dưỡng sâu.",
+    "category": "cam-nang",
+    "cover": "/tin-tuc-anh/2026/09/95b0b16cba0c36a8.webp",
+    "content": "<p>Mỗi thẻ Võ tướng có một <strong>Mệnh cách</strong> hiển thị ngay trên trang Thuộc tính. Mệnh cách tạo một cặp đánh đổi: một chỉ số được tăng 10%, một chỉ số bị giảm 10%; một số chỉ số còn lại không thay đổi. Vì vậy, hai thẻ cùng tên nhưng khác Mệnh cách có thể phù hợp với hai cách dùng khác nhau.</p><p><em>Ảnh đầu bài: Chấm xanh là tăng 10%, chấm đỏ là giảm 10% và chấm tím là không đổi. Nhãn <strong>Chọn</strong> có nghĩa là nên ưu tiên tướng mang Mệnh cách đó khi so sánh các thẻ cùng tướng; đây không phải một chỉ số cộng thêm.</em></p><h2>Cách đọc bảng Mệnh cách</h2><p>Trong bảng giải thích, <strong>chấm xanh</strong> là chỉ số tăng 10%, <strong>chấm đỏ</strong> là chỉ số giảm 10% và <strong>chấm tím</strong> là không thay đổi. Luôn đọc cả hai chiều. Nếu một Mệnh cách có nhãn <strong>Chọn</strong>, hãy ưu tiên thẻ mang Mệnh cách đó khi bạn đang so sánh nhiều bản của cùng một tướng. Sau đó vẫn cần kiểm tra cặp chỉ số tăng và giảm để biết thẻ có hợp với vị trí trong đội hay không.</p><div class=\"tbl\"><table><thead><tr><th>Mệnh cách đã ghi nhận</th><th>Chỉ số tăng</th><th>Chỉ số giảm</th></tr></thead><tbody><tr><td>Cô Thần</td><td>Vật phòng 10%</td><td>Vật công 10%</td></tr><tr><td>Thiên Quan</td><td>Tốc độ 10%</td><td>Vật công 10%</td></tr><tr><td>Vũ Khúc</td><td>Vật công 10%</td><td>Vật phòng 10%</td></tr><tr><td>Tinh Diệu</td><td>Vật phòng 10%</td><td>Phép công 10%</td></tr><tr><td>Khôi Cương</td><td>Vật phòng 10%</td><td>Tốc độ 10%</td></tr></tbody></table></div><h2>Chọn Mệnh cách theo cách dùng tướng</h2><p>Với tướng gây sát thương vật lý, Mệnh cách tăng Vật công dễ tận dụng hơn nếu phần giảm không làm tướng chết quá sớm. Tướng cần ra chiêu trước có thể ưu tiên Tốc độ. Tướng hàng trước thường hưởng lợi từ Vật phòng, nhưng phải kiểm tra xem chỉ số bị giảm có phải nguồn sát thương hoặc Tốc độ quan trọng hay không.</p><p>Không chọn Mệnh cách chỉ vì tên nghe mạnh. Hãy mở kỹ năng để xác định tướng dùng Vật công hay Phép công, sau đó đối chiếu cặp tăng giảm. Nếu hai bản cùng tên có Mệnh cách khác nhau, giữ bản phù hợp với vai trò đội hình rồi mới nâng Cấp, Sao và Trang bị.</p><h2>Kiểm tra trước khi bồi dưỡng sâu</h2><p>Trước khi dùng mảnh hiếm hoặc vật liệu lâu dài, thực hiện ba bước: mở Thuộc tính, đọc Mệnh cách; mở Kỹ năng, xác định chỉ số tấn công chính; cuối cùng kiểm tra vị trí của tướng trong đội. Nếu chỉ số bị giảm đánh trúng điểm quan trọng của tướng, hãy so sánh với bản khác cùng dòng trước khi đầu tư.</p><p>Mệnh cách không cho biết toàn bộ sức mạnh của một tướng. Cấp, Sao, kỹ năng, nghề và trang bị vẫn quyết định hiệu quả thực tế; Mệnh cách nên được dùng như tiêu chí chọn giữa các bản tương đương, không phải lý do duy nhất để loại một thẻ.</p>",
+    "updatedBy": "hieule",
+    "updatedAt": "2026-09-17T22:51:41.181+07:00"
+  }
+}

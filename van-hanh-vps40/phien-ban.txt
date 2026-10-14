@@ -1,0 +1,6 @@
+node v24.15.0
+v2.11.2 h1:iOlpsSiSKqEW+SIXrcZsZ/NO74SzB/ycqqvAIEfIm64=
+git version 2.54.0.windows.1
+tailscale 1.102.2
+nssm NSSM 2.24-101-g897c7ad 64-bit 2017-04-26
+Windows Microsoft Windows Server 2019 Datacenter Evaluation 10.0.17763

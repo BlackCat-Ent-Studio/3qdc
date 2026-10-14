@@ -1,0 +1,23 @@
+{
+  "savedAt": "2026-09-17T22:51:41.018+07:00",
+  "action": "luu",
+  "actor": "hieule",
+  "post": {
+    "id": 10,
+    "author": "hieule",
+    "authorUser": "hieule05072003",
+    "createdAt": "2026-09-17T22:51:41.018+07:00",
+    "status": "draft",
+    "publishAt": null,
+    "pinned": false,
+    "reviewNote": "",
+    "title": "[Phần 1 – Hướng dẫn tính năng] Tổng quan Bồi dưỡng Võ tướng",
+    "slug": "tong-quan-boi-duong-vo-tuong",
+    "summary": "Bồi dưỡng Anh Hùng gồm những nhánh nào, nên đọc theo thứ tự nào và cần kiểm tra gì trước, sau mỗi lần dùng tài nguyên.",
+    "category": "cam-nang",
+    "cover": "/3qdc-vi/home/anh-nen-slogan-vi.webp",
+    "content": "<p><strong>Bồi dưỡng Anh Hùng</strong> tập hợp các nhánh phát triển của một Võ tướng. Mỗi nhánh sử dụng tài nguyên và điều kiện riêng; nâng ở mục này không tự thay thế thao tác của mục khác. Vì vậy, trước khi dùng tài nguyên, hãy xác nhận đúng tướng và đúng tab.</p><h2>Cách vào Bồi dưỡng</h2><p>Mở <strong>Võ Tướng → Điện Anh Hùng</strong>, chọn một thẻ rồi bấm <strong>Bồi dưỡng</strong>. Danh sách tướng ở cạnh màn hình cho phép chuyển sang thẻ khác. Sau khi đổi tướng, hãy nhìn lại tên, cấp, sao và hình đại diện trước khi thao tác.</p><h2>Các nhánh chính</h2><div class=\"tbl\"><table><thead><tr><th>Bài</th><th>Nội dung chính</th></tr></thead><tbody><tr><td>1. Thuộc tính và Cấp EXP</td><td>Đọc sáu chỉ số cơ bản và tăng cấp bằng vật phẩm EXP.</td></tr><tr><td>2. Rèn luyện</td><td>Điều chỉnh các chỉ số hiển thị trên biểu đồ radar.</td></tr><tr><td>3. Đột phá</td><td>Nâng bậc và xem trước phần thuộc tính thay đổi.</td></tr><tr><td>4. Sao</td><td>Xem mốc sao, chỉ số được tăng và nguyên liệu được yêu cầu.</td></tr><tr><td>5. Kỹ năng</td><td>Đọc mô tả, điều kiện mở và nâng cấp kỹ năng.</td></tr><tr><td>6. Trang bị</td><td>Quản lý bốn ô Mũ, Giáp, Đai, Giày và bồi dưỡng món.</td></tr><tr><td>7. Thân thiết</td><td>Tặng quà, theo dõi tiến độ và các mốc hiệu ứng.</td></tr><tr><td>8. Vận huy và Huyễn Vũ</td><td>Khảm rune Vận huy và quản lý vật phẩm Huyễn Vũ.</td></tr><tr><td>9. Mệnh cách</td><td>Đọc chỉ số tăng, chỉ số giảm và chọn tướng phù hợp.</td></tr><tr><td>10. Tái sinh và Phân giải</td><td>Xem trước tài nguyên hoàn lại và tác động tới tài sản.</td></tr></tbody></table></div><h2>Thứ tự đọc gợi ý</h2><p>Người chơi mới nên bắt đầu từ <strong>Cấp EXP</strong>, sau đó kiểm tra <strong>Đột phá, Sao, Kỹ năng và Trang bị</strong> theo các mục đã mở. Rèn luyện cần được đầu tư sau khi đã xác định chỉ số chính của tướng. Mệnh cách nên được đọc trước khi quyết định giữ một bản tướng lâu dài; Tái sinh và Phân giải nên để sau cùng vì có thể ảnh hưởng nhiều phần đầu tư.</p><h2>Trước và sau khi bồi dưỡng</h2><ol><li>Xác nhận đúng thẻ tướng, nhất là khi có nhiều bản cùng tên.</li><li>Đọc chỉ số, cấp, sao, bậc và lực chiến hiện tại.</li><li>Kiểm tra nguyên liệu cùng chi phí trên đúng nút thao tác.</li><li>Với màn có <strong>Lưu</strong>, đọc kết quả trước khi rời màn.</li><li>Sau khi xác nhận, kiểm tra chỉ số mới và số tài nguyên còn lại.</li></ol><p>Không cần nâng mọi mục cùng lúc. Hãy ưu tiên nhánh đang đáp ứng điều kiện và phục vụ tướng bạn thực sự sử dụng trong đội hình.</p>",
+    "updatedBy": "hieule",
+    "updatedAt": "2026-09-17T22:51:41.018+07:00"
+  }
+}

@@ -3,4 +3,6 @@ node_modules/
 verify-out/
 *.log
 image-backup/
-/data/
+/data/*
+!/data/news/
+/data/news/users.json

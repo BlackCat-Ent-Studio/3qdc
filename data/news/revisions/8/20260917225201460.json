@@ -1,0 +1,23 @@
+{
+  "savedAt": "2026-09-17T22:52:01.460+07:00",
+  "action": "luu",
+  "actor": "hieule",
+  "post": {
+    "id": 8,
+    "author": "hieule",
+    "authorUser": "hieule05072003",
+    "createdAt": "2026-09-17T22:16:33.047+07:00",
+    "status": "draft",
+    "publishAt": null,
+    "pinned": false,
+    "reviewNote": "",
+    "title": "[Phần 1 – Hướng dẫn tính năng] Phe và nghề của Võ tướng",
+    "slug": "phe-va-nghe-vo-tuong",
+    "summary": "Bốn phe, năm nghề và vòng tương khắc: nghề nào khắc nghề nào, hiệu ứng tăng 25% / giảm 15% và cách chọn nghề để đối phó đội hình đối thủ.",
+    "category": "cam-nang",
+    "cover": "/tin-tuc-anh/2026/09/b7894bde2c510950.webp",
+    "content": "<p>Mỗi Võ tướng có một phe và một nghề. Phe gồm <strong>Thục, Ngụy, Ngô, Quần</strong>; nghề gồm <strong>Thống soái, Tướng quân, Hiệp khách, Mưu sĩ, Hồng nhan</strong>. Hai nhãn này giúp người chơi lọc roster và chọn tướng phù hợp trước trận.</p><p>Mở <strong>Võ Tướng → Điện Anh Hùng</strong> để xem phe và nghề trên thẻ. Trong màn <strong>Đội hình</strong>, nhóm nút phía dưới cho phép lọc theo từng phe hoặc nghề. Giao diện có thể rút gọn tên nghề thành <strong>Soái, Tướng, Hiệp, Mưu, Hồng</strong>.</p><p><em>Ảnh đầu bài: Mũi tên trong vòng nghề chỉ chiều khắc chế. Phần bên trái là quan hệ giữa các phe.</em></p><h2>Vòng tương khắc năm nghề</h2><p><strong>Thống soái → Tướng quân → Hiệp khách → Mưu sĩ → Hồng nhan → Thống soái.</strong></p><div class=\"tbl\"><table><thead><tr><th>Nghề của bạn</th><th>Khắc chế</th><th>Bị khắc chế bởi</th></tr></thead><tbody><tr><td>Thống soái</td><td>Tướng quân</td><td>Hồng nhan</td></tr><tr><td>Tướng quân</td><td>Hiệp khách</td><td>Thống soái</td></tr><tr><td>Hiệp khách</td><td>Mưu sĩ</td><td>Tướng quân</td></tr><tr><td>Mưu sĩ</td><td>Hồng nhan</td><td>Hiệp khách</td></tr><tr><td>Hồng nhan</td><td>Thống soái</td><td>Mưu sĩ</td></tr></tbody></table></div><p>Theo sơ đồ trong game, chiều khắc chế được <strong>tăng 25% hiệu ứng cuối</strong>, còn chiều bị khắc chế bị <strong>giảm 15% hiệu ứng cuối</strong>. Khi xem đội đối phương, hãy bắt đầu từ nghề của tướng gây ảnh hưởng lớn nhất rồi tìm nghề có mũi tên hướng tới nó.</p><h2>Chọn nghề để đối phó</h2><div class=\"tbl\"><table><thead><tr><th>Nghề đối thủ</th><th>Nghề nên ưu tiên</th></tr></thead><tbody><tr><td>Thống soái</td><td>Hồng nhan</td></tr><tr><td>Tướng quân</td><td>Thống soái</td></tr><tr><td>Hiệp khách</td><td>Tướng quân</td></tr><tr><td>Mưu sĩ</td><td>Hiệp khách</td></tr><tr><td>Hồng nhan</td><td>Mưu sĩ</td></tr></tbody></table></div><p>Ví dụ, khi đối thủ dùng Mưu sĩ làm tướng chủ lực, bạn có thể lọc roster theo Hiệp khách. Sau đó so sánh cấp, sao, kỹ năng và trang bị của các ứng viên trước khi đổi đội. Một tướng đúng nghề nhưng bồi dưỡng quá thấp chưa chắc tốt hơn tướng hiện tại.</p><h2>Cách dùng phe và nghề hợp lý</h2><p>Phe và nghề trước hết là công cụ đọc đội hình. Phe giúp thu hẹp danh sách và nhận biết nguồn gốc của tướng. Nghề giúp kiểm tra vòng tương khắc. Không nên tự gán một nghề cố định là chống chịu, gây sát thương hay hỗ trợ; hai tướng cùng nghề vẫn có thể sở hữu bộ kỹ năng khác nhau.</p><p>Khi chuẩn bị trận, hãy thực hiện theo thứ tự: xem nghề đối thủ, lọc nghề có lợi, đọc kỹ năng của tướng định thay vào, rồi kiểm tra lại lực chiến toàn đội. Tương khắc tạo lợi thế nhưng kết quả còn phụ thuộc cấp độ, chỉ số, kỹ năng và cách bố trí đội hình.</p>",
+    "updatedBy": "hieule",
+    "updatedAt": "2026-09-17T22:52:01.460+07:00"
+  }
+}

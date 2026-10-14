@@ -1,0 +1,23 @@
+{
+  "savedAt": "2026-09-17T23:43:33.416+07:00",
+  "action": "hen-gio",
+  "actor": "hieule",
+  "post": {
+    "id": 9,
+    "author": "hieule",
+    "authorUser": "hieule05072003",
+    "createdAt": "2026-09-17T22:16:33.068+07:00",
+    "status": "published",
+    "publishAt": "2026-09-18T21:00:00+07:00",
+    "pinned": false,
+    "reviewNote": "",
+    "title": "[Cẩm Nang Người Mới] Điện Anh Hùng và cách tìm Võ tướng",
+    "slug": "dien-anh-hung-tim-vo-tuong",
+    "summary": "Điện Anh Hùng là nơi quản lý roster: tìm Võ tướng theo tên, lọc theo phe, nghề, phẩm chất, xem mảnh và mở Bồi dưỡng Anh Hùng.",
+    "category": "cam-nang",
+    "cover": "/tin-tuc-anh/2026/09/c706ce389fa42266.webp",
+    "content": "<p><strong>Điện Anh Hùng</strong> là nơi quản lý roster Võ tướng và mảnh tướng. Từ màn thành, chọn <strong>Võ Tướng → Điện Anh Hùng</strong>. Chạm một thẻ để mở thông tin chi tiết; thao tác xem thẻ không tự thay đổi đội hình.</p><p><em>Ảnh đầu bài: Biểu tượng kính lúp mở ô tìm kiếm; các nút lọc giúp thu hẹp roster.</em></p><h2>Những gì có thể xem</h2><p>Màn hình hiển thị danh sách tướng đang sở hữu, dung lượng kho và panel của tướng đang chọn. Tùy tab, bạn có thể xem tên, cấp, sao, phe, nghề và các thuộc tính. Từ đây cũng có lối vào Bồi dưỡng, Đội hình gợi ý, Phân giải và tab Mảnh.</p><p>Nếu roster có nhiều phiên bản gần giống nhau, hãy kiểm tra đầy đủ tên, cấp, sao và hình thẻ trước khi bồi dưỡng. Không nên chỉ dựa vào tên nhân vật vì các thẻ cùng dòng có thể có trạng thái phát triển khác nhau.</p><h2>Tìm theo tên</h2><ol><li>Chạm biểu tượng kính lúp trong Điện Anh Hùng.</li><li>Nhập tên hoặc một phần tên Võ tướng.</li><li>Chờ danh sách cập nhật rồi chọn thẻ cần xem.</li><li>Xóa từ khóa để quay lại roster đầy đủ.</li></ol><p>Từ khóa không dấu như tuan có thể trả về nhiều thẻ có tên phù hợp. Khi nhập từng ký tự, danh sách có thể cần một khoảng ngắn để tải lại; nếu roster chưa đổi ngay, hãy chờ giao diện hoàn tất cập nhật.</p><h2>Lọc roster</h2><p>Ngoài tìm kiếm, người chơi có thể dùng các nhóm lọc theo <strong>phe, nghề và phẩm chất</strong> đang hiển thị trên màn hình. Lọc theo phe Ngô, chẳng hạn, sẽ thu hẹp danh sách về các tướng phù hợp. Bộ lọc thích hợp khi bạn chưa nhớ đầy đủ tên hoặc muốn so sánh nhiều tướng cùng nhóm.</p><p>Tìm kiếm và bộ lọc phục vụ hai tình huống khác nhau: tìm kiếm đi thẳng tới tên, còn bộ lọc giúp duyệt theo đặc điểm. Khi không thấy tướng mong muốn, hãy kiểm tra xem bộ lọc cũ có còn được bật hay không.</p><h2>Xem mảnh và mở Bồi dưỡng</h2><p>Chuyển sang tab <strong>Mảnh</strong> để xem số mảnh của từng Võ tướng. Nhãn <strong>CÓ THỂ HỢP THÀNH</strong> cho biết game đang hiển thị trạng thái đủ điều kiện; hãy mở chi tiết và đọc số lượng yêu cầu trước khi thực hiện.</p><p>Muốn phát triển một tướng, chọn đúng thẻ rồi mở <strong>Bồi dưỡng Anh Hùng</strong>. Đây là điểm bắt đầu của các nhánh Cấp EXP, Rèn luyện, Đột phá, Sao, Kỹ năng và những mục tăng trưởng khác.</p>",
+    "updatedBy": "hieule",
+    "updatedAt": "2026-09-17T23:43:33.416+07:00"
+  }
+}

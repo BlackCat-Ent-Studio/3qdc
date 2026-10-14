@@ -1,0 +1,18 @@
+{
+  "id": 15,
+  "author": "hieule",
+  "authorUser": "hieule05072003",
+  "createdAt": "2026-09-17T22:51:41.112+07:00",
+  "status": "draft",
+  "publishAt": null,
+  "pinned": false,
+  "reviewNote": "",
+  "title": "[Phần 2 – Bồi dưỡng Võ tướng] Bồi dưỡng 5: Kỹ năng",
+  "slug": "boi-duong-5-ky-nang",
+  "summary": "Điểm kỹ năng hồi theo thời gian: phân điểm theo vai trò tướng, tránh lãng phí điểm hồi và gỡ các điều kiện khóa nâng kỹ năng.",
+  "category": "cam-nang",
+  "cover": "/tin-tuc-anh/2026/09/925b898f50e5ab7c.webp",
+  "content": "<p>Kỹ năng quyết định tướng gây sát thương, bảo vệ đồng đội hay khống chế đối thủ như thế nào. Điểm kỹ năng hồi theo thời gian; khi đạt <strong>VIP5</strong>, tốc độ hồi là <strong>60 giây cho một điểm</strong>. Ở các bậc VIP thấp hơn, hãy xem thời gian đếm ngược ngay cạnh bộ đếm vì chưa có một mốc chung đã được xác nhận. Cấp kỹ năng vẫn chịu giới hạn từ cấp tướng và các điều kiện mở.</p><p><em>Ảnh đầu bài: Mô tả kỹ năng là căn cứ để chọn thứ tự nâng, không phải vị trí hay màu của biểu tượng.</em></p><h2>Tối ưu điểm kỹ năng</h2><p>Hãy xác định tướng đang được dùng cho nhiệm vụ gì rồi mới phân điểm:</p><div class=\"tbl\"><table><thead><tr><th>Vai trò trong đội</th><th>Nhóm kỹ năng nên xem trước</th></tr></thead><tbody><tr><td>Gây sát thương chính</td><td>Kỹ năng gây sát thương thường dùng, hệ số theo Vật công hoặc Phép công và hiệu ứng tăng sát thương</td></tr><tr><td>Khống chế</td><td>Kỹ năng tạo choáng, cấm cố, giảm tốc hoặc trạng thái làm mất lượt</td></tr><tr><td>Hỗ trợ</td><td>Hồi phục, tạo khiên, tăng thuộc tính hoặc giải hiệu ứng</td></tr><tr><td>Chống chịu</td><td>Giảm sát thương, hồi phục bản thân, bảo vệ đồng đội hoặc kỹ năng khi bị tấn công</td></tr></tbody></table></div><p>Nếu kỹ năng chỉ phát huy trong PVP nhưng bạn đang tập trung vượt ải, có thể để sau kỹ năng dùng được ở nhiều nội dung. Ngược lại, khi xây đội chuyên PVP, các bị động tăng hoặc giảm sát thương PVP mới trở thành mốc ưu tiên.</p><p>Khi bộ đếm đã chạm mức tối đa đang hiển thị, phần hồi tiếp theo không còn chỗ để cộng. Người chơi VIP5 có thể ước tính nhanh: thiếu 10 điểm cần khoảng 10 phút nếu bộ đếm vẫn đang hồi. Trước khi đăng xuất dài, hãy dùng bớt điểm cho kỹ năng của đội hình chính để thời gian hồi không bị lãng phí. Không cần giữ điểm để chờ một tướng chưa đủ điều kiện nâng.</p><p>Nâng kỹ năng chủ lực tới giới hạn hiện tại, sau đó chuyển sang kỹ năng quan trọng thứ hai. Với tướng chỉ xuất trận tạm thời, dừng ở mức đủ dùng sẽ tiết kiệm Bạc và vật phẩm cho đội hình lâu dài. Luôn đọc giá của cấp kế tiếp vì chi phí có thể thay đổi theo cấp.</p><h2>Các yếu tố ảnh hưởng đến việc nâng kỹ năng</h2><p>Kỹ năng có thể bị chặn bởi cấp tướng, Sao hoặc Đột phá. Nếu nút nâng bị khóa, đọc đúng điều kiện của ô đó:</p><ul><li>Thiếu cấp tướng: dùng EXP trước, vì cấp kỹ năng không vượt cấp tướng.</li><li>Thiếu Sao: xem mốc Sao và nguyên liệu bản sao hoặc mảnh.</li><li>Thiếu Đột phá: so sánh cấp yêu cầu và vật liệu của bậc kế tiếp.</li></ul><p>Sau khi mở được kỹ năng mới, đừng tự động nâng tối đa. Hãy đọc mục tiêu, thời lượng và điều kiện kích hoạt để chắc rằng kỹ năng đó thực sự phục vụ đội hình hiện tại.</p>",
+  "updatedBy": "hieule",
+  "updatedAt": "2026-09-17T22:51:41.112+07:00"
+}

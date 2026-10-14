@@ -1,0 +1,22 @@
+{
+  "savedAt": "2026-09-16T19:19:03.692+07:00",
+  "action": "khoi-phuc",
+  "actor": "hieule",
+  "post": {
+    "id": 3,
+    "slug": "cam-nang-tan-thu-doi-hinh-dau-tien",
+    "title": "Cẩm nang tân thủ: 5 bước xây đội hình đầu tiên",
+    "category": "cam-nang",
+    "cover": "/3qdc-vi/home/tinh-nang-3-vi.webp",
+    "summary": "Chọn tướng chủ lực, cân bằng hàng trước hàng sau và tận dụng kỹ năng phe — những điều nên làm trong 3 ngày đầu chơi.",
+    "content": "<p>Đội hình tốt không cần toàn tướng hiếm. Năm bước dưới đây giúp bạn vượt ải cốt truyện nhanh trong những ngày đầu.</p>\n<h2>1. Chọn một tướng chủ lực</h2><p>Dồn tài nguyên cho một tướng sát thương thay vì chia đều cho cả đội.</p>\n<h2>2. Hai tướng hàng trước</h2><p>Tướng phòng thủ giữ vị trí, bảo vệ chủ lực khỏi đợt tấn công đầu.</p>\n<h2>3. Ưu tiên cùng phe</h2><p>Ba tướng cùng phe mở hiệu ứng liên kết, tăng chỉ số cho cả đội.</p>\n<h2>4. Nâng kỹ năng Nộ công</h2><p>Kỹ năng Nộ công quyết định trận đấu nhiều hơn chỉ số cơ bản.</p>\n<h2>5. Đừng bỏ qua nhiệm vụ ngày</h2><p>Nhiệm vụ ngày cho đủ nguyên liệu nâng cấp trong tuần đầu.</p>",
+    "status": "draft",
+    "publishAt": null,
+    "pinned": false,
+    "author": "Quản trị",
+    "updatedBy": "hieule",
+    "createdAt": "2026-09-16T03:58:31+07:00",
+    "updatedAt": "2026-09-16T19:19:03.692+07:00",
+    "reviewNote": ""
+  }
+}

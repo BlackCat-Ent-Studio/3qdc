@@ -1,0 +1,23 @@
+{
+  "savedAt": "2026-09-17T22:51:41.079+07:00",
+  "action": "luu",
+  "actor": "hieule",
+  "post": {
+    "id": 13,
+    "author": "hieule",
+    "authorUser": "hieule05072003",
+    "createdAt": "2026-09-17T22:51:41.079+07:00",
+    "status": "draft",
+    "publishAt": null,
+    "pinned": false,
+    "reviewNote": "",
+    "title": "[Phần 2 – Bồi dưỡng Võ tướng] Bồi dưỡng 3: Đột phá",
+    "slug": "boi-duong-3-dot-pha",
+    "summary": "Đột phá tăng cố định cả sáu thuộc tính: các mốc cấp cần nhớ, nâng tướng nào trước khi đội bị kẹt và khi nào dùng Đột phá nhanh.",
+    "category": "cam-nang",
+    "cover": "/tin-tuc-anh/2026/09/8e3d6215e8cc92d9.webp",
+    "content": "<p>Đột phá là nhánh tăng chỉ số <strong>cố định</strong>, không có kết quả ngẫu nhiên và không làm chỉ số khác giảm xuống. Mỗi bậc tăng đồng thời <strong>HP, Tốc độ, Vật công, Vật phòng, Phép công và Phép phòng</strong>. Vì vậy, người chơi không cần chọn chỉ số như Rèn luyện hoặc Tiềm năng; điều cần quyết định là <strong>nâng tướng nào trước và nâng tới mốc nào</strong>.</p><p><em>Ảnh đầu bài: Đột phá nhanh cho phép chọn bậc đích và xem tổng Bạc cùng vật liệu cần dùng trước khi xác nhận.</em></p><h2>Điều quan trọng nhất về Đột phá</h2><p>Đột phá luôn tăng cả sáu thuộc tính. Bạn không cần kiểm tra tướng dùng Vật công hay Phép công để quyết định có nhận bậc mới hay không. Nếu tướng đang được sử dụng và đã đủ cấp, lần Đột phá tiếp theo luôn làm tướng mạnh hơn.</p><p>Trong lần nâng Lưu Bị từ phẩm Trắng lên Lục đã ghi nhận, cả sáu thuộc tính đều tăng và lực chiến chuyển từ <strong>2477 lên 2702</strong>. Con số tăng của mỗi tướng và mỗi bậc có thể khác nhau, nhưng cách hoạt động giống nhau: không có bước chọn kết quả, Lưu hoặc Hủy.</p><h2>Các mốc cấp cần nhớ</h2><p>Đột phá bị giới hạn bởi cấp tướng. Khi đã chạm mốc cấp yêu cầu, tiếp tục gom vật liệu cũng chưa thể nâng cho tới khi tướng lên cấp. Các giai đoạn hiện có thể ghi nhớ như sau:</p><div class=\"tbl\"><table><thead><tr><th>Giai đoạn phẩm</th><th>Cấp tướng cần đạt</th></tr></thead><tbody><tr><td>Trắng lên Lục và các bậc Lục</td><td>Bắt đầu từ Lv1, sau đó có mốc Lv8 và Lv16</td></tr><tr><td>Các bậc Lam</td><td>Lv22, Lv28, Lv35 và Lv40</td></tr><tr><td>Các bậc Tím</td><td>Từ Lv45 đến Lv65, mỗi bậc cách 5 cấp</td></tr><tr><td>Các bậc Vàng</td><td>Từ Lv70 đến Lv95, mỗi bậc cách 5 cấp</td></tr><tr><td>Các bậc Đỏ</td><td>Từ Lv100 đến Lv120, mỗi bậc cách 5 cấp</td></tr><tr><td>Bậc tiếp theo</td><td>Yêu cầu Lv125</td></tr></tbody></table></div><p>Nếu tướng đang ở Lv40 và bậc kế tiếp yêu cầu Lv45, hãy dừng Đột phá và chuyển sang tăng cấp hoặc phát triển tướng khác. Đừng mua thêm vật liệu chỉ vì biểu tượng đang thiếu; nút thắt thực tế lúc này là cấp tướng.</p><h2>Nâng ai trước khi đội hình bị kẹt</h2><p>Không cần luôn giữ sáu tướng ở cùng một bậc. Hãy nhìn nguyên nhân khiến đội thua:</p><div class=\"tbl\"><table><thead><tr><th>Tình trạng trong trận</th><th>Tướng nên Đột phá trước</th></tr></thead><tbody><tr><td>Hết lượt nhưng đối thủ vẫn còn nhiều HP</td><td>Tướng gây sát thương chính</td></tr><tr><td>Hàng trước bị hạ trước khi đội kịp dùng kỹ năng</td><td>Tướng chống chịu ở hàng trước</td></tr><tr><td>Kỹ năng quan trọng đang khóa bởi bậc Đột phá</td><td>Đúng tướng sở hữu kỹ năng đó, nâng tới chính xác mốc yêu cầu</td></tr><tr><td>Một tướng hỗ trợ vẫn sống tới cuối trận</td><td>Có thể để sau tướng gây sát thương hoặc chống chịu đang thiếu chỉ số</td></tr><tr><td>Tướng chỉ nằm trong kho hoặc dùng làm nguyên liệu</td><td>Không cần Đột phá</td></tr></tbody></table></div><p>Đầu game, đưa sáu tướng chính qua những mốc Đột phá dễ đạt để tránh một vị trí quá yếu. Khi vật liệu bắt đầu thiếu, chuyển sang cách ưu tiên theo bảng trên. Tướng gây sát thương chính có thể đi trước một mốc nếu đội thiếu sát thương; tướng chống chịu đi trước khi hàng trước không sống đủ lâu.</p><h2>Đột phá nhanh</h2><p>Đột phá nhanh là công cụ gộp nhiều bậc vào một lần xác nhận. Nút này không phải banner giảm giá hoặc một loại Đột phá mạnh hơn. Chỉ dùng khi bạn đã biết bậc đích muốn đạt và popup cho thấy đủ Bạc cùng toàn bộ vật liệu.</p><p>Nếu còn phân vân giữa hai tướng, nâng từng bậc sẽ dễ kiểm soát tài nguyên hơn. Nếu mục tiêu đã rõ, chẳng hạn cần đưa tướng lên đúng bậc để mở kỹ năng, chọn bậc đích trong Đột phá nhanh rồi kiểm tra tổng chi phí trước khi xác nhận.</p><h2>Mốc dừng rõ ràng</h2><p>Dừng Đột phá trong ba trường hợp: bậc tiếp theo yêu cầu cấp tướng cao hơn; kỹ năng cần thiết đã mở và vị trí khác trong đội đang yếu hơn; hoặc tướng sắp bị thay khỏi đội hình chính. Khi chưa có tướng thay thế chắc chắn, không nên tiêu vật liệu cho các bản trùng hoặc tướng dự bị chỉ để tăng lực chiến tổng.</p>",
+    "updatedBy": "hieule",
+    "updatedAt": "2026-09-17T22:51:41.079+07:00"
+  }
+}

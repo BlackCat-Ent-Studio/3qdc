@@ -1,0 +1,23 @@
+{
+  "savedAt": "2026-09-17T22:51:41.197+07:00",
+  "action": "luu",
+  "actor": "hieule",
+  "post": {
+    "id": 20,
+    "author": "hieule",
+    "authorUser": "hieule05072003",
+    "createdAt": "2026-09-17T22:51:41.197+07:00",
+    "status": "draft",
+    "publishAt": null,
+    "pinned": false,
+    "reviewNote": "",
+    "title": "[Phần 2 – Bồi dưỡng Võ tướng] Bồi dưỡng 10: Tái sinh và Phân giải",
+    "slug": "boi-duong-10-tai-sinh-phan-giai",
+    "summary": "Tái sinh giữ tướng và hoàn lại tài nguyên, Phân giải xóa tướng để đổi vật phẩm: phần nào được giữ, khi nào chỉ nên phân giải tướng dư.",
+    "category": "cam-nang",
+    "cover": "/3qdc-vi/home/anh-nen-slogan-vi.webp",
+    "content": "<p><strong>Tái sinh</strong> và <strong>Phân giải</strong> phục vụ hai mục đích khác nhau. Tái sinh hoàn nguyên một phần tiến độ để lấy lại tài nguyên nhưng vẫn giữ tướng; Phân giải loại bỏ tướng được chọn để đổi lấy vật phẩm. Nếu chỉ muốn thu hồi khoản đầu tư từ một tướng đang giữ, hãy xem Tái sinh trước khi nghĩ tới Phân giải.</p><h2>Chọn đúng thao tác</h2><div class=\"tbl\"><table><thead><tr><th>Nhu cầu</th><th>Thao tác phù hợp</th></tr></thead><tbody><tr><td>Muốn giữ tướng nhưng lấy lại tài nguyên đã nâng</td><td>Tái sinh</td></tr><tr><td>Muốn xóa một bản tướng dư để đổi vật phẩm</td><td>Phân giải</td></tr><tr><td>Muốn chuyển một số tiến độ giữa hai tướng</td><td>Kế thừa, không phải Tái sinh</td></tr></tbody></table></div><p>Khu vực hoàn nguyên còn có các mục riêng cho Huyễn Vũ, Văn Diệu và Binh phù. Không lấy quy tắc của tướng để áp cho các loại vật phẩm này; luôn đọc phần xem trước của đúng tab.</p><h2>Tái sinh giữ và hoàn lại những gì</h2><p>Theo quy tắc hiển thị của hệ thống, Tái sinh tướng đưa <strong>Cấp và EXP, Đột phá, Kỹ năng thường, Trang bị và Thiên phú</strong> về trạng thái gốc để hoàn tài nguyên tương ứng. Các phần <strong>Sao, Rèn luyện hoặc Tẩy luyện, Tiềm năng, Thân thiết và Huyễn Vũ</strong> được giữ lại.</p><p>Hộp xem trước vẫn là căn cứ cuối cùng trước khi xác nhận. Hãy đối chiếu danh sách hoàn trả với những gì bạn đã đầu tư; nếu một nhánh không xuất hiện, không nên tự cho rằng tài nguyên của nhánh đó sẽ được trả lại.</p><h2>Chỉ phân giải tướng dư</h2><p>Phân giải xóa tướng và có thể làm mất những tiến độ không được hoàn lại. Chỉ chọn bản dư sau khi đã loại trừ các trường hợp sau:</p><ul><li>Tướng đang ở đội chính, đội cài sẵn hoặc đội của một mode khác.</li><li>Tướng đang bị khóa hoặc là bản duy nhất của một dòng.</li><li>Hai thẻ cùng tên nhưng khác phẩm, sao hoặc Mệnh cách.</li><li>Tướng đang giữ Huyễn Vũ hoặc tài sản bạn vẫn muốn sử dụng.</li></ul><p>Tính năng chọn tự động chỉ giúp lọc nhanh, không thay thế bước kiểm tra. Trước khi phân giải nhiều tướng, rà từng hình thẻ trong danh sách cuối và bỏ chọn mọi bản chưa chắc chắn.</p><h2>Chuẩn bị trước khi xác nhận</h2><p>Chụp lại Cấp, Đột phá, Sao, Kỹ năng, Trang bị và các nhánh đặc biệt của tướng. Sau đó kiểm tra đội hình, phí và danh sách vật phẩm hoàn trả. Nếu mục tiêu chỉ là chuyển Rèn luyện, Tiềm năng hoặc Thân thiết sang tướng khác, hãy xem Kế thừa trước; Tái sinh không có cùng mục đích và Phân giải là thao tác xóa.</p><p>Sau khi hoàn tất, kiểm tra roster, túi đồ, đội hình và các đội cài sẵn. Việc kiểm tra ngay giúp phát hiện một ô đội hình bị trống hoặc tài sản được trả về túi thay vì tự chuyển sang tướng khác.</p>",
+    "updatedBy": "hieule",
+    "updatedAt": "2026-09-17T22:51:41.197+07:00"
+  }
+}

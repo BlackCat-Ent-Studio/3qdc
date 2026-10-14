@@ -53,6 +53,8 @@ import { WRAPPERS_PATH, patchWrappers } from './scripts/lib/home/mobile-no-redir
 // the home player's songs (the folder overrides/home/nhac, read on every request)
 import { listSongs, publicList } from './scripts/lib/home/music-store.mjs';
 
+// Mun Van Su Thong Q&A widget (served by the bot service under /hoi-dap/); remove this line and its use in buildBEntry to roll back
+const MUN_WIDGET_HTML = '<script src="/hoi-dap/widget.js" defer></script>';
 const ROOT = join(process.cwd(), 'mirror');
 const ENTRY_B = join(ROOT, 'index.html');          // build B entry (umi.62525e29)
 const ENTRY_FAB = join(ROOT, '_fab-index.html');   // build A entry (umi.ca75703e)
@@ -204,7 +206,7 @@ async function buildBEntry(route, path) {
   // index + main share build B → native hash nav handles #/index ↔ #/main/* in-app.
   // nav-sync wires the top menu to clean paths + sets the tab title per section.
   // layout-v2 is injected on every build-B entry but only activates while the hash is #/index.
-  const inject = RF(route) + BBS_SHIM_HTML + HOME_I18N + MAIN_I18N + HOME_HIDE + MAIN_NEUTER + BUILDB_NAV + LAYOUT_V2_HTML;
+  const inject = RF(route) + BBS_SHIM_HTML + HOME_I18N + MAIN_I18N + HOME_HIDE + MAIN_NEUTER + BUILDB_NAV + LAYOUT_V2_HTML + MUN_WIDGET_HTML;
   return html.replace('<head>', '<head>' + inject);
 }
 async function wikiEntry() {

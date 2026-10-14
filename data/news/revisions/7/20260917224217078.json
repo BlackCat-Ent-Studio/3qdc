@@ -1,0 +1,23 @@
+{
+  "savedAt": "2026-09-17T22:42:17.078+07:00",
+  "action": "hen-gio",
+  "actor": "hieule",
+  "post": {
+    "id": 7,
+    "author": "hieule",
+    "authorUser": "hieule05072003",
+    "createdAt": "2026-09-17T22:16:33.028+07:00",
+    "status": "published",
+    "publishAt": "2026-09-17T23:00:00+07:00",
+    "pinned": false,
+    "reviewNote": "",
+    "title": "[Cẩm Nang Người Mới] Đội hình và số vị trí",
+    "slug": "doi-hinh-va-so-vi-tri",
+    "summary": "Đội hình có sáu vị trí: cách thêm, rút Võ tướng, lọc theo phe và nghề, dùng đội hình cài sẵn và những điều cần kiểm tra trước khi rời màn.",
+    "category": "cam-nang",
+    "cover": "/tin-tuc-anh/2026/09/f43d446fea000082.webp",
+    "content": "<p>Đội hình chính có <strong>sáu vị trí</strong>. Người chơi có thể xuất trận từ một đến sáu Võ tướng; đội hình không thể để trống và không thể thêm tướng thứ bảy khi đã đủ sáu.</p><p><em>Ảnh đầu bài: Bộ đếm ở cạnh dưới cho biết số Võ tướng đang xuất trận trên tổng sáu vị trí.</em></p><h2>Thêm và rút Võ tướng</h2><p>Danh sách ở dưới màn hình chứa các Võ tướng có thể chọn. Chạm vào thẻ của một tướng để thêm vào đội hoặc rút khỏi đội. Sau mỗi thay đổi, hãy nhìn bộ đếm và lực chiến để biết đội hiện còn bao nhiêu người và sức mạnh đã thay đổi ra sao.</p><p>Khi đội đã đủ sáu, game sẽ không nhận thêm tướng. Khi chỉ còn một tướng, game cũng chặn việc rút người cuối cùng. Nếu bạn thay đổi nhiều vị trí và muốn nhanh chóng lấp đầy đội, có thể dùng <strong>Bày trận nhanh</strong>, sau đó kiểm tra lại từng tướng được chọn.</p><h2>Lọc danh sách tướng</h2><p>Các nút bên dưới giúp lọc roster theo bốn phe <strong>Thục, Ngụy, Ngô, Quần</strong> và năm nghề <strong>Soái, Tướng, Hiệp, Mưu, Hồng</strong>. Bộ lọc hữu ích khi bạn cần tìm tướng cùng phe, chọn nghề có lợi thế tương khắc hoặc roster đã có quá nhiều thẻ.</p><p>Danh sách cũng có lựa chọn sắp xếp theo <strong>L.C.</strong> để so sánh lực chiến. Lực chiến là một chỉ báo nhanh, nhưng không thay thế việc đọc kỹ năng, nghề và mức bồi dưỡng của từng tướng.</p><h2>Dùng đội hình cài sẵn</h2><p>Đội hình cài sẵn cho phép sử dụng một nhóm tướng đã chuẩn bị. Khi mở danh sách, hãy xem tên đội, số tướng và tổng lực chiến được ghi trên từng mục. Sau khi chọn <strong>Sử dụng</strong>, quay lại màn đội hình chính để kiểm tra đội đã đổi đúng hay chưa.</p><p>Các chế độ dùng nhiều đội có thể có màn hình và giới hạn riêng. Không nên mặc định đội hình chính sẽ tự áp dụng cho mọi chế độ; hãy đọc số lượng đội và điều kiện xuất trận tại màn chuẩn bị của chế độ đó.</p><h2>Kiểm tra trước khi rời màn</h2><ol><li>Đội hình có ít nhất một và không quá sáu tướng.</li><li>Bộ đếm đã đúng với số thẻ đang xuất trận.</li><li>Tướng chủ lực và tướng hỗ trợ đều có mặt.</li><li>Bộ lọc đã được bỏ nếu bạn muốn xem lại toàn bộ roster.</li><li>Nếu vừa dùng đội cài sẵn hoặc Bày trận nhanh, hãy kiểm tra lại lực chiến và danh sách tướng.</li></ol>",
+    "updatedBy": "hieule",
+    "updatedAt": "2026-09-17T22:42:17.078+07:00"
+  }
+}

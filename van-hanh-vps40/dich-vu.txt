@@ -1,0 +1,26 @@
+[3qdc-unified]
+Application = C:\Program Files\nodejs\node.exe
+AppParameters = server.mjs
+AppDirectory = C:\web\web1\3qdc-unified
+AppStdout = C:\web\web1\3qdc-unified\verify-out\nssm-out.log
+AppStderr = C:\web\web1\3qdc-unified\verify-out\nssm-err.log
+Start = SERVICE_AUTO_START
+Env names = PORT, PHIEU_GOOGLE_CLIENT_ID
+
+[3q-hoi-dap]
+Application = C:\Program Files\nodejs\node.exe
+AppParameters = --max-old-space-size=512 tro-ly\chay.ts
+AppDirectory = C:\app\3q-hoi-dap\app
+AppStdout = C:\app\3q-hoi-dap\log\out.log
+AppStderr = C:\app\3q-hoi-dap\log\err.log
+Start = SERVICE_AUTO_START
+Env names = BOT_MOI_TRUONG, BOT_ENGINE, BOT_GROK_BIN, BOT_KHO, BOT_NHAT_KY, BOT_PORT, BOT_COOKIE_SECURE, BOT_MUOI_BAM, TYPESAFE_API_KEY
+
+[3q-duyet]
+Application = C:\Program Files\nodejs\node.exe
+AppParameters = --max-old-space-size=128 may-chu.ts
+AppDirectory = C:\app\3q-duyet\app
+AppStdout = C:\app\3q-duyet\log\out.log
+AppStderr = C:\app\3q-duyet\log\err.log
+Start = SERVICE_AUTO_START
+Env names = DUYET_PORT, DUYET_DU_LIEU
