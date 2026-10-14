@@ -71,45 +71,62 @@ h1 { font: 400 clamp(30px, 6vw, 44px)/1.15 var(--font-display); color: var(--gol
 .who { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; justify-content: space-between; border-top: 1px solid var(--line); margin-top: 18px; padding-top: 12px; font-size: 14px; color: var(--muted); }
 .who .email { color: var(--ink); font-weight: 600; }
 
-/* question cards */
-.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px 24px; margin-top: 12px; transition: border-color .15s; }
-.card:focus-within { border-color: var(--gold); box-shadow: inset 4px 0 0 var(--gold); }
-.card.err { border-color: var(--red); }
-.q { font-weight: 600; font-size: 16px; margin: 0 0 4px; display: block; }
+/* the form: one panel, labels above filled fields */
+.form { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 6px 28px 26px; margin-top: 12px;
+  display: grid; grid-template-columns: minmax(0, 1fr); column-gap: 24px; box-shadow: 0 18px 40px #0006; }
+.form > * { grid-column: 1 / -1; min-width: 0; }
+.fld { padding: 22px 0 2px; }
+.q { font-weight: 600; font-size: 14px; letter-spacing: .01em; margin: 0 0 2px; display: block; }
+.fld:focus-within .q { color: var(--gold-hi); }
 .star { color: var(--red); margin-left: 3px; }
-.hint { color: var(--muted); font-size: 13px; margin: 0 0 12px; }
-input[type=text], textarea, select { width: 100%; background: transparent; color: var(--ink); font: inherit; border: 0; border-bottom: 1px solid var(--line); padding: 8px 2px; outline: none; border-radius: 0; }
-input[type=text]:focus, textarea:focus, select:focus { border-bottom: 2px solid var(--gold); padding-bottom: 7px; }
-select { background: var(--panel); cursor: pointer; }
-textarea { resize: vertical; min-height: 44px; }
+.hint { color: var(--muted); font-size: 12.5px; margin: 0 0 10px; }
+.inp { width: 100%; background: var(--panel-2); color: var(--ink); font: inherit; border: 1px solid var(--line); border-radius: 10px; padding: 11px 14px; min-height: 46px;
+  outline: none; transition: border-color .15s, box-shadow .15s; }
+.inp::placeholder { color: #7d7a72; }
+.inp:focus { border-color: var(--gold); box-shadow: 0 0 0 3px #c9a45c33; }
+.fld.err .inp { border-color: var(--red); }
+select.inp { appearance: none; cursor: pointer; padding-right: 40px;
+  background: var(--panel-2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23c9a45c' stroke-width='2'/%3E%3C/svg%3E") right 14px center no-repeat; }
+textarea.inp { resize: vertical; min-height: 92px; }
 .errmsg { color: var(--red); font-size: 13px; margin-top: 8px; }
-.gifts { display: grid; gap: 6px; }
-.gift { display: grid; grid-template-columns: 26px 1fr 34px; align-items: center; gap: 8px; }
-.gift .n { color: var(--gold); font-variant-numeric: tabular-nums; font-size: 13px; text-align: right; }
-.x { width: 34px; height: 34px; border-radius: 50%; border: 0; background: transparent; color: var(--muted); font-size: 20px; cursor: pointer; line-height: 1; }
+.gifts { display: grid; gap: 8px; }
+.gift { display: grid; grid-template-columns: 28px minmax(0, 1fr) 38px; align-items: center; gap: 8px; }
+.gift .n { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: #c9a45c22; color: var(--gold-hi); font: 700 12px var(--font-body); font-variant-numeric: tabular-nums; }
+.x { width: 38px; height: 38px; border-radius: 50%; border: 0; background: transparent; color: var(--muted); font-size: 20px; cursor: pointer; line-height: 1; }
 .x:hover { background: var(--panel-2); color: var(--ink); }
-.add { margin-top: 10px; display: inline-flex; align-items: center; gap: 8px; background: transparent; border: 1px dashed var(--gold); color: var(--gold-hi); font: 600 14px var(--font-body); padding: 8px 14px; border-radius: 8px; cursor: pointer; }
-.add:hover { background: #c9a45c18; }
+.add { margin-top: 10px; display: inline-flex; align-items: center; gap: 8px; background: var(--panel-2); border: 1px solid var(--line); color: var(--gold-hi); font: 600 14px var(--font-body);
+  padding: 9px 14px; border-radius: 10px; cursor: pointer; }
+.add:hover { border-color: var(--gold); }
 .add:disabled { opacity: .45; cursor: not-allowed; }
-.actions { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; justify-content: space-between; margin-top: 18px; }
+.actions { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; justify-content: space-between; margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line); }
 .btn-scroll { position: relative; width: min(300px, 100%); aspect-ratio: 640 / 183; border: 0; cursor: pointer; background: url("/3qdc-vi/phieu-be-ngoan/nut-vang.webp") center / contain no-repeat; font: 400 22px var(--font-display); color: #3a2208; padding: 0; transition: transform .12s, filter .12s; }
 .btn-scroll:hover { filter: brightness(1.08); }
 .btn-scroll:active { transform: translateY(2px) scale(.99); }
 .btn-scroll:disabled { filter: grayscale(.6) brightness(.8); cursor: wait; }
 .clear { background: none; border: 0; color: var(--gold-hi); font: 600 14px var(--font-body); cursor: pointer; padding: 6px; }
 .form-err { color: var(--red); margin: 12px 0 0; }
-.done { border-color: var(--gold); text-align: center; padding: 28px 24px; }
+.done { border: 1px solid var(--gold); background: var(--panel); border-radius: 16px; text-align: center; padding: 28px 24px; margin-top: 12px; }
 .done h2 { font: 400 28px var(--font-display); color: var(--gold-hi); margin: 0 0 6px; }
 .done p { margin: 4px auto; max-width: 52ch; }
 .clock { font-variant-numeric: tabular-nums; color: var(--gold-hi); font-weight: 700; }
 
-/* history */
-.sec-title { font: 400 24px var(--font-display); color: var(--gold-hi); margin: 34px 0 4px; }
-.sec-sub { color: var(--muted); font-size: 13px; margin: 0 0 10px; }
-.tk { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 18px; margin-top: 10px; display: grid; gap: 6px; }
+/* tabs under the header card: send a ticket / my tickets */
+.tabs { display: flex; gap: 4px; margin-top: 16px; padding: 4px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; }
+.tab { flex: 1 1 0; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; border: 0; border-radius: 9px;
+  background: transparent; color: var(--muted); font: 600 15px var(--font-body); cursor: pointer; transition: background .15s, color .15s; }
+.tab:hover { color: var(--ink); }
+.tab[aria-selected="true"] { background: var(--panel-2); color: var(--gold-hi); box-shadow: inset 0 -2px 0 var(--gold); }
+.tab .count { min-width: 22px; height: 22px; padding: 0 7px; border-radius: 999px; background: #c9a45c22; color: var(--gold-hi); font: 700 12px var(--font-body);
+  display: inline-grid; place-items: center; font-variant-numeric: tabular-nums; }
+.tabpanel:focus-visible { outline: none; }
+.hist-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 12px; margin: 16px 2px 0; }
+.sec-title { font: 400 22px var(--font-display); color: var(--gold-hi); margin: 0; }
+.sec-sub { color: var(--muted); font-size: 13px; margin: 0; }
+.tk { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px 18px; margin-top: 10px; display: grid; gap: 6px; }
 .tk-top { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; justify-content: space-between; }
 .tk-date { font-weight: 600; font-variant-numeric: tabular-nums; }
 .tk ul { margin: 0; padding-left: 20px; }
+.tk .meta { color: var(--muted); font-size: 13px; }
 .tk .reply { font-size: 13px; color: var(--muted); border-left: 2px solid var(--line); padding-left: 10px; }
 .pill { font-size: 12px; font-weight: 700; border-radius: 999px; padding: 2px 10px; white-space: nowrap; }
 .pill.cho { color: #1a1406; background: var(--wait); }
@@ -128,7 +145,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .quote { display: none; }
   .lead, .login-rules, .login-note { text-shadow: 0 1px 6px #000; }
 }
-@media (max-width: 720px) { .card { padding: 16px; } .hero-body { padding: 2px 16px 18px; } .hero-art img { width: 84px; left: 12px; top: 10px; } }
+@media (min-width: 680px) { .form { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .form > .fld-acc { grid-column: 1; } .form > .fld-srv { grid-column: 2; } }
+@media (max-width: 720px) { .form { padding: 2px 16px 20px; } .actions { justify-content: center; } .hero-body { padding: 2px 16px 18px; } .hero-art img { width: 84px; left: 12px; top: 10px; } }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } .dt { animation: none; } .caret { display: none; } }
 </style>
 </head>
@@ -176,10 +194,15 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
       <div class="who"><span>Đang dùng <span class="email" id="me"></span></span><button class="linkbtn" id="out" type="button">Đổi tài khoản</button></div>
     </div>
   </section>
-  <div id="area"></div>
-  <h2 class="sec-title">Lịch sử phiếu của tôi</h2>
-  <p class="sec-sub">Trạng thái được cập nhật khi quà đã trả.</p>
-  <div id="hist"></div>
+  <div class="tabs" role="tablist" aria-label="Phiếu của tôi">
+    <button class="tab" type="button" role="tab" id="tab-gui" aria-controls="panel-gui" aria-selected="true">Gửi phiếu</button>
+    <button class="tab" type="button" role="tab" id="tab-ls" aria-controls="panel-ls" aria-selected="false" tabindex="-1">Lịch sử phiếu <span class="count" id="count">0</span></button>
+  </div>
+  <section class="tabpanel" role="tabpanel" id="panel-gui" aria-labelledby="tab-gui"><div id="area"></div></section>
+  <section class="tabpanel" role="tabpanel" id="panel-ls" aria-labelledby="tab-ls" tabindex="0" hidden>
+    <div class="hist-head"><h2 class="sec-title">Lịch sử phiếu của tôi</h2><p class="sec-sub">Trạng thái được cập nhật khi quà đã trả.</p></div>
+    <div id="hist"></div>
+  </section>
 </main>
 
 <script>
@@ -251,28 +274,28 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   function renderArea() {
     var a = $("#area");
     if (me.homNay) {
-      a.innerHTML = '<div class="card done">' + (justSent ? '<h2>Đã nhận phiếu của Chúa Công</h2><p>Quà sẽ được trả vào hòm thư trong game vào ngày mai.</p>' : '<h2>Hôm nay Chúa Công đã gửi phiếu</h2>') +
+      a.innerHTML = '<div class="done">' + (justSent ? '<h2>Đã nhận phiếu của Chúa Công</h2><p>Quà sẽ được trả vào hòm thư trong game vào ngày mai.</p>' : '<h2>Hôm nay Chúa Công đã gửi phiếu</h2>') +
         '<p>Phiếu mới mở lại lúc 00:00, còn <span class="clock" id="clock">' + untilMidnight() + '</span>.</p></div>';
       return;
     }
     var d = draft, err = function (k) { return errs[k] ? '<div class="errmsg" role="alert">⚠ ' + esc(errs[k]) + '</div>' : ""; };
     var rows = d.qua.map(function (g, i) {
-      return '<div class="gift"><span class="n">' + (i + 1) + '.</span><input type="text" id="gift-' + i + '" data-i="' + i + '" value="' + esc(g) + '" placeholder="Tên quà, ví dụ: Tướng Điêu Thuyền" maxlength="80" aria-label="Quà thứ ' + (i + 1) + '">' +
+      return '<div class="gift"><span class="n">' + (i + 1) + '</span><input class="inp" type="text" id="gift-' + i + '" data-i="' + i + '" value="' + esc(g) + '" placeholder="Ví dụ: Tướng Điêu Thuyền" maxlength="80" aria-label="Quà thứ ' + (i + 1) + '">' +
         (d.qua.length > 1 ? '<button type="button" class="x" data-rm="' + i + '" aria-label="Xoá quà thứ ' + (i + 1) + '">×</button>' : "<span></span>") + "</div>";
     }).join("");
     var servers = (me.servers || [{ id: "S1", name: "S1" }]).map(function (s) { return '<option value="' + esc(s.id) + '"' + (s.id === d.server ? " selected" : "") + ">" + esc(s.name) + "</option>"; }).join("");
-    a.innerHTML = '<form id="f" novalidate>' +
-      '<div class="card' + (errs.acc ? " err" : "") + '"><label class="q" for="acc">Tên tài khoản game<span class="star">*</span></label>' +
+    a.innerHTML = '<form class="form" id="f" novalidate>' +
+      '<div class="fld fld-acc' + (errs.acc ? " err" : "") + '"><label class="q" for="acc">Tên tài khoản game<span class="star">*</span></label>' +
       '<p class="hint">Tên đăng nhập trong game 3Q Đại Chiến, quà sẽ được gửi vào tài khoản này.</p>' +
-      '<input type="text" id="acc" value="' + esc(d.acc) + '" placeholder="Câu trả lời của bạn" maxlength="32" autocomplete="off">' + err("acc") + "</div>" +
-      '<div class="card' + (errs.server ? " err" : "") + '"><label class="q" for="srv">Server<span class="star">*</span></label><p class="hint">Server có nhân vật nhận quà.</p><select id="srv">' + servers + "</select>" + err("server") + "</div>" +
-      '<div class="card' + (errs.qua ? " err" : "") + '"><p class="q">Quà muốn nhận<span class="star">*</span></p><p class="hint">Ghi mỗi món quà một dòng. Không cần ghi số lượng.</p><div class="gifts">' + rows + "</div>" +
+      '<input class="inp" type="text" id="acc" value="' + esc(d.acc) + '" placeholder="Ví dụ: chuacong01" maxlength="32" autocomplete="off">' + err("acc") + "</div>" +
+      '<div class="fld fld-srv' + (errs.server ? " err" : "") + '"><label class="q" for="srv">Server<span class="star">*</span></label><p class="hint">Server có nhân vật nhận quà.</p><select class="inp" id="srv">' + servers + "</select>" + err("server") + "</div>" +
+      '<div class="fld' + (errs.qua ? " err" : "") + '"><p class="q">Quà muốn nhận<span class="star">*</span></p><p class="hint">Ghi mỗi món quà một dòng. Không cần ghi số lượng.</p><div class="gifts">' + rows + "</div>" +
       '<button type="button" class="add" id="add"' + (d.qua.length >= MAX ? " disabled" : "") + ">+ Thêm quà</button>" +
       (d.qua.length >= MAX ? '<p class="hint" style="margin-top:8px">Tối đa ' + MAX + " món mỗi phiếu.</p>" : "") + err("qua") + "</div>" +
-      '<div class="card' + (errs.ghiChu ? " err" : "") + '"><label class="q" for="note">Ghi chú</label><p class="hint">Không bắt buộc.</p><textarea id="note" rows="2" maxlength="300" placeholder="Câu trả lời của bạn">' + esc(d.ghiChu) + "</textarea>" + err("ghiChu") + "</div>" +
+      '<div class="fld' + (errs.ghiChu ? " err" : "") + '"><label class="q" for="note">Ghi chú</label><p class="hint">Không bắt buộc.</p><textarea class="inp" id="note" rows="3" maxlength="300" placeholder="Lời nhắn cho ban quản trị">' + esc(d.ghiChu) + "</textarea>" + err("ghiChu") + "</div>" +
       '<p class="form-err" id="form-err" role="alert"' + (errs._ ? "" : " hidden") + ">" + esc(errs._ || "") + "</p>" +
       '<div class="actions"><button type="submit" class="btn-scroll"' + (sending ? " disabled" : "") + "><span>" + (sending ? "Đang gửi…" : "Gửi phiếu") + '</span></button><button type="button" class="clear" id="clear">Xoá hết câu trả lời</button></div></form>';
-    var clearErr = function (el, k) { if (!errs[k]) return; delete errs[k]; var c = el.closest(".card"); c.classList.remove("err"); var m = c.querySelector(".errmsg"); if (m) m.remove(); };
+    var clearErr = function (el, k) { if (!errs[k]) return; delete errs[k]; var c = el.closest(".fld"); c.classList.remove("err"); var m = c.querySelector(".errmsg"); if (m) m.remove(); };
     $("#acc").oninput = function (e) { d.acc = e.target.value; clearErr(e.target, "acc"); };
     $("#srv").onchange = function (e) { d.server = e.target.value; };
     $("#note").oninput = function (e) { d.ghiChu = e.target.value; clearErr(e.target, "ghiChu"); };
@@ -286,8 +309,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
       var qua = d.qua.map(function (g) { return g.trim(); }).filter(Boolean);
       errs = {};
       if (!d.acc.trim()) errs.acc = "Đây là câu hỏi bắt buộc.";
+      else if (!/^[A-Za-z0-9._-]{1,32}$/.test(d.acc.trim())) errs.acc = "Tên tài khoản chỉ gồm chữ không dấu, số và . _ -";
       if (!qua.length) errs.qua = "Ghi ít nhất một món quà.";
-      if (Object.keys(errs).length) { renderArea(); var f = document.querySelector(".card.err input"); if (f) f.focus(); return; }
+      if (Object.keys(errs).length) { renderArea(); var f = document.querySelector(".fld.err .inp"); if (f) f.focus(); return; }
       sending = true; renderArea();
       api("POST", "/gui", { acc: d.acc.trim(), server: d.server, qua: qua, ghiChu: d.ghiChu.trim() }).then(function (r) {
         sending = false;
@@ -299,16 +323,38 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     };
   }
 
+  function srvName(id) { var s = (me.servers || []).filter(function (x) { return x.id === id; })[0]; return s ? s.name : id; }
+
   function renderHist() {
     var list = me.lichSu || [];
+    $("#count").textContent = list.length;
     $("#hist").innerHTML = list.length ? list.map(function (t) {
       return '<article class="tk"><div class="tk-top"><span class="tk-date">' + fmt(t.luc) + '</span><span class="pill ' + esc(t.st) + '">' + (ST[t.st] || "") + "</span></div>" +
         "<div><ul>" + t.qua.map(function (g) { return "<li>" + esc(g) + "</li>"; }).join("") + "</ul></div>" +
-        '<div class="hint" style="margin:0">Tài khoản: ' + esc(t.acc) + " · Server " + esc(t.server) + "</div>" +
+        '<div class="meta">Tài khoản: ' + esc(t.acc) + " · Server " + esc(srvName(t.server)) + "</div>" +
         (t.ghiChu ? "<div>Ghi chú: " + esc(t.ghiChu) + "</div>" : "") +
         (t.phanHoi ? '<div class="reply">Phản hồi: ' + esc(t.phanHoi) + "</div>" : "") + "</article>";
     }).join("") : '<p class="empty">Chưa có phiếu nào. Phiếu đầu tiên sẽ hiện ở đây.</p>';
   }
+
+  // tabs: click, or arrow keys / Home / End while a tab has focus
+  var TABS = ["gui", "ls"];
+  function showTab(name, focus) {
+    TABS.forEach(function (n) {
+      var t = $("#tab-" + n), on = n === name;
+      t.setAttribute("aria-selected", on); t.tabIndex = on ? 0 : -1; $("#panel-" + n).hidden = !on;
+      if (on && focus) t.focus();
+    });
+  }
+  TABS.forEach(function (n, i) {
+    var t = $("#tab-" + n);
+    t.onclick = function () { showTab(n); };
+    t.onkeydown = function (e) {
+      var k = e.key, j = k === "ArrowRight" ? i + 1 : k === "ArrowLeft" ? i - 1 : k === "Home" ? 0 : k === "End" ? TABS.length - 1 : null;
+      if (j === null) return;
+      e.preventDefault(); showTab(TABS[(j + TABS.length) % TABS.length], true);
+    };
+  });
 
   function showPlayer() {
     $("#loading").hidden = true; $("#login").hidden = true; $("#player").hidden = false;

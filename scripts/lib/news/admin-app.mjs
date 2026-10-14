@@ -555,7 +555,7 @@ ${d.pages > 1 ? `<div class="dks-pager"><button type="button" class="btn btn-gho
 <div class="tbl-wrap"><table class="posts posts-phieu"><thead><tr><th>Phiếu</th><th>Tài khoản game</th><th>Quà muốn nhận</th><th>Ghi chú</th><th>Trạng thái</th><th>Xử lý</th></tr></thead><tbody>
 ${d.items.map((t) => `<tr data-id="${esc(t.id)}">
 <td><b>${esc(t.email)}</b><div class="meta">${fmtTime(t.luc)}</div></td>
-<td><b>${esc(t.acc)}</b><div class="meta">Server ${esc(t.server)}</div></td>
+<td><b>${esc(t.acc)}</b><div class="meta">Server ${esc(t.serverTen || t.server)}</div></td>
 <td><ul class="phieu-qua">${t.qua.map((g) => `<li>${esc(g)}</li>`).join('')}</ul></td>
 <td class="meta">${esc(t.ghiChu) || '—'}</td>
 <td><span class="pill s-phieu-${esc(t.st)}">${PHIEU_ST[t.st] || esc(t.st)}</span>${t.xuLyBoi ? `<div class="meta" style="margin-top:4px">${esc(t.xuLyBoi)} · ${fmtTime(t.xuLyLuc)}</div>` : ''}</td>

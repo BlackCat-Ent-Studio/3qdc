@@ -6,7 +6,7 @@ import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { randomBytes } from 'node:crypto';
 import { readJson, writeJsonAtomic, siteNow, siteNowSeconds } from '../news/news-files.mjs';
-import { DATA_DIR, STATES } from './phieu-config.mjs';
+import { DATA_DIR, STATES, serverName } from './phieu-config.mjs';
 
 const listFile = () => join(DATA_DIR, 'phieu.json');
 
@@ -81,7 +81,8 @@ export async function listPhieu({ ngay = 'hom-nay', st = 'all' } = {}, now = Dat
   const counts = { all: inDay.length, cho: 0, tra: 0, tu: 0 };
   for (const t of inDay) counts[t.st] = (counts[t.st] || 0) + 1;
   const shown = (Object.hasOwn(STATES, st) ? inDay.filter((t) => t.st === st) : inDay).reverse();
-  return { items: shown, counts, cho: items.filter((t) => t.st === 'cho').length };
+  // copies, so the stored tickets never pick up the display-only server name
+  return { items: shown.map((t) => ({ ...t, serverTen: serverName(t.server) })), counts, cho: items.filter((t) => t.st === 'cho').length };
 }
 
 // Marks a ticket given / refused / back to waiting. → the ticket, or null when the id is unknown.
@@ -110,7 +111,7 @@ export async function phieuCsv(filter, now = Date.now()) {
   const { items } = await listPhieu(filter, now);
   const lines = ['Thời gian,Gmail,Tài khoản game,Server,Quà muốn nhận,Ghi chú,Trạng thái,Phản hồi,Người xử lý'];
   for (const t of items.slice().reverse()) {
-    lines.push([csvTime(t.luc), t.email, t.acc, t.server, t.qua.join('\n'), t.ghiChu, STATES[t.st] || t.st, t.phanHoi, t.xuLyBoi].map(csvCell).join(','));
+    lines.push([csvTime(t.luc), t.email, t.acc, t.serverTen, t.qua.join('\n'), t.ghiChu, STATES[t.st] || t.st, t.phanHoi, t.xuLyBoi].map(csvCell).join(','));
   }
   return { text: String.fromCharCode(0xfeff) + lines.join('\r\n') + '\r\n', rows: items.length };
 }

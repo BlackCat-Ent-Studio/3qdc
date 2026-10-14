@@ -20,7 +20,9 @@ export const DEV_LOGIN = process.env.PHIEU_DEV_LOGIN === '1' && process.env.NEWS
 export const SECURE_COOKIE = process.env.NEWS_INSECURE_COOKIE !== '1';
 
 // Game servers a player can pick; one for now.
-export const SERVERS = [{ id: 'S1', name: 'S1 · 3Q Đại Chiến' }];
+export const SERVERS = [{ id: 'S1', name: 'S1 Trương Liêu' }];
+// Tickets keep the id (S1); pages and the CSV show the name.
+export const serverName = (id) => SERVERS.find((s) => s.id === id)?.name || id;
 
 export const ACC_RE = /^[A-Za-z0-9._-]{1,32}$/;
 export const GIFTS_MAX = 10;
