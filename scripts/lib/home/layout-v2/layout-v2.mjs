@@ -39,6 +39,10 @@ const LOGO_CENTER = 56;
 // The download panel starts just below that frame so no text of the art is covered. Update these if the home
 // background artwork is replaced (the original art was 2560x1306 with eventFrameBottom 1140).
 const KV_IMAGE = '/3qdc-vi/home/anh-nen-slogan-vi.webp';
+// ground of the content area: the key visual blurred (pre-blurred file, 1280px) under the first block, and the gold
+// cloud pattern of the Q&A scroll (navy taken out, gold lines on transparent) faintly over the whole area
+const GROUND_KV = '/3qdc-vi/home/nen-kv-mo.webp';
+const GROUND_CLOUDS = '/3qdc-vi/home/nen-may-gam.webp';
 const KV = { width: 1756, height: 896, eventFrameBottom: 785 };
 
 // Vietnamese download buttons (omg3q-style artwork in overrides/home) in display order, filling a 2-column grid row by
@@ -271,8 +275,20 @@ html.hv2-soc-collapsed #hv2-social .hv2-soc-toggle{background-position:-44px 0}
 
 /* content area below the key visual */
 #home-v2{display:none}
-html.hv2 #home-v2{display:block;position:relative;z-index:1;background:#0b0d18;color:#e8e2d0;padding-top:var(--hv2-dl-push,0px);
+html.hv2 #home-v2{display:block;position:relative;z-index:1;background:#0d1222;color:#e8e2d0;padding-top:var(--hv2-dl-push,0px);
   font-family:"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+/* the ground is two still layers behind the blocks (no blend mode, nothing animated, so phones only paint it once):
+   the blurred key visual fading into the night with warm lantern light, then the gold clouds, faded in and out */
+html.hv2 #home-v2::before,html.hv2 #home-v2::after{content:"";position:absolute;left:0;right:0;top:0;z-index:0;pointer-events:none}
+html.hv2 #home-v2::before{height:1100px;background:
+  radial-gradient(60% 40% at 18% 22%,rgba(231,132,58,.16),transparent 70%),
+  radial-gradient(50% 35% at 85% 70%,rgba(231,132,58,.12),transparent 70%),
+  linear-gradient(180deg,rgba(13,18,34,.25) 0,rgba(13,18,34,.9) 60%,#0d1222 100%),
+  url("${GROUND_KV}") center top/cover no-repeat}
+html.hv2 #home-v2::after{bottom:0;background:url("${GROUND_CLOUDS}") 0 0/300px;opacity:.22;
+  -webkit-mask:linear-gradient(180deg,transparent,#000 260px,#000 calc(100% - 200px),transparent);
+  mask:linear-gradient(180deg,transparent,#000 260px,#000 calc(100% - 200px),transparent)}
+#home-v2 .hv2-section{position:relative;z-index:1}
 /* sections are centred on the window: content up to 1280px with the same side padding, at least 212px so the content
    never runs under the fixed side bars' collapse arrows (social arrow ends 43px in, sidebar arrow starts 209px in) */
 #home-v2 .hv2-section{display:none;padding:72px max(212px,calc((100% - 1280px) / 2)) 64px;max-width:none;margin:0 auto;box-sizing:content-box}
