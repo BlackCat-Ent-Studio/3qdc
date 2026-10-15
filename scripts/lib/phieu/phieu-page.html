@@ -58,81 +58,103 @@ h1 { font: 400 clamp(30px, 6vw, 44px)/1.15 var(--font-display); color: var(--gol
 @keyframes blink { 50% { opacity: 0; } }
 .quote cite { display: block; margin-top: 6px; font: italic 500 14px var(--font-body); color: var(--muted); }
 
-/* header card */
-.hero { border: 1px solid var(--gold); border-radius: 12px; overflow: hidden; background: var(--panel); }
-.hero-art { position: relative; aspect-ratio: 1200 / 362; max-width: 100%; background: #000 url("/3qdc-vi/phieu-be-ngoan/banner.webp") center / cover no-repeat; }
-.hero-art::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 55%, var(--panel) 100%); }
-.hero-art img { position: absolute; left: 18px; top: 14px; width: 112px; height: auto; z-index: 1; filter: drop-shadow(0 2px 6px #000a); }
-.hero-body { padding: 4px 26px 22px; }
-.hero p { margin: 0; max-width: 62ch; }
-.rules { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
-.rule { font-size: 13px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 3px 11px; }
-.rule strong { color: var(--ink); font-weight: 600; }
-.who { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; justify-content: space-between; border-top: 1px solid var(--line); margin-top: 18px; padding-top: 12px; font-size: 14px; color: var(--muted); }
-.who .email { color: var(--ink); font-weight: 600; }
-
-/* the form: one panel, labels above filled fields */
-.form { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 6px 28px 26px; margin-top: 12px;
-  display: grid; grid-template-columns: minmax(0, 1fr); column-gap: 24px; box-shadow: 0 18px 40px #0006; }
-.form > * { grid-column: 1 / -1; min-width: 0; }
-.fld { padding: 22px 0 2px; }
-.q { font-weight: 600; font-size: 14px; letter-spacing: .01em; margin: 0 0 2px; display: block; }
-.fld:focus-within .q { color: var(--gold-hi); }
-.star { color: var(--red); margin-left: 3px; }
-.hint { color: var(--muted); font-size: 12.5px; margin: 0 0 10px; }
-.inp { width: 100%; background: var(--panel-2); color: var(--ink); font: inherit; border: 1px solid var(--line); border-radius: 10px; padding: 11px 14px; min-height: 46px;
-  outline: none; transition: border-color .15s, box-shadow .15s; }
-.inp::placeholder { color: #7d7a72; }
-.inp:focus { border-color: var(--gold); box-shadow: 0 0 0 3px #c9a45c33; }
-.fld.err .inp { border-color: var(--red); }
-select.inp { appearance: none; cursor: pointer; padding-right: 40px;
-  background: var(--panel-2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23c9a45c' stroke-width='2'/%3E%3C/svg%3E") right 14px center no-repeat; }
-textarea.inp { resize: vertical; min-height: 92px; }
-.errmsg { color: var(--red); font-size: 13px; margin-top: 8px; }
-.gifts { display: grid; gap: 8px; }
-.gift { display: grid; grid-template-columns: 28px minmax(0, 1fr) 38px; align-items: center; gap: 8px; }
-.gift .n { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: #c9a45c22; color: var(--gold-hi); font: 700 12px var(--font-body); font-variant-numeric: tabular-nums; }
-.x { width: 38px; height: 38px; border-radius: 50%; border: 0; background: transparent; color: var(--muted); font-size: 20px; cursor: pointer; line-height: 1; }
-.x:hover { background: var(--panel-2); color: var(--ink); }
-.add { margin-top: 10px; display: inline-flex; align-items: center; gap: 8px; background: var(--panel-2); border: 1px solid var(--line); color: var(--gold-hi); font: 600 14px var(--font-body);
-  padding: 9px 14px; border-radius: 10px; cursor: pointer; }
-.add:hover { border-color: var(--gold); }
-.add:disabled { opacity: .45; cursor: not-allowed; }
-.actions { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; justify-content: space-between; margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line); }
-.btn-scroll { position: relative; width: min(300px, 100%); aspect-ratio: 640 / 183; border: 0; cursor: pointer; background: url("/3qdc-vi/phieu-be-ngoan/nut-vang.webp") center / contain no-repeat; font: 400 22px var(--font-display); color: #3a2208; padding: 0; transition: transform .12s, filter .12s; }
-.btn-scroll:hover { filter: brightness(1.08); }
-.btn-scroll:active { transform: translateY(2px) scale(.99); }
-.btn-scroll:disabled { filter: grayscale(.6) brightness(.8); cursor: wait; }
-.clear { background: none; border: 0; color: var(--gold-hi); font: 600 14px var(--font-body); cursor: pointer; padding: 6px; }
-.form-err { color: var(--red); margin: 12px 0 0; }
-.done { border: 1px solid var(--gold); background: var(--panel); border-radius: 16px; text-align: center; padding: 28px 24px; margin-top: 12px; }
-.done h2 { font: 400 28px var(--font-display); color: var(--gold-hi); margin: 0 0 6px; }
-.done p { margin: 4px auto; max-width: 52ch; }
-.clock { font-variant-numeric: tabular-nums; color: var(--gold-hi); font-weight: 700; }
-
-/* tabs under the header card: send a ticket / my tickets */
-.tabs { display: flex; gap: 4px; margin-top: 16px; padding: 4px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; }
-.tab { flex: 1 1 0; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; border: 0; border-radius: 9px;
-  background: transparent; color: var(--muted); font: 600 15px var(--font-body); cursor: pointer; transition: background .15s, color .15s; }
-.tab:hover { color: var(--ink); }
-.tab[aria-selected="true"] { background: var(--panel-2); color: var(--gold-hi); box-shadow: inset 0 -2px 0 var(--gold); }
-.tab .count { min-width: 22px; height: 22px; padding: 0 7px; border-radius: 999px; background: #c9a45c22; color: var(--gold-hi); font: 700 12px var(--font-body);
-  display: inline-grid; place-items: center; font-variant-numeric: tabular-nums; }
-.tabpanel:focus-visible { outline: none; }
-.hist-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 12px; margin: 16px 2px 0; }
-.sec-title { font: 400 22px var(--font-display); color: var(--gold-hi); margin: 0; }
-.sec-sub { color: var(--muted); font-size: 13px; margin: 0; }
-.tk { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px 18px; margin-top: 10px; display: grid; gap: 6px; }
-.tk-top { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; justify-content: space-between; }
-.tk-date { font-weight: 600; font-variant-numeric: tabular-nums; }
-.tk ul { margin: 0; padding-left: 20px; }
-.tk .meta { color: var(--muted); font-size: 13px; }
-.tk .reply { font-size: 13px; color: var(--muted); border-left: 2px solid var(--line); padding-left: 10px; }
-.pill { font-size: 12px; font-weight: 700; border-radius: 999px; padding: 2px 10px; white-space: nowrap; }
-.pill.cho { color: #1a1406; background: var(--wait); }
-.pill.tra { color: #06170e; background: var(--ok); }
-.pill.tu { color: #200a05; background: var(--red); }
-.empty { color: var(--muted); text-align: center; padding: 22px; border: 1px dashed var(--line); border-radius: 12px; margin-top: 10px; }
+/* ---------- player screen: the owner's pavilion frame (khung-mai-dinh, 160/92/46/92 slices as on /dang-ky-som), cream paper
+   inside, over a five-layer backdrop (deep gradient, blurred key art, faint auspicious clouds, warm glow, grain + vignette) ---------- */
+#player { --paper-ink: #3a2717; --ink-soft: #6f5a42; --seal: #b4301f; --seal-dk: #7e1d12; --jade: #2f7d5b; --amber: #b7791f; --s: .62;
+  max-width: 980px; position: relative; isolation: isolate; }
+#player .bg { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden;
+  background: radial-gradient(55% 48% at 50% 40%, #c9a45c33 0%, #c9a45c10 45%, transparent 72%),
+              radial-gradient(90% 60% at 50% 115%, #3a1e4a99 0%, transparent 70%),
+              linear-gradient(180deg, #0d1430 0%, #090d1f 45%, #070a17 100%); }
+#player .bg::before { content: ""; position: absolute; inset: -40px; background: url("/3qdc-vi/phieu-be-ngoan/banner.webp") center top / cover no-repeat;
+  filter: blur(10px) saturate(1.2); opacity: .34; -webkit-mask-image: linear-gradient(180deg, #000 0%, transparent 52%); mask-image: linear-gradient(180deg, #000 0%, transparent 52%); }
+#player .bg::after { content: ""; position: absolute; inset: 0; opacity: .045;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='92' viewBox='0 0 160 92'%3E%3Cg fill='none' stroke='%23e9c983' stroke-width='1.1' stroke-linecap='round'%3E%3Cpath d='M18 62c-8 0-12-10-5-15 3-12 18-14 24-5 6-10 22-8 25 3 11-2 18 9 11 17z'/%3E%3Cpath d='M30 52c0-5 7-6 8-1M50 49c1-5 9-5 9 1'/%3E%3Cpath d='M96 30c-7 0-10-8-4-12 3-10 15-11 20-4 5-8 18-6 20 3 9-2 15 7 9 13z'/%3E%3Cpath d='M106 22c0-4 6-5 7-1M122 20c1-4 7-4 7 1'/%3E%3C/g%3E%3C/svg%3E") 0 0 / 300px 172px repeat, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='92' viewBox='0 0 160 92'%3E%3Cg fill='none' stroke='%23e9c983' stroke-width='1.1' stroke-linecap='round'%3E%3Cpath d='M18 62c-8 0-12-10-5-15 3-12 18-14 24-5 6-10 22-8 25 3 11-2 18 9 11 17z'/%3E%3Cpath d='M30 52c0-5 7-6 8-1M50 49c1-5 9-5 9 1'/%3E%3Cpath d='M96 30c-7 0-10-8-4-12 3-10 15-11 20-4 5-8 18-6 20 3 9-2 15 7 9 13z'/%3E%3Cpath d='M106 22c0-4 6-5 7-1M122 20c1-4 7-4 7 1'/%3E%3C/g%3E%3C/svg%3E") 150px 86px / 300px 172px repeat;
+  -webkit-mask-image: radial-gradient(65% 60% at 50% 45%, transparent 30%, #000 75%); mask-image: radial-gradient(65% 60% at 50% 45%, transparent 30%, #000 75%); }
+#player .bg .grain { position: absolute; inset: 0; opacity: .5; mix-blend-mode: overlay; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 .35 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+#player .bg .vig { position: absolute; inset: 0; background: radial-gradient(120% 90% at 50% 45%, transparent 55%, #000000b3 100%); }
+#player .board { position: relative; color: var(--paper-ink); border-style: solid; border-color: transparent;
+  border-width: calc(160px * var(--s)) calc(92px * var(--s)) calc(46px * var(--s)) calc(92px * var(--s));
+  border-image: url("/3qdc-vi/dang-ky-som/khung-mai-dinh.webp") 160 92 46 92 fill / calc(160px * var(--s)) calc(92px * var(--s)) calc(46px * var(--s)) calc(92px * var(--s));
+  padding: 6px clamp(6px, 3vw, 26px) 26px; filter: drop-shadow(0 22px 34px #000a); }
+#player .head { display: grid; grid-template-columns: auto 1fr; gap: 6px 18px; align-items: center; }
+#player .head .logo { width: 86px; height: auto; }
+#player h1 { color: var(--seal-dk); margin: 0; font-size: clamp(30px, 4.6vw, 46px); }
+#player .intro { grid-column: 1 / -1; margin: 0; color: var(--ink-soft); max-width: 60ch; }
+#player .rules { grid-column: 1 / -1; list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13.5px; color: var(--ink-soft); }
+#player .rules li::before { content: "◆"; color: var(--seal); font-size: 9px; margin-right: 7px; vertical-align: 2px; }
+#player .rules b { color: var(--paper-ink); }
+#player .who { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline; justify-content: space-between;
+  margin-top: 8px; padding-top: 12px; border-top: 1px dashed #b89d6c; font-size: 14px; color: var(--ink-soft); }
+#player .who .email { color: var(--paper-ink); font-weight: 700; }
+#player .linkbtn { color: var(--seal-dk); font-weight: 600; text-underline-offset: 3px; padding: 4px 0; }
+/* tabs: two lacquer plaques hung on cords */
+#player .tabs { display: flex; justify-content: center; gap: 14px; margin: 26px 0 6px; }
+#player .tab { position: relative; white-space: nowrap; cursor: pointer; padding: 9px 22px 8px; min-height: 44px; font: 400 19px var(--font-display); color: var(--paper-ink);
+  background: linear-gradient(#f3e3bd, #e3c98f); border: 2px solid #9c7a3c; border-radius: 3px; box-shadow: inset 0 0 0 2px #f8eccd, 0 3px 0 #8c6a31; }
+#player .tab::before { content: ""; position: absolute; left: 50%; top: -14px; width: 34px; height: 14px; transform: translateX(-50%);
+  border: 1.5px solid #8c6a31; border-bottom: 0; border-radius: 18px 18px 0 0; }
+#player .tab[aria-selected="true"] { color: #fff3d6; background: linear-gradient(#c8432a, #8e2414); border-color: #e7b85b; box-shadow: inset 0 0 0 2px #e59a5a55, 0 3px 0 #5c160c; }
+#player .tab .count { display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; margin-left: 6px; border-radius: 50%;
+  font: 700 12px var(--font-body); background: #00000022; font-variant-numeric: tabular-nums; }
+#player .tabpanel { margin-top: 18px; }
+#player .tabpanel:focus-visible { outline: none; }
+/* the form: ink lines on paper */
+#player .form { display: grid; gap: 22px 28px; grid-template-columns: 1fr; }
+#player .form > .wide { grid-column: 1 / -1; }
+#player .fld { display: grid; gap: 4px; min-width: 0; }
+#player .q { font-weight: 700; font-size: 14.5px; color: var(--seal-dk); }
+#player .star { color: var(--seal); margin-left: 3px; }
+#player .hint { font-size: 12.5px; margin: 0; color: var(--ink-soft); }
+#player .inp { width: 100%; min-width: 0; min-height: 44px; outline: none; background: transparent; border: 0; border-bottom: 1.5px solid #a88a5a; border-radius: 0;
+  padding: 8px 2px; color: var(--paper-ink); font: 16px var(--font-body); }
+#player .inp::placeholder { color: #a8947a; font-style: italic; }
+#player .inp:focus { border-bottom: 2px solid var(--seal); padding-bottom: 7px; }
+#player .inp:disabled { opacity: .55; }
+#player textarea.inp { resize: vertical; min-height: 84px; border: 1.5px solid #c9b088; border-radius: 4px; padding: 10px 12px; background: #fffaf0aa; }
+#player select.inp { appearance: none; cursor: pointer; padding-right: 30px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%237e1d12' stroke-width='2'/%3E%3C/svg%3E") right 6px center no-repeat; }
+#player .fld.err .inp { border-color: var(--seal); }
+#player .errmsg { color: var(--seal); font-size: 13px; font-weight: 600; }
+/* gifts: wooden tablets with a red number */
+#player .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+#player .chip { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; background: linear-gradient(#fbf3df, #f0dfb6); border: 1.5px solid #b48d4c;
+  color: var(--paper-ink); padding: 6px 6px 6px 8px; border-radius: 2px;
+  clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px); }
+#player .chip .n { display: grid; place-items: center; width: 22px; height: 22px; background: var(--seal); color: #fff3d6; font: 700 12px var(--font-body); border-radius: 2px; }
+#player .chip .t { overflow-wrap: anywhere; }
+#player .chip .x { border: 0; background: none; cursor: pointer; font-size: 18px; line-height: 1; width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; color: var(--ink-soft); }
+#player .chip .x:hover { background: #0001; color: var(--seal); }
+#player .addrow { display: flex; gap: 8px; align-items: stretch; }
+#player .addrow .inp { flex: 1 1 auto; }
+#player .btn-add { cursor: pointer; white-space: nowrap; border: 1.5px solid #9c7a3c; background: #f3e3bd; color: var(--seal-dk); font: 700 14px var(--font-body); padding: 0 14px; border-radius: 3px; }
+#player .btn-add:disabled { opacity: .5; cursor: not-allowed; }
+#player .form-err { color: var(--seal); font-weight: 600; margin: 0; }
+#player .actions { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; justify-content: space-between; border-top: 1px dashed #b89d6c; padding-top: 20px; }
+#player .send { cursor: pointer; border: 0; min-width: 230px; height: 58px; padding: 0 34px; font: 400 23px var(--font-display); color: #fff6dc; letter-spacing: .02em;
+  text-shadow: 0 1px 0 #6a1a0c; background: linear-gradient(#e0682f, #b8361b 55%, #93240f);
+  box-shadow: inset 0 0 0 2px #f2c46b, inset 0 0 0 4px #9a2a14, 0 4px 0 #5f170a, 0 10px 18px #5f170a55;
+  clip-path: polygon(16px 0, calc(100% - 16px) 0, 100% 50%, calc(100% - 16px) 100%, 16px 100%, 0 50%); transition: transform .1s, filter .1s; }
+#player .send:hover { filter: brightness(1.07); }
+#player .send:active { transform: translateY(3px); }
+#player .send:disabled { filter: grayscale(.5) brightness(.85); cursor: wait; }
+#player .clear { background: none; border: 0; cursor: pointer; color: var(--ink-soft); font: 600 14px var(--font-body); text-decoration: underline; text-underline-offset: 3px; padding: 6px 0; }
+#player .done { text-align: center; padding: 18px 6px 6px; }
+#player .done h2 { font: 400 28px/1.2 var(--font-display); color: var(--seal-dk); margin: 0 0 6px; text-wrap: balance; }
+#player .done p { margin: 4px auto; max-width: 48ch; }
+#player .clock { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--seal); }
+/* history: receipts with a status stamp */
+#player .hist { display: grid; gap: 14px; }
+#player .tk { position: relative; display: grid; gap: 6px; background: #fbf4e2; border: 1px solid #d6bf92; padding: 14px 16px 14px 18px; color: var(--paper-ink);
+  background-image: radial-gradient(circle at 0 50%, transparent 0 7px, #fbf4e2 7.5px); }
+#player .tk-top { display: flex; flex-wrap: wrap; gap: 6px 12px; justify-content: space-between; align-items: center; }
+#player .tk-date { font-weight: 700; font-variant-numeric: tabular-nums; }
+#player .tk ul { margin: 0; padding-left: 20px; }
+#player .tk .meta { font-size: 13px; color: var(--ink-soft); }
+#player .tk .reply { font-size: 13px; color: var(--ink-soft); border-top: 1px dashed #cdb488; padding-top: 6px; }
+#player .stamp { font: 700 12px var(--font-body); letter-spacing: .08em; text-transform: uppercase; padding: 3px 9px; border: 2px solid currentColor; border-radius: 4px; transform: rotate(-4deg); }
+#player .stamp.tra { color: var(--jade); } #player .stamp.tu { color: var(--seal); } #player .stamp.cho { color: var(--amber); }
+#player .empty { color: var(--ink-soft); text-align: center; padding: 20px; border: 1px dashed #c9b088; }
 .loading { text-align: center; color: var(--muted); padding: 120px 16px; }
 button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
 
@@ -145,8 +167,12 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .quote { display: none; }
   .lead, .login-rules, .login-note { text-shadow: 0 1px 6px #000; }
 }
-@media (min-width: 680px) { .form { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .form > .fld-acc { grid-column: 1; } .form > .fld-srv { grid-column: 2; } }
-@media (max-width: 720px) { .form { padding: 2px 16px 20px; } .actions { justify-content: center; } .hero-body { padding: 2px 16px 18px; } .hero-art img { width: 84px; left: 12px; top: 10px; } }
+@media (min-width: 720px) { #player .form { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 560px) {
+  #player { --s: .3; padding-left: 8px; padding-right: 8px; } #player .board { padding-left: 4px; padding-right: 4px; }
+  #player .head .logo { width: 60px; } #player h1 { font-size: 30px; } #player .tabs { gap: 10px; } #player .tab { font-size: 16px; padding: 8px 12px 7px; }
+  #player .send { width: 100%; } #player .actions { justify-content: center; }
+}
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } .dt { animation: none; } .caret { display: none; } }
 </style>
 </head>
@@ -181,28 +207,22 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 </section>
 
 <main id="player" class="wrap" hidden>
-  <section class="hero" aria-labelledby="ttl">
-    <div class="hero-art" role="img" aria-label="Ảnh nền 3Q Đại Chiến"><img src="/3qdc-vi/home/logo-3qdc.webp" alt="3Q Đại Chiến"></div>
-    <div class="hero-body">
+  <div class="bg" aria-hidden="true"><span class="grain"></span><span class="vig"></span></div>
+  <div class="board">
+    <section class="head" aria-labelledby="ttl">
+      <img class="logo" src="/3qdc-vi/home/logo-3qdc.webp" alt="3Q Đại Chiến" width="203" height="152">
       <h1 id="ttl">Phiếu Bé Ngoan</h1>
-      <p>Chúa Công muốn nhận quà gì thì ghi vào phiếu. Mỗi ngày được gửi một phiếu, quà sẽ được trả vào hòm thư trong game vào ngày hôm sau.</p>
-      <div class="rules">
-        <span class="rule"><strong>1 phiếu</strong> / tài khoản / ngày</span>
-        <span class="rule">Mở phiếu mới lúc <strong>00:00</strong> (giờ Việt Nam)</span>
-        <span class="rule">Trả quà <strong>ngày hôm sau</strong></span>
-      </div>
+      <p class="intro">Chúa Công muốn nhận quà gì thì ghi vào phiếu. Mỗi ngày gửi được một phiếu, quà về hòm thư trong game vào ngày hôm sau.</p>
+      <ul class="rules"><li><b>1 phiếu</b> mỗi tài khoản mỗi ngày</li><li>Mở phiếu mới lúc <b>00:00</b> giờ Việt Nam</li><li>Trả quà <b>ngày hôm sau</b></li></ul>
       <div class="who"><span>Đang dùng <span class="email" id="me"></span></span><button class="linkbtn" id="out" type="button">Đổi tài khoản</button></div>
+    </section>
+    <div class="tabs" role="tablist" aria-label="Phiếu của tôi">
+      <button class="tab" type="button" role="tab" id="tab-gui" aria-controls="panel-gui" aria-selected="true">Gửi phiếu</button>
+      <button class="tab" type="button" role="tab" id="tab-ls" aria-controls="panel-ls" aria-selected="false" tabindex="-1">Lịch sử <span class="count" id="count">0</span></button>
     </div>
-  </section>
-  <div class="tabs" role="tablist" aria-label="Phiếu của tôi">
-    <button class="tab" type="button" role="tab" id="tab-gui" aria-controls="panel-gui" aria-selected="true">Gửi phiếu</button>
-    <button class="tab" type="button" role="tab" id="tab-ls" aria-controls="panel-ls" aria-selected="false" tabindex="-1">Lịch sử phiếu <span class="count" id="count">0</span></button>
+    <section class="tabpanel" role="tabpanel" id="panel-gui" aria-labelledby="tab-gui"><div id="area"></div></section>
+    <section class="tabpanel" role="tabpanel" id="panel-ls" aria-labelledby="tab-ls" tabindex="0" hidden><div class="hist" id="hist"></div></section>
   </div>
-  <section class="tabpanel" role="tabpanel" id="panel-gui" aria-labelledby="tab-gui"><div id="area"></div></section>
-  <section class="tabpanel" role="tabpanel" id="panel-ls" aria-labelledby="tab-ls" tabindex="0" hidden>
-    <div class="hist-head"><h2 class="sec-title">Lịch sử phiếu của tôi</h2><p class="sec-sub">Trạng thái được cập nhật khi quà đã trả.</p></div>
-    <div id="hist"></div>
-  </section>
 </main>
 
 <script>
@@ -213,7 +233,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   var QUOTES = ["Chúa Công ngoan ngoãn, quà sẽ về tận hòm thư.", "Mỗi ngày một phiếu, Chúa Công nhớ ghé thăm thiếp nhé.", "Trăng sáng đêm nay, quà của Chúa Công cũng sắp tới rồi."];
   var $ = function (s) { return document.querySelector(s); };
   var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
-  var me = null, draft = { acc: "", server: "S1", qua: [""], ghiChu: "" }, errs = {}, justSent = false, sending = false;
+  var me = null, draft = { acc: "", server: "S1", qua: [], ghiChu: "" }, giftText = "", errs = {}, justSent = false, sending = false;
 
   function api(method, path, body) {
     return fetch("/api/phieu" + path, {
@@ -271,51 +291,60 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   });
 
   // ---------- the form ----------
+  function addGift() {
+    var v = giftText.trim();
+    if (!v || draft.qua.length >= MAX) return false;
+    draft.qua.push(v.slice(0, 80)); giftText = ""; delete errs.qua; return true;
+  }
   function renderArea() {
     var a = $("#area");
     if (me.homNay) {
-      a.innerHTML = '<div class="done">' + (justSent ? '<h2>Đã nhận phiếu của Chúa Công</h2><p>Quà sẽ được trả vào hòm thư trong game vào ngày mai.</p>' : '<h2>Hôm nay Chúa Công đã gửi phiếu</h2>') +
+      a.innerHTML = '<div class="done">' + (justSent ? '<h2>Đã nhận phiếu của Chúa Công</h2><p>Quà sẽ về hòm thư trong game vào ngày mai.</p>' : '<h2>Hôm nay Chúa Công đã gửi phiếu</h2>') +
         '<p>Phiếu mới mở lại lúc 00:00, còn <span class="clock" id="clock">' + untilMidnight() + '</span>.</p></div>';
       return;
     }
-    var d = draft, err = function (k) { return errs[k] ? '<div class="errmsg" role="alert">⚠ ' + esc(errs[k]) + '</div>' : ""; };
-    var rows = d.qua.map(function (g, i) {
-      return '<div class="gift"><span class="n">' + (i + 1) + '</span><input class="inp" type="text" id="gift-' + i + '" data-i="' + i + '" value="' + esc(g) + '" placeholder="Ví dụ: Tướng Điêu Thuyền" maxlength="80" aria-label="Quà thứ ' + (i + 1) + '">' +
-        (d.qua.length > 1 ? '<button type="button" class="x" data-rm="' + i + '" aria-label="Xoá quà thứ ' + (i + 1) + '">×</button>' : "<span></span>") + "</div>";
+    var d = draft, full = d.qua.length >= MAX, err = function (k) { return errs[k] ? '<div class="errmsg" role="alert">' + esc(errs[k]) + '</div>' : ""; };
+    var chips = d.qua.map(function (g, i) {
+      return '<span class="chip"><span class="n">' + (i + 1) + '</span><span class="t">' + esc(g) + '</span><button type="button" class="x" data-rm="' + i + '" aria-label="Bỏ ' + esc(g) + '">×</button></span>';
     }).join("");
     var servers = (me.servers || [{ id: "S1", name: "S1" }]).map(function (s) { return '<option value="' + esc(s.id) + '"' + (s.id === d.server ? " selected" : "") + ">" + esc(s.name) + "</option>"; }).join("");
     a.innerHTML = '<form class="form" id="f" novalidate>' +
-      '<div class="fld fld-acc' + (errs.acc ? " err" : "") + '"><label class="q" for="acc">Tên tài khoản game<span class="star">*</span></label>' +
-      '<p class="hint">Tên đăng nhập trong game 3Q Đại Chiến, quà sẽ được gửi vào tài khoản này.</p>' +
-      '<input class="inp" type="text" id="acc" value="' + esc(d.acc) + '" placeholder="Ví dụ: chuacong01" maxlength="32" autocomplete="off">' + err("acc") + "</div>" +
-      '<div class="fld fld-srv' + (errs.server ? " err" : "") + '"><label class="q" for="srv">Server<span class="star">*</span></label><p class="hint">Server có nhân vật nhận quà.</p><select class="inp" id="srv">' + servers + "</select>" + err("server") + "</div>" +
-      '<div class="fld' + (errs.qua ? " err" : "") + '"><p class="q">Quà muốn nhận<span class="star">*</span></p><p class="hint">Ghi mỗi món quà một dòng. Không cần ghi số lượng.</p><div class="gifts">' + rows + "</div>" +
-      '<button type="button" class="add" id="add"' + (d.qua.length >= MAX ? " disabled" : "") + ">+ Thêm quà</button>" +
-      (d.qua.length >= MAX ? '<p class="hint" style="margin-top:8px">Tối đa ' + MAX + " món mỗi phiếu.</p>" : "") + err("qua") + "</div>" +
-      '<div class="fld' + (errs.ghiChu ? " err" : "") + '"><label class="q" for="note">Ghi chú</label><p class="hint">Không bắt buộc.</p><textarea class="inp" id="note" rows="3" maxlength="300" placeholder="Lời nhắn cho ban quản trị">' + esc(d.ghiChu) + "</textarea>" + err("ghiChu") + "</div>" +
-      '<p class="form-err" id="form-err" role="alert"' + (errs._ ? "" : " hidden") + ">" + esc(errs._ || "") + "</p>" +
-      '<div class="actions"><button type="submit" class="btn-scroll"' + (sending ? " disabled" : "") + "><span>" + (sending ? "Đang gửi…" : "Gửi phiếu") + '</span></button><button type="button" class="clear" id="clear">Xoá hết câu trả lời</button></div></form>';
+      '<div class="fld' + (errs.acc ? " err" : "") + '"><label class="q" for="acc">Tên tài khoản game<span class="star">*</span></label>' +
+      '<input class="inp" type="text" id="acc" value="' + esc(d.acc) + '" placeholder="Ví dụ: chuacong01" maxlength="32" autocomplete="off">' +
+      '<p class="hint">Tên đăng nhập trong game, quà gửi vào tài khoản này.</p>' + err("acc") + "</div>" +
+      '<div class="fld' + (errs.server ? " err" : "") + '"><label class="q" for="srv">Server<span class="star">*</span></label><select class="inp" id="srv">' + servers + '</select>' +
+      '<p class="hint">Server có nhân vật nhận quà.</p>' + err("server") + "</div>" +
+      '<div class="fld wide' + (errs.qua ? " err" : "") + '"><label class="q" for="gift-in">Quà muốn nhận<span class="star">*</span></label>' +
+      (chips ? '<div class="chips">' + chips + "</div>" : "") +
+      '<div class="addrow"><input class="inp" type="text" id="gift-in" value="' + esc(giftText) + '" placeholder="' + (full ? "Đã đủ " + MAX + " món" : "Gõ tên quà rồi Enter") + '" maxlength="80"' + (full ? " disabled" : "") + '>' +
+      '<button type="button" class="btn-add" id="add"' + (full ? " disabled" : "") + '>Thêm</button></div>' +
+      '<p class="hint">Mỗi món một lần thêm, không cần ghi số lượng. Tối đa ' + MAX + " món (" + d.qua.length + "/" + MAX + ").</p>" + err("qua") + "</div>" +
+      '<div class="fld wide' + (errs.ghiChu ? " err" : "") + '"><label class="q" for="note">Ghi chú</label><textarea class="inp" id="note" rows="2" maxlength="300" placeholder="Lời nhắn cho ban quản trị (không bắt buộc)">' + esc(d.ghiChu) + "</textarea>" + err("ghiChu") + "</div>" +
+      '<p class="form-err wide" id="form-err" role="alert"' + (errs._ ? "" : " hidden") + ">" + esc(errs._ || "") + "</p>" +
+      '<div class="actions wide"><button type="submit" class="send"' + (sending ? " disabled" : "") + ">" + (sending ? "Đang gửi…" : "Gửi phiếu") + '</button><button type="button" class="clear" id="clear">Xoá hết</button></div></form>';
     var clearErr = function (el, k) { if (!errs[k]) return; delete errs[k]; var c = el.closest(".fld"); c.classList.remove("err"); var m = c.querySelector(".errmsg"); if (m) m.remove(); };
+    var addAndFocus = function () { if (addGift()) { renderArea(); var el = $("#gift-in"); if (el) el.focus(); } };
     $("#acc").oninput = function (e) { d.acc = e.target.value; clearErr(e.target, "acc"); };
     $("#srv").onchange = function (e) { d.server = e.target.value; };
     $("#note").oninput = function (e) { d.ghiChu = e.target.value; clearErr(e.target, "ghiChu"); };
-    a.querySelectorAll(".gift input").forEach(function (inp) { inp.oninput = function (e) { d.qua[+e.target.dataset.i] = e.target.value; clearErr(e.target, "qua"); }; });
+    $("#gift-in").oninput = function (e) { giftText = e.target.value; clearErr(e.target, "qua"); };
+    $("#gift-in").onkeydown = function (e) { if (e.key === "Enter") { e.preventDefault(); addAndFocus(); } };
+    $("#add").onclick = addAndFocus;
     a.querySelectorAll("[data-rm]").forEach(function (b) { b.onclick = function () { d.qua.splice(+b.dataset.rm, 1); renderArea(); }; });
-    $("#add").onclick = function () { if (d.qua.length < MAX) { d.qua.push(""); renderArea(); var el = $("#gift-" + (d.qua.length - 1)); if (el) el.focus(); } };
-    $("#clear").onclick = function () { draft = { acc: "", server: "S1", qua: [""], ghiChu: "" }; errs = {}; renderArea(); };
+    $("#clear").onclick = function () { draft = { acc: "", server: "S1", qua: [], ghiChu: "" }; giftText = ""; errs = {}; renderArea(); };
     $("#f").onsubmit = function (ev) {
       ev.preventDefault();
       if (sending) return;
-      var qua = d.qua.map(function (g) { return g.trim(); }).filter(Boolean);
+      addGift(); // a gift still typed in the box counts
       errs = {};
-      if (!d.acc.trim()) errs.acc = "Đây là câu hỏi bắt buộc.";
+      if (!d.acc.trim()) errs.acc = "Chúa Công chưa ghi tên tài khoản.";
       else if (!/^[A-Za-z0-9._-]{1,32}$/.test(d.acc.trim())) errs.acc = "Tên tài khoản chỉ gồm chữ không dấu, số và . _ -";
-      if (!qua.length) errs.qua = "Ghi ít nhất một món quà.";
+      if (!d.qua.length) errs.qua = "Ghi ít nhất một món quà.";
       if (Object.keys(errs).length) { renderArea(); var f = document.querySelector(".fld.err .inp"); if (f) f.focus(); return; }
       sending = true; renderArea();
-      api("POST", "/gui", { acc: d.acc.trim(), server: d.server, qua: qua, ghiChu: d.ghiChu.trim() }).then(function (r) {
+      api("POST", "/gui", { acc: d.acc.trim(), server: d.server, qua: d.qua.slice(), ghiChu: d.ghiChu.trim() }).then(function (r) {
         sending = false;
-        if (r._status === 201 || r._status === 409) { justSent = r._status === 201; draft.qua = [""]; draft.ghiChu = ""; return boot(); }
+        if (r._status === 201 || r._status === 409) { justSent = r._status === 201; draft.qua = []; draft.ghiChu = ""; return boot(); }
         if (r._status === 401) return boot();
         errs = {}; errs[r.field || "_"] = r.error || "Không gửi được phiếu. Thử lại sau ít phút.";
         renderArea();
@@ -329,10 +358,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     var list = me.lichSu || [];
     $("#count").textContent = list.length;
     $("#hist").innerHTML = list.length ? list.map(function (t) {
-      return '<article class="tk"><div class="tk-top"><span class="tk-date">' + fmt(t.luc) + '</span><span class="pill ' + esc(t.st) + '">' + (ST[t.st] || "") + "</span></div>" +
-        "<div><ul>" + t.qua.map(function (g) { return "<li>" + esc(g) + "</li>"; }).join("") + "</ul></div>" +
-        '<div class="meta">Tài khoản: ' + esc(t.acc) + " · Server " + esc(srvName(t.server)) + "</div>" +
-        (t.ghiChu ? "<div>Ghi chú: " + esc(t.ghiChu) + "</div>" : "") +
+      return '<article class="tk"><div class="tk-top"><span class="tk-date">' + fmt(t.luc) + '</span><span class="stamp ' + esc(t.st) + '">' + (ST[t.st] || "") + "</span></div>" +
+        "<ul>" + t.qua.map(function (g) { return "<li>" + esc(g) + "</li>"; }).join("") + "</ul>" +
+        '<div class="meta">Tài khoản ' + esc(t.acc) + " · " + esc(srvName(t.server)) + (t.ghiChu ? " · Ghi chú: " + esc(t.ghiChu) : "") + "</div>" +
         (t.phanHoi ? '<div class="reply">Phản hồi: ' + esc(t.phanHoi) + "</div>" : "") + "</article>";
     }).join("") : '<p class="empty">Chưa có phiếu nào. Phiếu đầu tiên sẽ hiện ở đây.</p>';
   }
