@@ -187,6 +187,7 @@ Mở bài → đổi ô "Đăng lên" → Lưu. Bài **biến khỏi** trang cũ
 - **Google:** project Google Cloud `phieu-be-ngoan-3qdc` (tài khoản blackcat.ent.studio), app "Phiếu Bé Ngoan 3Q Đại Chiến", External, **In production**, không logo (thêm logo ⇒ Google bắt xin duyệt). Client ID nằm trong biến môi trường dịch vụ: `nssm get 3qdc-unified AppEnvironmentExtra` (`PORT=3399` + `PHIEU_GOOGLE_CLIENT_ID=…`). **Không bao giờ** đặt `PHIEU_DEV_LOGIN` trên LIVE. Đổi tên miền ⇒ thêm origin mới trong Google Cloud → Clients.
 - **Caddy:** khối `phieubengoan.3qdc.wanmeivn.com { … }` ở cuối `C:\caddy\Caddyfile` (backup trước khi thêm: `Caddyfile.bak-261015-phieu-be-ngoan`). DNS: bản ghi A `phieubengoan.3qdc` ở Mắt Bão.
 - **Commit:** `f8fe81f` (thẻ trước đó `pre-phieu-be-ngoan`). Lùi: `git revert f8fe81f` + restart, xoá khối Caddy + reload; dữ liệu phiếu vẫn còn trong `data\`.
+- **Giao diện (15/10):** màn đăng nhập = Điêu Thuyền (≤860px làm nền mờ); màn người chơi = **hướng A \"Đình làng\"** khách chọn: khung đình ngói của `/dang-ky-som`, giấy kem, tab biển treo, quà dạng thẻ bài, nút sơn mài, nền 5 lớp. Server hiển thị **S1 Trương Liêu** (`SERVERS` + `serverName()` trong `phieu-config.mjs`; dữ liệu lưu mã `S1`). Commit gần nhất `ddb9994`.
 - Chi tiết: `plans\261014-2335-phieu-be-ngoan\HANDOFF-phieu-be-ngoan.md`.
 
 ---

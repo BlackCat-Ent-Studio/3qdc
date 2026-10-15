@@ -1,4 +1,4 @@
-# Journal 29/09 → 15/10/2026 (bổ sung 15/10 ~01:00: deploy Phiếu Bé Ngoan, lỗi #21–26) — DNS sập, VPS .40 mất kết nối, tư liệu Hán→Việt, Phiếu Bé Ngoan
+# Journal 29/09 → 15/10/2026 (bổ sung 15/10 ~01:00: deploy Phiếu Bé Ngoan #21–26; 15/10 chiều: responsive, form, chuẩn bị reset VPS, giao diện hướng A #27–36) — DNS sập, VPS .40 mất kết nối, tư liệu Hán→Việt, Phiếu Bé Ngoan
 
 Phiên dài nhiều việc nhỏ + 1 việc lớn (Phiếu Bé Ngoan). Đọc mục 3 (quy trình) trước khi làm web mini kiểu này lần sau.
 
@@ -14,6 +14,11 @@ Phiên dài nhiều việc nhỏ + 1 việc lớn (Phiếu Bé Ngoan). Đọc m�
 | VPS .40 sập hẳn 14/10 ~19:50 | Mọi cổng + ARP từ .23 đều chết ⇒ máy/ảo hoá, không phải web. Chạy lại 22:24 (user xử lý). Chưa đọc event log tìm nguyên nhân. |
 | Snipping Tool không lưu ảnh vào ổ C | Windows Defender **Controlled folder access** chặn `SnippingTool.exe` + `PickerHost.exe` → thêm 2 app vào danh sách cho phép (UAC). |
 | **Phiếu Bé Ngoan** | Brainstorm → bản mẫu Artifact v1–v3 → plan 5 phase → phase 1–4 xong trên nháp VPS 13398, chờ user duyệt + DNS + Google Client ID. Bàn giao: `plans\261014-2335-phieu-be-ngoan\HANDOFF-phieu-be-ngoan.md`. |
+
+| Responsive trang đăng nhập (00:30) | ≤860px Điêu Thuyền thành nền mờ (trước bị `display:none`), bỏ khung trắng quanh nút Google (`color-scheme: light`), nút co `min(360, khung)`, `100dvh` — `39d3555`. |
+| Form 1 khung + tab lịch sử + "S1 Trương Liêu" (01:20) | `61cf13d`; `serverName()` 1 chỗ, `listPhieu` trả bản sao có `serverTen` (CSV + /quan-tri hiện tên, dữ liệu vẫn `S1`). |
+| Chuẩn bị reset VPS .40 (01:30–02:00) | Kiểm kê: code ở GitHub, `mirror/` 8,1 GB chỉ ở laptop (khớp 2533/2533), `data/`, nhạc, Caddyfile, env, hỏi-đáp/wiki/duyệt chỉ ở VPS → `3045a2a` (data/news, nhạc, `van-hanh-vps40/` + HUONG-DAN-DUNG-LAI.md) + repo mới `3q-hoi-dap`. Bí mật → gói 7z (chưa làm). |
+| Khách: form "nhìn ra AI" (15:00) | 3 hướng trên 1 Artifact (A Đình làng / B Chiếu chỉ / C Bảng sự kiện) dùng **ảnh khách đã duyệt**; khách chọn A → `99c7f32`; nền 5 lớp; nút Đổi tài khoản lên ngang tiêu đề `ddb9994`; `ban-giao/` cập nhật `a955068`. |
 
 ## 2. Lỗi thật → nguyên nhân → cách sửa
 | # | Lỗi | Nguyên nhân | Cách sửa / phòng |
@@ -46,6 +51,14 @@ Phiên dài nhiều việc nhỏ + 1 việc lớn (Phiếu Bé Ngoan). Đọc m�
 | 26 | Google Cloud: nút "Publish app" bị khoá | Trang Branding thiếu trang chủ + chính sách bảo mật | Điền home = tên miền phiếu, privacy = `https://3qdc.wanmeivn.com/privacy`, domain `wanmeivn.com`; **không** tải logo (có logo ⇒ phải xin Google duyệt). Ô checkbox điều khoản không bấm được bằng toạ độ ⇒ `input.click()` qua JS (tìm trong shadow DOM). |
 | 27 | Script deploy vẫn chạy dù 4 lệnh `scp` báo lỗi (tạo tag + backup rồi mới dừng ở bước chép) | Tạo thư mục đích bằng `ssh \"powershell -Command \\\"New-Item ...\\\"\"` hỏng dấu nháy; lệnh nối bằng `;` nên bước sau vẫn chạy | Tạo thư mục bằng `.ps1`; chạy với `set -e`; **so SHA1 file đã tải lên trước khi gọi deploy**; deploy script có `ErrorActionPreference=Stop` nên dừng trước khi chép/restart — kiểm lại SHA1 LIVE + giờ khởi động service, xoá tag/backup dở rồi chạy lại. |
 | 28 | Xem trước bản sửa trang phiếu mà không dựng nháp 13398 | Trang chỉ là 1 file HTML server đọc lúc khởi động | Playwright `page.route(BASE)` trả file HTML trên laptop + giả lập `/api/phieu/toi`, `/api/phieu/gui` trong trình duyệt → kiểm cả lượt gửi mà không tạo phiếu thật; nháp VPS chỉ cần khi đổi code server. |
+| 29 | Khách chê form "nhìn ra AI slop", "gần như không đổi so với bản đầu" | Lần trước chỉ xếp lại khối: vẫn khung tối bo góc giống nhau, ô tối, điểm vàng = kiểu dashboard SaaS; **không dùng chút nào bộ khung/nút khách đã vẽ** (`overrides/dang-ky-som`, `overrides/home`) | Khi khách nói "AI": đổi **chất liệu**, không xếp lại khối. Lấy ảnh khách đã duyệt (khung đình, 9-slice giấy, nút sơn mài) + chữ thư pháp; ô nhập theo vật liệu (dòng kẻ mực); trình **nhiều hướng** để khách tự chọn style. |
+| 30 | Định "chép bố cục 21st.dev" | 21st.dev gần như toàn shadcn/Tailwind SaaS — chính là nguồn của cảm giác AI | Chỉ mượn **cơ chế** (chip input, stepper, lớp nền nhiều tầng); phần nhìn lấy từ thế giới game. Nói thẳng với user trước khi làm. |
+| 31 | Nền xanh "chưa chuyên nghiệp" | 1 màu phẳng + 1 vệt sáng | Nền 5 lớp: gradient sâu → tranh game blur phía trên (mask) → hoa văn mây vàng rất mờ, so le, mask hở giữa → vầng sáng ấm sau khung → grain + vignette. Hoa văn lặp đều = giấy dán tường ⇒ phóng to, 2 lớp lệch nửa ô, opacity ~.045. |
+| 32 | Tiêu đề bẻ 3 dòng trên điện thoại khi thêm nút cạnh tiêu đề | 3 cột (logo · tiêu đề · nút) quá chật ở 393px | ≤560px: hàng 1 logo + nút, tiêu đề xuống hàng 2 (grid-row). Luôn chụp lại phần đầu ở Pixel 5 sau mỗi thay đổi đầu trang. |
+| 33 | Deploy lần 2 dừng ở bước đầu: file tải lên "không có" | Sinh script mới từ script cũ bằng `sed`: thay đường dẫn có `\` không ăn | Script dừng trước tag/backup/chép (kiểm SHA1 file tải lên là bước 1) nên LIVE không đổi. Sửa đường dẫn bằng Python; tốt hơn: **tham số hoá** thư mục tải lên thay vì sửa chuỗi. |
+| 34 | In nhầm giá trị bí mật (`BOT_MUOI_BAM`) ra chat khi xem env service hỏi-đáp | Bộ lọc regex chỉ che tên chứa key/token/secret/pass | **Không bao giờ in giá trị env**: chỉ in TÊN biến (`dich-vu.txt` làm vậy). Báo user ngay, đề nghị đổi khi dựng lại. |
+| 35 | Quét bí mật báo hàng trăm dòng "token/API_KEY" | Tên biến trong code, không phải giá trị | Quét 2 lượt: lượt 1 tên khoá; lượt 2 **chuỗi dài ≥24 ký tự có chữ hoa+thường+số / hex ≥32 / `xai-`**, chỉ in vị trí + độ dài. Tên file trùng từ khoá (`nhat-ky.ts`) = báo nhầm, mở xem trước khi kết luận. |
+| 36 | HANDOFF có đường dẫn hỏng `overrideshome⏎hac` từ phiên cũ | Lỗi #20 kiểu khác: `\n` trong `overrides\home\nhac` thành xuống dòng | Đã sửa 15/10. Sau mỗi lần ghi tài liệu: kiểm ký tự điều khiển + tìm `±` lạ + đọc lại dòng vừa ghi. |
 
 ## 3. Quy trình làm web mini mới (đã chạy tốt với Phiếu Bé Ngoan)
 1. **Hiểu yêu cầu + scout thật**: đọc tin nhắn khách; tìm trong hệ thống cái liên quan (vd. tài khoản game 3Q ở `auth.3qdc…:8443` trên .11/.41, Caddy .23 chỉ là cổng). Hỏi lại khi yêu cầu mâu thuẫn ("log gmail" vs tài khoản game).
@@ -60,8 +73,26 @@ Phiên dài nhiều việc nhỏ + 1 việc lớn (Phiếu Bé Ngoan). Đọc m�
 10. **So SHA1 LIVE = baseline** (chứng minh chưa đụng LIVE) → báo user link đường hầm → DỪNG chờ duyệt → "deploy đi" mới làm phase deploy.
 11. **Ngữ cảnh ~90%** ⇒ viết HANDOFF ngay (file riêng trong plan + 1 dòng trỏ ở đầu `HANDOFF.md`) trước khi làm tiếp.
 
+## 3b. Quy trình sửa giao diện khi khách chê (đã chạy 15/10, khách chọn được ngay)
+1. **Đọc đúng lời khách** (ảnh Zalo): tách từng ý — "chọn style", "viền khung", "kiểu nút", "cân đối", "đừng AI". Ý nào cũng phải có thay đổi nhìn thấy được.
+2. **Kiểm kho ảnh khách đã duyệt** trước khi vẽ mới: `git ls-tree` repo `3qdc` → `overrides/dang-ky-som`, `overrides/home` → contact sheet (PIL) → biết có khung/nút gì, cách gắn (`border-image` slice trong CSS trang cũ).
+3. **Đề xuất 2–3 hướng khác nhau về chất liệu** (không chỉ khác màu), mỗi hướng ghi rõ dùng ảnh nào; nói thẳng hướng nào dễ bị "chưa đổi gì".
+4. **1 Artifact nhiều hướng** (nút A/B/C + Máy tính/Điện thoại, form bấm thử được, dữ liệu mẫu ghi "(ví dụ)", nhúng ảnh/font data URI) → mở trên Chrome laptop (`5aa70949-…`) → user gửi khách chọn. Sửa = đăng lại cùng link.
+5. Khách chọn ⇒ làm vào trang thật **chỉ màn được chọn** (CSS gói dưới `#player` để không đụng màn khác), ảnh dùng URL `/3qdc-vi/...` đã có trên server.
+6. **Xem trước trên trang LIVE** bằng Playwright `route(BASE)` trả file laptop + giả lập API (`kiem-huong-a.cjs`, 7 cỡ màn, lỗi trống, thêm quà, gửi, tab lịch sử) → ảnh cho user → DỪNG.
+7. "deploy đi" ⇒ quét log `/quan-tri` → tải file lên thư mục tạm riêng → **deploy script tự so SHA1 file tải lên + SHA1 LIVE = baseline** → tag + backup → chép → restart → curl → kiểm LIVE 7 cỡ màn (tham số `-`) → commit chỉ file đó trên VPS → bundle → push → dọn → HANDOFF.
+
+## 3c. Quy trình đưa dự án lên git trước khi reset máy chủ
+1. Kiểm kê chỉ đọc: `.gitignore`, `git status --ignored`, dung lượng từng thư mục, service (nssm: Application/AppParameters/AppDirectory, **không in env**), Caddy block nào trỏ đâu, DNS từng tên miền (`dns.google/resolve`) — tên miền trỏ máy khác (vd. `portal` → .35) không bị ảnh hưởng.
+2. Thư mục lớn không lên git được (`mirror/` 8 GB) → so manifest `đường dẫn|dung lượng` VPS vs laptop; khớp thì khỏi tải.
+3. Code + dữ liệu công khai (bài tin, ảnh) → git; `.gitignore` mở từng phần (`/data/*` + `!/data/news/` + `/data/news/users.json`); script chặn commit nếu staged có tên bí mật.
+4. Dịch vụ không có git (hỏi-đáp, wiki, duyệt) → gom thư mục tạm (bỏ `node_modules`, log, nhật ký người dùng, bản `.cu`, tài khoản) → `git init` → bundle → `gh repo create --private` → push.
+5. Bí mật + dữ liệu cá nhân → **không lên git** → 7z AES-256 + mã hoá tên file, mật khẩu do user giữ, cất nơi khác file.
+6. Viết `HUONG-DAN-DUNG-LAI.md` vào repo (cài phần mềm, chép gì vào đâu, tạo service, Caddy, DNS, kiểm thử).
+
 ## 4. Còn treo
-- ~~Phiếu Bé Ngoan~~ ✅ LIVE 15/10 (`f8fe81f`); chỉ chờ user tự gửi thử 1 phiếu thật.
+- ~~Phiếu Bé Ngoan~~ ✅ LIVE 15/10 (`f8fe81f` → `ddb9994`); chờ khách duyệt giao diện hướng A trên máy thật + user tự gửi thử 1 phiếu thật.
+- **Gói bí mật 7z trước khi reset .40** — chờ user chọn mật khẩu (xem HANDOFF dòng TÌNH TRẠNG).
 - Nguyên nhân VPS .40 sập 14/10 (đọc event log 41/6008/1074/1001/WHEA quanh 19:50).
 - ~8 tiến trình `claude` cũ trên VPS; cổng 22/3389/5985 mở ra Internet.
 - `D:\Doc\Tư liệu sưu tầm` thiếu `08-anh-khac`, `Planing` (còn trong Thùng rác như 01/10).
