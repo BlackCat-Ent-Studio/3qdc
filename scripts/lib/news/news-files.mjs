@@ -8,8 +8,13 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 // either the old file or the new one, never half of one. Windows can refuse the rename for a moment while another
 // program (antivirus, backup) holds the file open, so it is retried briefly.
 export async function writeJsonAtomic(file, data) {
+  return writeTextAtomic(file, JSON.stringify(data, null, 2) + '\n');
+}
+
+// Same as writeJsonAtomic for a file that is not JSON (e.g. the sign-up list, one JSON object per line).
+export async function writeTextAtomic(file, text) {
   const tmp = `${file}.${process.pid}.${randomBytes(4).toString('hex')}.tmp`;
-  await writeFile(tmp, JSON.stringify(data, null, 2) + '\n', 'utf8');
+  await writeFile(tmp, text, 'utf8');
   for (let attempt = 0; ; attempt++) {
     try {
       await rename(tmp, file);

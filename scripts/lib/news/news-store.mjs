@@ -3,7 +3,7 @@
 // appears by itself at its time without any timer.
 // Changes go through change(): one at a time, so checking an article and writing it can never interleave with another
 // save. Each saved version is also kept in revisions/<id>/ (newest 20); a deleted article moves to trash/ and can be
-// restored from there as a draft.
+// restored from there as a draft, or deleted from there for good by a manager.
 import { readdir, readFile, mkdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { DATA_DIR, SLUG_RE, SLUG_MAX, isCat, isSite } from './news-config.mjs';
@@ -94,7 +94,7 @@ export async function visiblePosts(now = Date.now()) {
 let queue = Promise.resolve();
 // Runs fn(tools) after every earlier change has finished; its result (or error) is returned to the caller.
 export function change(fn) {
-  const run = queue.then(async () => fn({ posts: await allPosts(), save, remove, restore, nextId }));
+  const run = queue.then(async () => fn({ posts: await allPosts(), save, remove, restore, purge, nextId }));
   queue = run.catch(() => {});
   return run;
 }
@@ -181,6 +181,28 @@ async function restore(file, actor, nowText) {
   await save(post, { action: 'khoi-phuc', actor });
   await rm(join(trashDir(), file));
   return { post };
+}
+
+// Deletes a trashed article for good (only inside change()): its trash copy, and its saved versions unless the same
+// article still exists elsewhere (on the list, or as another trash copy after a restore and a second delete). Uploaded
+// pictures stay: another article may show the same picture. Returns { id, title } or { status, error }.
+async function purge(file) {
+  if (!TRASH_NAME_RE.test(file)) return { status: 404, error: 'Không tìm thấy bài trong thùng rác.' };
+  let p;
+  try {
+    p = JSON.parse(await readFile(join(trashDir(), file), 'utf8'));
+  } catch {
+    p = {};
+  }
+  try {
+    await rm(join(trashDir(), file));
+  } catch {
+    return { status: 404, error: 'Không tìm thấy bài trong thùng rác (có thể vừa bị xoá).' };
+  }
+  const id = parseInt(file, 10);
+  const stillTrashed = (await readdir(trashDir()).catch(() => [])).some((n) => TRASH_NAME_RE.test(n) && parseInt(n, 10) === id);
+  if (!stillTrashed && !(await allPosts()).some((x) => x.id === id)) await rm(revisionsDir(id), { recursive: true, force: true });
+  return { id, title: String(p.title || '') };
 }
 
 // Saved versions of an article, newest first: [{ rev, savedAt, action, actor }]

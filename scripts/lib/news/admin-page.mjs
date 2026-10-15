@@ -92,7 +92,9 @@ table.posts{border-collapse:collapse;width:100%;min-width:860px}
 .dks-moc .inp{flex:1 1 260px;max-width:480px}
 .posts-dks td:first-child b{font-variant-numeric:tabular-nums;letter-spacing:.03em}
 .s-phieu-cho{color:var(--warn)}.s-phieu-tra{color:var(--ok)}.s-phieu-tu{color:var(--danger)}
-.posts-phieu td{vertical-align:top}.posts-phieu td:nth-child(3),.posts-phieu td:nth-child(4){white-space:normal;min-width:180px}
+.posts-phieu td{vertical-align:top}.posts-phieu td:nth-child(3),.posts-phieu td:nth-child(4){white-space:normal;min-width:180px}.posts-phieu td:nth-child(4){min-width:140px}
+/* who handled a ticket and the reply can be long: these two columns wrap, so the table stays inside its frame */
+.posts-phieu td:nth-child(5){white-space:normal;min-width:130px}.posts-phieu td:nth-child(6){white-space:normal;min-width:220px;max-width:280px}
 .phieu-qua{margin:0;padding-left:18px}.phieu-act{display:grid;gap:8px;min-width:220px}.phieu-act .inp{width:100%}
 .radios{display:flex;flex-direction:column;gap:8px}
 .radios label{display:flex;gap:8px;align-items:center;cursor:pointer;font-size:14px}

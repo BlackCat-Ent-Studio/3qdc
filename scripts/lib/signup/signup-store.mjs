@@ -4,7 +4,7 @@
 // The milestones the page shows live in cai-dat.json next to it (written whole, atomically).
 import { appendFile, mkdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { readJson, writeJsonAtomic, siteNowSeconds } from '../news/news-files.mjs';
+import { readJson, writeJsonAtomic, writeTextAtomic, siteNowSeconds } from '../news/news-files.mjs';
 
 export const DATA_DIR = process.env.SIGNUP_DATA_DIR || join(process.cwd(), 'data', 'dang-ky-som');
 const listFile = () => join(DATA_DIR, 'dang-ky.jsonl');
@@ -73,6 +73,24 @@ export function addSignup({ sdt, ip, nguon }) {
     db.phones.add(sdt);
     db.rows.push(row);
     return { ok: true, count: db.rows.length };
+  });
+  queue = job.catch(() => {});
+  return job;
+}
+
+// Deletes one number for good: the list is written again without it (atomically, through the same queue as new
+// sign-ups). The count on /dang-ky-som drops by one and the number may sign up again. → { count } or null when unknown.
+export function deleteSignup(sdt) {
+  const job = queue.then(async () => {
+    const db = await load();
+    if (!db.phones.has(sdt)) return null;
+    const rows = db.rows.filter((r) => r.sdt !== sdt);
+    await mkdir(DATA_DIR, { recursive: true });
+    await writeTextAtomic(listFile(), rows.map((r) => JSON.stringify(r) + '\n').join(''));
+    db.rows = rows;
+    db.phones.delete(sdt);
+    db.needNewline = false;
+    return { count: rows.length };
   });
   queue = job.catch(() => {});
   return job;

@@ -98,6 +98,17 @@ export function setStatus(id, st, phanHoi, username) {
   });
 }
 
+// Deletes a ticket for good. A ticket of today no longer counts, so that player may send another one today.
+// → the deleted ticket, or null when the id is unknown.
+export function deletePhieu(id) {
+  return exclusive(async (items) => {
+    const i = items.findIndex((x) => x.id === id);
+    if (i < 0) return { value: null };
+    const [t] = items.splice(i, 1);
+    return { save: true, value: t };
+  });
+}
+
 // CSV Excel opens correctly: UTF-8 with a byte-order mark; any cell that starts like a formula gets a leading ' so it is
 // shown, never run (same rule as the early sign-up list).
 const csvCell = (v) => {

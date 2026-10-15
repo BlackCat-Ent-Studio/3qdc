@@ -11,6 +11,15 @@ export function adminApp() {
   const $$ = (s, r) => Array.prototype.slice.call((r || document).querySelectorAll(s));
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const catName = (id) => (CATS.find((c) => c.id === id) || {}).name || '';
+  // a button that deletes for good asks first by changing its label: the first click arms it, a second click within
+  // 4 s goes ahead (same as deleting an article from the list; no pop-up dialog)
+  const armDelete = (b, idle) => {
+    if (b.dataset.armed > Date.now() - 4000) return true;
+    b.dataset.armed = Date.now();
+    b.textContent = 'Bấm lần nữa để xoá';
+    setTimeout(() => { if (b.isConnected && !b.disabled) b.textContent = idle; }, 4000);
+    return false;
+  };
   // sites an article can go to (empty when the split is switched off: then there is nothing to choose)
   const SITES = DATA.sites || [];
   const siteName = (id) => (SITES.find((s) => s.id === id) || {}).name || '';
@@ -359,7 +368,7 @@ ${rows.length ? '' : `<tr><td colspan="6" class="meta" style="text-align:center;
     if (mine !== screen || !me) return;
     if (!r.ok) { if (r.status !== 401) $('main').innerHTML = `<div class="err" style="margin:40px 0">${esc(r.data.error)}</div>`; return; }
     const draw = (items, notice) => {
-      $('main').innerHTML = `<div class="adm-top"><div><h1>Thùng rác</h1><p>Bài đã xoá nằm ở đây. <b>Khôi phục</b> đưa bài về <b>Nháp</b> — người chơi chưa thấy cho tới khi đăng lại.</p></div></div>
+      $('main').innerHTML = `<div class="adm-top"><div><h1>Thùng rác</h1><p>Bài đã xoá nằm ở đây. <b>Khôi phục</b> đưa bài về <b>Nháp</b> — người chơi chưa thấy cho tới khi đăng lại. <b>Xoá vĩnh viễn</b> thì bài mất hẳn, không lấy lại được.</p></div>${items.length ? `<button type="button" class="btn btn-danger" id="t-empty">Dọn sạch thùng rác (${items.length})</button>` : ''}</div>
 <div class="err" id="t-err" role="alert"${notice ? '' : ' hidden'}>${esc(notice || '')}</div>
 <div class="tbl-wrap"><table class="posts posts-rac"><thead><tr><th>Bài viết</th><th>Mục</th><th>Lúc xoá</th><th>Người viết</th><th>Xoá bởi</th><th></th></tr></thead><tbody>
 ${items.map((t) => `<tr data-file="${esc(t.file)}">
@@ -368,7 +377,7 @@ ${items.map((t) => `<tr data-file="${esc(t.file)}">
 <td class="meta">${fmtTime(t.deletedAt)}</td>
 <td><div class="person">${avatar(t.author)}${esc(t.author)}</div></td>
 <td class="meta">${esc(t.deletedBy || '—')}</td>
-<td><div class="acts"><button type="button" class="btn btn-ghost btn-sm" data-restore="${esc(t.file)}">Khôi phục</button></div></td></tr>`).join('')}
+<td><div class="acts"><button type="button" class="btn btn-ghost btn-sm" data-restore="${esc(t.file)}">Khôi phục</button><button type="button" class="btn btn-danger btn-sm" data-purge="${esc(t.file)}">Xoá vĩnh viễn</button></div></td></tr>`).join('')}
 ${items.length ? '' : '<tr><td colspan="6" class="meta" style="text-align:center;padding:30px">Thùng rác trống.</td></tr>'}
 </tbody></table></div>`;
       $$('[data-restore]').forEach((b) => b.addEventListener('click', async () => {
@@ -380,6 +389,27 @@ ${items.length ? '' : '<tr><td colspan="6" class="meta" style="text-align:center
         toast(`Đã khôi phục “${res.data.post.title}” về Nháp`);
         draw(res.data.items, '');
       }));
+      $$('[data-purge]').forEach((b) => b.addEventListener('click', async () => {
+        if (!armDelete(b, 'Xoá vĩnh viễn')) return;
+        $$('[data-purge],[data-restore],#t-empty').forEach((x) => { x.disabled = true; });
+        const mine2 = screen;
+        const res = await api('POST', `/thung-rac/${encodeURIComponent(b.getAttribute('data-purge'))}/xoa-han`, {});
+        if (mine2 !== screen) return;
+        if (!res.ok) { if (res.status !== 401) draw(items, res.data.error || 'Không xoá được.'); return; }
+        toast(`Đã xoá vĩnh viễn “${res.data.title}”`);
+        draw(res.data.items, '');
+      }));
+      const empty = $('#t-empty');
+      if (empty) empty.addEventListener('click', async () => {
+        if (!armDelete(empty, `Dọn sạch thùng rác (${items.length})`)) return;
+        $$('[data-purge],[data-restore],#t-empty').forEach((x) => { x.disabled = true; });
+        const mine2 = screen;
+        const res = await api('POST', '/thung-rac/don-sach', {});
+        if (mine2 !== screen) return;
+        if (!res.ok) { if (res.status !== 401) draw(items, res.data.error || 'Không dọn được thùng rác.'); return; }
+        toast(`Đã xoá vĩnh viễn ${res.data.deleted} bài`);
+        draw(res.data.items, '');
+      });
     };
     draw(r.data.items, '');
   }
@@ -489,9 +519,9 @@ ${items.length ? '' : '<tr><td colspan="5" class="meta" style="text-align:center
 <form class="dks-find" id="s-find"><input class="inp" id="s-q" type="search" inputmode="numeric" placeholder="Tìm theo số, ví dụ 0912" value="${esc(view.q)}" aria-label="Tìm theo số điện thoại">
 <button type="submit" class="btn btn-ghost">Tìm</button>${view.q ? '<button type="button" class="btn btn-ghost" id="s-clear">Bỏ lọc</button>' : ''}
 <span class="meta">${view.q ? `${fmtNum(d.count)} / ${fmtNum(d.total)} số khớp` : `Tổng ${fmtNum(d.total)} số`}</span></form>
-<div class="tbl-wrap"><table class="posts posts-dks"><thead><tr><th>Số điện thoại</th><th>STT</th><th>Thời gian</th><th>Nguồn</th><th>IP</th></tr></thead><tbody>
-${d.items.map((s) => `<tr><td><b>${esc(s.sdt)}</b></td><td class="meta">#${s.stt}</td><td class="meta">${fmtTime(s.luc)}</td><td class="meta">${esc(s.nguon || '—')}</td><td class="meta">${esc(s.ip || '—')}</td></tr>`).join('')}
-${d.items.length ? '' : `<tr><td colspan="5" class="meta" style="text-align:center;padding:30px">${view.q ? 'Không có số nào khớp.' : 'Chưa có ai đăng ký.'}</td></tr>`}
+<div class="tbl-wrap"><table class="posts posts-dks"><thead><tr><th>Số điện thoại</th><th>STT</th><th>Thời gian</th><th>Nguồn</th><th>IP</th><th></th></tr></thead><tbody>
+${d.items.map((s) => `<tr><td><b>${esc(s.sdt)}</b></td><td class="meta">#${s.stt}</td><td class="meta">${fmtTime(s.luc)}</td><td class="meta">${esc(s.nguon || '—')}</td><td class="meta">${esc(s.ip || '—')}</td><td><div class="acts"><button type="button" class="btn btn-danger btn-sm" data-del-sdt="${esc(s.sdt)}">Xoá</button></div></td></tr>`).join('')}
+${d.items.length ? '' : `<tr><td colspan="6" class="meta" style="text-align:center;padding:30px">${view.q ? 'Không có số nào khớp.' : 'Chưa có ai đăng ký.'}</td></tr>`}
 </tbody></table></div>
 ${d.pages > 1 ? `<div class="dks-pager"><button type="button" class="btn btn-ghost btn-sm" id="s-prev"${d.page <= 1 ? ' disabled' : ''}>‹ Mới hơn</button>
 <span class="meta">Trang ${d.page} / ${d.pages}</span><button type="button" class="btn btn-ghost btn-sm" id="s-next"${d.page >= d.pages ? ' disabled' : ''}>Cũ hơn ›</button></div>` : ''}
@@ -505,6 +535,17 @@ ${d.pages > 1 ? `<div class="dks-pager"><button type="button" class="btn btn-gho
       if ($('#s-clear')) $('#s-clear').addEventListener('click', () => { view.q = ''; view.page = 1; again(); });
       if ($('#s-prev')) $('#s-prev').addEventListener('click', () => { view.page = d.page - 1; again(); });
       if ($('#s-next')) $('#s-next').addEventListener('click', () => { view.page = d.page + 1; again(); });
+      $$('[data-del-sdt]').forEach((b) => b.addEventListener('click', async () => {
+        if (!armDelete(b, 'Xoá')) return;
+        const sdt = b.getAttribute('data-del-sdt');
+        b.disabled = true;
+        const mine2 = screen;
+        const res = await api('POST', '/dang-ky-som/xoa', { sdt });
+        if (mine2 !== screen) return;
+        if (!res.ok) { b.disabled = false; b.textContent = 'Xoá'; if (res.status !== 401) toast(res.data.error || 'Không xoá được.'); return; }
+        toast(`Đã xoá ${sdt} — còn ${fmtNum(res.data.count)} số`);
+        again();
+      }));
       $('#s-moc-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const err = $('#s-moc-err');
@@ -561,7 +602,8 @@ ${d.items.map((t) => `<tr data-id="${esc(t.id)}">
 <td><span class="pill s-phieu-${esc(t.st)}">${PHIEU_ST[t.st] || esc(t.st)}</span>${t.xuLyBoi ? `<div class="meta" style="margin-top:4px">${esc(t.xuLyBoi)} · ${fmtTime(t.xuLyLuc)}</div>` : ''}</td>
 <td>${t.st === 'cho'
     ? `<div class="phieu-act"><input class="inp" maxlength="160" placeholder="Phản hồi cho người chơi (không bắt buộc)" aria-label="Phản hồi" data-reply="${esc(t.id)}"><div class="acts"><button type="button" class="btn btn-fire btn-sm" data-set="tra" data-id="${esc(t.id)}">Đã trả</button><button type="button" class="btn btn-danger btn-sm" data-set="tu" data-id="${esc(t.id)}">Từ chối</button></div></div>`
-    : `<div class="meta">${t.phanHoi ? esc(t.phanHoi) : 'Không có phản hồi.'}</div><button type="button" class="btn btn-ghost btn-xs" data-set="cho" data-id="${esc(t.id)}" style="margin-top:6px">Đưa về Đang chờ</button>`}</td></tr>`).join('')}
+    : `<div class="meta">${t.phanHoi ? esc(t.phanHoi) : 'Không có phản hồi.'}</div><button type="button" class="btn btn-ghost btn-xs" data-set="cho" data-id="${esc(t.id)}" style="margin-top:6px">Đưa về Đang chờ</button>`}
+<div style="margin-top:8px"><button type="button" class="btn btn-danger btn-xs" data-del-phieu="${esc(t.id)}">Xoá phiếu</button></div></td></tr>`).join('')}
 ${d.items.length ? '' : `<tr><td colspan="6" class="meta" style="text-align:center;padding:30px">${c.all ? 'Không có phiếu nào khớp bộ lọc.' : 'Chưa có phiếu nào trong ngày này.'}</td></tr>`}
 </tbody></table></div>`;
 
@@ -577,6 +619,15 @@ ${d.items.length ? '' : `<tr><td colspan="6" class="meta" style="text-align:cent
         if (mine !== screen) return;
         if (!r.ok) { b.disabled = false; if (r.status !== 401) toast(r.data.error || 'Không đổi được trạng thái.'); return; }
         toast(st === 'cho' ? 'Đã đưa phiếu về Đang chờ' : `Đã đánh dấu: ${PHIEU_ST[st]}`);
+        again();
+      }));
+      $$('[data-del-phieu]').forEach((b) => b.addEventListener('click', async () => {
+        if (!armDelete(b, 'Xoá phiếu')) return;
+        b.disabled = true;
+        const r = await api('POST', `/phieu-be-ngoan/${b.getAttribute('data-del-phieu')}/xoa`, {});
+        if (mine !== screen) return;
+        if (!r.ok) { b.disabled = false; b.textContent = 'Xoá phiếu'; if (r.status !== 401) toast(r.data.error || 'Không xoá được phiếu.'); return; }
+        toast('Đã xoá phiếu');
         again();
       }));
     };

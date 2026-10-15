@@ -5,8 +5,8 @@ import { signIn, endSession, setPassword, currentUser, sameOrigin, sessionCookie
 import { change, allPosts, listRevisions, readRevision, stampAfter, isVisible, listTrash, TRASH_NAME_RE } from './news-store.mjs';
 import { saveUpload, recentUploads } from './news-uploads.mjs';
 import { listSongs, saveSong, removeSong, SONG_MAX, FOLDER_MAX } from '../home/music-store.mjs';
-import { listSignups, signupsCsv, readMilestones, writeMilestones, cleanMilestones } from '../signup/signup-store.mjs';
-import { listPhieu, setStatus, phieuCsv } from '../phieu/phieu-store.mjs';
+import { listSignups, signupsCsv, readMilestones, writeMilestones, cleanMilestones, deleteSignup, normalizePhone } from '../signup/signup-store.mjs';
+import { listPhieu, setStatus, phieuCsv, deletePhieu } from '../phieu/phieu-store.mjs';
 import { STATES, REPLY_MAX } from '../phieu/phieu-config.mjs';
 import { decide, mayDelete, summaryOf } from './news-workflow.mjs';
 import { register, listUsers, manageUser } from './admin-users.mjs';
@@ -194,6 +194,14 @@ async function route(req, res, path) {
       console.log(`[news] ${siteNow()} ${user.username} set the early sign-up milestones to ${list.join(', ')}`);
       return send(res, 200, { milestones: list });
     }
+    if (method === 'POST' && path === '/dang-ky-som/xoa') {
+      const sdt = normalizePhone(body.sdt);
+      if (!sdt) return oops(res, 400, 'Số điện thoại không hợp lệ.');
+      const r = await deleteSignup(sdt);
+      if (!r) return oops(res, 404, 'Không tìm thấy số này trong danh sách.');
+      console.log(`[news] ${siteNow()} ${user.username} deleted early sign-up ${sdt} (${r.count} left)`);
+      return send(res, 200, r);
+    }
     return oops(res, 404, 'Không có địa chỉ này.');
   }
 
@@ -225,10 +233,17 @@ async function route(req, res, path) {
       console.log(`[news] ${siteNow()} ${user.username} set ticket ${t.id} to ${st}`);
       return send(res, 200, { item: t });
     }
+    const dm = path.match(/^\/phieu-be-ngoan\/([a-z0-9]{6,20})\/xoa$/);
+    if (method === 'POST' && dm) {
+      const t = await deletePhieu(dm[1]);
+      if (!t) return oops(res, 404, 'Không tìm thấy phiếu này (có thể vừa bị xoá).');
+      console.log(`[news] ${siteNow()} ${user.username} deleted ticket ${t.id} (${t.email}, ${t.ngay})`);
+      return send(res, 200, { id: t.id });
+    }
     return oops(res, 404, 'Không có địa chỉ này.');
   }
 
-  // trash (managers only): list deleted articles, bring one back as a draft
+  // trash (managers only): list deleted articles, bring one back as a draft, delete one or all of them for good
   if (path === '/thung-rac' || path.startsWith('/thung-rac/')) {
     if (user.role !== 'manager') return oops(res, 403, 'Chỉ Quản lý mới xem được thùng rác.');
     if (method === 'GET' && path === '/thung-rac') return send(res, 200, { items: await listTrash() });
@@ -238,6 +253,22 @@ async function route(req, res, path) {
       if (r.error) return oops(res, r.status, r.error);
       console.log(`[news] ${siteNow()} ${user.username} restored article ${r.post.id} from ${tm[1]} (as draft)`);
       return send(res, 200, { post: r.post, items: await listTrash() });
+    }
+    const pm2 = path.match(/^\/thung-rac\/([^/]+)\/xoa-han$/);
+    if (method === 'POST' && pm2 && TRASH_NAME_RE.test(pm2[1])) {
+      const r = await change(({ purge }) => purge(pm2[1]));
+      if (r.error) return oops(res, r.status, r.error);
+      console.log(`[news] ${siteNow()} ${user.username} deleted article ${r.id} for good (${pm2[1]})`);
+      return send(res, 200, { title: r.title, items: await listTrash() });
+    }
+    if (method === 'POST' && path === '/thung-rac/don-sach') {
+      const n = await change(async ({ purge }) => {
+        let done = 0;
+        for (const t of await listTrash()) if (!(await purge(t.file)).error) done++;
+        return done;
+      });
+      console.log(`[news] ${siteNow()} ${user.username} emptied the trash (${n} article(s) deleted for good)`);
+      return send(res, 200, { deleted: n, items: await listTrash() });
     }
     return oops(res, 404, 'Không có địa chỉ này.');
   }
