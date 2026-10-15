@@ -77,7 +77,11 @@ h1 { font: 400 clamp(30px, 6vw, 44px)/1.15 var(--font-display); color: var(--gol
   border-width: calc(160px * var(--s)) calc(92px * var(--s)) calc(46px * var(--s)) calc(92px * var(--s));
   border-image: url("/3qdc-vi/dang-ky-som/khung-mai-dinh.webp") 160 92 46 92 fill / calc(160px * var(--s)) calc(92px * var(--s)) calc(46px * var(--s)) calc(92px * var(--s));
   padding: 6px clamp(6px, 3vw, 26px) 26px; filter: drop-shadow(0 22px 34px #000a); }
-#player .head { display: grid; grid-template-columns: auto 1fr; gap: 6px 18px; align-items: center; }
+#player .head { display: grid; grid-template-columns: auto 1fr auto; gap: 6px 18px; align-items: center; }
+#player .btn-out { cursor: pointer; white-space: nowrap; align-self: center; min-height: 40px; padding: 0 16px; border: 1.5px solid #9c7a3c; border-radius: 3px;
+  background: linear-gradient(#f8ecce, #ead2a0); color: var(--seal-dk); font: 700 14px var(--font-body); box-shadow: inset 0 0 0 2px #fbf3df, 0 2px 0 #8c6a31; }
+#player .btn-out:hover { background: linear-gradient(#fbf1d8, #efd9ab); }
+#player .btn-out:active { transform: translateY(2px); box-shadow: inset 0 0 0 2px #fbf3df; }
 #player .head .logo { width: 86px; height: auto; }
 #player h1 { color: var(--seal-dk); margin: 0; font-size: clamp(30px, 4.6vw, 46px); }
 #player .intro { grid-column: 1 / -1; margin: 0; color: var(--ink-soft); max-width: 60ch; }
@@ -87,7 +91,6 @@ h1 { font: 400 clamp(30px, 6vw, 44px)/1.15 var(--font-display); color: var(--gol
 #player .who { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline; justify-content: space-between;
   margin-top: 8px; padding-top: 12px; border-top: 1px dashed #b89d6c; font-size: 14px; color: var(--ink-soft); }
 #player .who .email { color: var(--paper-ink); font-weight: 700; }
-#player .linkbtn { color: var(--seal-dk); font-weight: 600; text-underline-offset: 3px; padding: 4px 0; }
 /* tabs: two lacquer plaques hung on cords */
 #player .tabs { display: flex; justify-content: center; gap: 14px; margin: 26px 0 6px; }
 #player .tab { position: relative; white-space: nowrap; cursor: pointer; padding: 9px 22px 8px; min-height: 44px; font: 400 19px var(--font-display); color: var(--paper-ink);
@@ -170,7 +173,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 @media (min-width: 720px) { #player .form { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 560px) {
   #player { --s: .3; padding-left: 8px; padding-right: 8px; } #player .board { padding-left: 4px; padding-right: 4px; }
-  #player .head .logo { width: 60px; } #player h1 { font-size: 30px; } #player .tabs { gap: 10px; } #player .tab { font-size: 16px; padding: 8px 12px 7px; }
+  #player .head .logo { width: 60px; } #player h1 { font-size: 28px; } #player .btn-out { min-height: 36px; padding: 0 10px; font-size: 13px; }
+  #player .head .logo { grid-column: 1; grid-row: 1; } #player .btn-out { grid-column: 3; grid-row: 1; justify-self: end; } #player h1 { grid-column: 1 / -1; grid-row: 2; } #player .tabs { gap: 10px; } #player .tab { font-size: 16px; padding: 8px 12px 7px; }
   #player .send { width: 100%; } #player .actions { justify-content: center; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } .dt { animation: none; } .caret { display: none; } }
@@ -212,9 +216,10 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     <section class="head" aria-labelledby="ttl">
       <img class="logo" src="/3qdc-vi/home/logo-3qdc.webp" alt="3Q Đại Chiến" width="203" height="152">
       <h1 id="ttl">Phiếu Bé Ngoan</h1>
+      <button class="btn-out" id="out" type="button">Đổi tài khoản</button>
       <p class="intro">Chúa Công muốn nhận quà gì thì ghi vào phiếu. Mỗi ngày gửi được một phiếu, quà về hòm thư trong game vào ngày hôm sau.</p>
       <ul class="rules"><li><b>1 phiếu</b> mỗi tài khoản mỗi ngày</li><li>Mở phiếu mới lúc <b>00:00</b> giờ Việt Nam</li><li>Trả quà <b>ngày hôm sau</b></li></ul>
-      <div class="who"><span>Đang dùng <span class="email" id="me"></span></span><button class="linkbtn" id="out" type="button">Đổi tài khoản</button></div>
+      <div class="who"><span>Đang dùng <span class="email" id="me"></span></span></div>
     </section>
     <div class="tabs" role="tablist" aria-label="Phiếu của tôi">
       <button class="tab" type="button" role="tab" id="tab-gui" aria-controls="panel-gui" aria-selected="true">Gửi phiếu</button>
