@@ -179,12 +179,27 @@ Mở bài → đổi ô "Đăng lên" → Lưu. Bài **biến khỏi** trang cũ
 
 ---
 
+## 5b. Web mini thứ ba — Phiếu Bé Ngoan `phieubengoan.3qdc.wanmeivn.com` (LIVE 15/10/2026)
+
+- **Là gì:** người chơi đăng nhập Google → gửi phiếu nhận quà (tài khoản game, server, ≤10 dòng quà, ghi chú), **1 phiếu / email / ngày giờ VN**, xem lịch sử + trạng thái. Không phải trang tạm (không gỡ khi hết đợt test).
+- **Chạy ở đâu:** trong chính dịch vụ `3qdc-unified` (cổng 3399), nhận theo tên miền như trang phụ. Code `scripts\lib\phieu\*`, ảnh `overrides\phieu-be-ngoan\*`, dữ liệu `data\phieu-be-ngoan\phieu.json` (không vào git). Trên tên miền phiếu chỉ có trang phiếu + `/api/phieu/*`; `/quan-tri`, `/tin-tuc`… trả 404.
+- **Quản trị:** mục **Phiếu Bé Ngoan** trong `https://3qdc.wanmeivn.com/quan-tri` (chỉ Quản lý): lọc trạng thái/ngày, Đã trả / Từ chối + phản hồi, đưa về Đang chờ, Xuất CSV.
+- **Google:** project Google Cloud `phieu-be-ngoan-3qdc` (tài khoản blackcat.ent.studio), app "Phiếu Bé Ngoan 3Q Đại Chiến", External, **In production**, không logo (thêm logo ⇒ Google bắt xin duyệt). Client ID nằm trong biến môi trường dịch vụ: `nssm get 3qdc-unified AppEnvironmentExtra` (`PORT=3399` + `PHIEU_GOOGLE_CLIENT_ID=…`). **Không bao giờ** đặt `PHIEU_DEV_LOGIN` trên LIVE. Đổi tên miền ⇒ thêm origin mới trong Google Cloud → Clients.
+- **Caddy:** khối `phieubengoan.3qdc.wanmeivn.com { … }` ở cuối `C:\caddy\Caddyfile` (backup trước khi thêm: `Caddyfile.bak-261015-phieu-be-ngoan`). DNS: bản ghi A `phieubengoan.3qdc` ở Mắt Bão.
+- **Commit:** `f8fe81f` (thẻ trước đó `pre-phieu-be-ngoan`). Lùi: `git revert f8fe81f` + restart, xoá khối Caddy + reload; dữ liệu phiếu vẫn còn trong `data\`.
+- Chi tiết: `plans\261014-2335-phieu-be-ngoan\HANDOFF-phieu-be-ngoan.md`.
+
+---
+
 ## 6. Truy cập & công cụ
+
+- **GitHub (private):** `BlackCat-Ent-Studio/3qdc` nhánh `main` = code trang chính thức (+ `ban-giao/` là bản chép tài liệu này và HANDOFF); nhánh `zgshx-cu` = bản cũ tháng 6. `BlackCat-Ent-Studio/3qdaichien` = code trang tạm. Git trên VPS **không nối GitHub**: muốn cập nhật GitHub thì trên VPS tạo gói `git bundle create x.bundle --all`, chép về máy đã đăng nhập GitHub, `git clone x.bundle`, rồi `git push` lên repo tương ứng.
 
 - VPS .40 (Windows): `ssh company-vps` (dòng lệnh là PowerShell). Git: `C:\PortableGit\cmd\git.exe`. NSSM: `C:\ProgramData\chocolatey\bin\nssm.exe`.
 - Caddy: `C:\caddy\caddy.exe run --config C:\caddy\Caddyfile` (tác vụ Windows "Caddy"). Nạp lại cấu hình: `caddy.exe validate …` rồi `caddy.exe reload --config C:\caddy\Caddyfile --adapter caddyfile` — **không restart Caddy** (nhiều web khác dùng chung).
 - DNS tên miền `wanmeivn.com`: Mắt Bão (`ns1/ns2.matbao.com`). Tên miền phụ cần bản ghi **A** riêng trỏ `160.191.3.40` (không có bản ghi "*").
-- Log truy cập: `C:\caddy\logs\3qdc-wanmeivn-access.log`, `C:\caddy\logs\3qdaichien-wanmeivn-access.log`.
+- Log truy cập: `C:\caddy\logs\3qdc-wanmeivn-access.log`, `C:\caddy\logs\3qdaichien-wanmeivn-access.log`, `C:\caddy\logs\phieubengoan-wanmeivn-access.log`. File log đang ghi **không** cập nhật "ngày sửa" trên Windows và bị Caddy khoá — đọc bằng `FileShare.ReadWrite`, đừng lọc theo `LastWriteTime`.
+- Git trên VPS có `core.autocrlf=true`: repo lưu LF, thư mục làm việc CRLF. Khi tự dựng nội dung đưa vào index (vd. commit một phần `server.mjs`), dùng LF.
 
 ---
 
