@@ -593,7 +593,7 @@ ${d.pages > 1 ? `<div class="dks-pager"><button type="button" class="btn btn-gho
 <div class="filters">${['all', 'cho', 'tra', 'tu'].map((s) => `<button type="button" class="tab${phieuView.st === s ? ' on' : ''}" data-pst="${s}">${s === 'all' ? 'Tất cả' : PHIEU_ST[s]}<small>${fmtNum(c[s])}</small></button>`).join('')}
 <select id="fngay" aria-label="Ngày gửi">${[['hom-nay', 'Hôm nay'], ['hom-qua', 'Hôm qua'], ['tat-ca', 'Mọi ngày']].map(([v, l]) => `<option value="${v}"${phieuView.ngay === v ? ' selected' : ''}>${l}</option>`).join('')}</select>
 <span class="meta">${fmtNum(d.cho)} phiếu đang chờ (mọi ngày)</span></div>
-<div class="tbl-wrap"><table class="posts posts-phieu"><thead><tr><th>Phiếu</th><th>Tài khoản game</th><th>Quà muốn nhận</th><th>Ghi chú</th><th>Trạng thái</th><th>Xử lý</th></tr></thead><tbody>
+<div class="tbl-wrap"><table class="posts posts-phieu"><thead><tr><th>Phiếu</th><th>Nhân vật</th><th>Quà muốn nhận</th><th>Ghi chú</th><th>Trạng thái</th><th>Xử lý</th></tr></thead><tbody>
 ${d.items.map((t) => `<tr data-id="${esc(t.id)}">
 <td><b>${esc(t.email)}</b><div class="meta">${fmtTime(t.luc)}</div></td>
 <td><b>${esc(t.acc)}</b><div class="meta">Server ${esc(t.serverTen || t.server)}</div></td>

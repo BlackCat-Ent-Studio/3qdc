@@ -9,7 +9,7 @@
 // pages and the main site are never reachable through it.
 import { clientIp } from '../news/admin-auth.mjs';
 import { siteNow } from '../news/news-files.mjs';
-import { isPhieuHost, ORIGINS, GOOGLE_CLIENT_ID, DEV_LOGIN, SERVERS, ACC_RE, GIFTS_MAX, GIFT_MAX, NOTE_MAX } from './phieu-config.mjs';
+import { isPhieuHost, ORIGINS, GOOGLE_CLIENT_ID, DEV_LOGIN, SERVERS, cleanAcc, ACC_MAX, GIFTS_MAX, GIFT_MAX, NOTE_MAX } from './phieu-config.mjs';
 import { addPhieu, myPhieu, playerView } from './phieu-store.mjs';
 import { verifyIdToken } from './google-token.mjs';
 import { startSession, endSession, currentPlayer } from './phieu-session.mjs';
@@ -58,9 +58,9 @@ async function postBody(req, res) {
 
 // The fields of a ticket, cleaned; → { fields } or { error, field }
 function readTicket(body) {
-  const acc = String(body.acc ?? '').trim();
-  if (!acc) return { field: 'acc', error: 'Đây là câu hỏi bắt buộc.' };
-  if (!ACC_RE.test(acc)) return { field: 'acc', error: 'Tên tài khoản chỉ gồm chữ không dấu, số và . _ - (tối đa 32 ký tự).' };
+  if (!String(body.acc ?? '').trim()) return { field: 'acc', error: 'Đây là câu hỏi bắt buộc.' };
+  const acc = cleanAcc(body.acc);
+  if (!acc) return { field: 'acc', error: `Tên nhân vật tối đa ${ACC_MAX} ký tự và không chứa ký tự ẩn.` };
   const server = String(body.server ?? '');
   if (!SERVERS.some((s) => s.id === server)) return { field: 'server', error: 'Chọn server.' };
   if (!Array.isArray(body.qua)) return { field: 'qua', error: 'Ghi ít nhất một món quà.' };

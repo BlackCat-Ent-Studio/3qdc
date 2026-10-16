@@ -24,7 +24,16 @@ export const SERVERS = [{ id: 'S1', name: 'S1 Trương Liêu' }];
 // Tickets keep the id (S1); pages and the CSV show the name.
 export const serverName = (id) => SERVERS.find((s) => s.id === id)?.name || id;
 
-export const ACC_RE = /^[A-Za-z0-9._-]{1,32}$/;
+// The character name exactly as it reads in the game (e.g. "Ngụy Tử Vân"): Vietnamese marks, spaces and symbols are
+// all fine, since every page escapes it and the CSV guards formulas. The same marks typed on different keyboards are
+// stored one way (NFC), runs of spaces become one, and invisible control characters are refused.
+export const ACC_MAX = 32;
+// → the cleaned name, or '' when it cannot be accepted
+export function cleanAcc(raw) {
+  const s = String(raw ?? '').normalize('NFC').replace(/\s+/g, ' ').trim();
+  if (!s || /\p{C}/u.test(s) || [...s].length > ACC_MAX) return '';
+  return s;
+}
 export const GIFTS_MAX = 10;
 export const GIFT_MAX = 80;
 export const NOTE_MAX = 300;

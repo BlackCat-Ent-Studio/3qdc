@@ -120,7 +120,7 @@ const csvTime = (iso) => (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(iso) ? `${iso.sl
 
 export async function phieuCsv(filter, now = Date.now()) {
   const { items } = await listPhieu(filter, now);
-  const lines = ['Thời gian,Gmail,Tài khoản game,Server,Quà muốn nhận,Ghi chú,Trạng thái,Phản hồi,Người xử lý'];
+  const lines = ['Thời gian,Gmail,Nhân vật trong game,Server,Quà muốn nhận,Ghi chú,Trạng thái,Phản hồi,Người xử lý'];
   for (const t of items.slice().reverse()) {
     lines.push([csvTime(t.luc), t.email, t.acc, t.serverTen, t.qua.join('\n'), t.ghiChu, STATES[t.st] || t.st, t.phanHoi, t.xuLyBoi].map(csvCell).join(','));
   }

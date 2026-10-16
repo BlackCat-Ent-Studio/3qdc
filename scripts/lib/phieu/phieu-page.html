@@ -314,9 +314,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     }).join("");
     var servers = (me.servers || [{ id: "S1", name: "S1" }]).map(function (s) { return '<option value="' + esc(s.id) + '"' + (s.id === d.server ? " selected" : "") + ">" + esc(s.name) + "</option>"; }).join("");
     a.innerHTML = '<form class="form" id="f" novalidate>' +
-      '<div class="fld' + (errs.acc ? " err" : "") + '"><label class="q" for="acc">Tên tài khoản game<span class="star">*</span></label>' +
-      '<input class="inp" type="text" id="acc" value="' + esc(d.acc) + '" placeholder="Ví dụ: chuacong01" maxlength="32" autocomplete="off">' +
-      '<p class="hint">Tên đăng nhập trong game, quà gửi vào tài khoản này.</p>' + err("acc") + "</div>" +
+      '<div class="fld' + (errs.acc ? " err" : "") + '"><label class="q" for="acc">Tên nhân vật trong game<span class="star">*</span></label>' +
+      '<input class="inp" type="text" id="acc" value="' + esc(d.acc) + '" placeholder="Ví dụ: Ngụy Tử Vân" maxlength="40" autocomplete="off">' +
+      '<p class="hint">Ghi đúng như trong game, có dấu được. Quà gửi vào nhân vật này.</p>' + err("acc") + "</div>" +
       '<div class="fld' + (errs.server ? " err" : "") + '"><label class="q" for="srv">Server<span class="star">*</span></label><select class="inp" id="srv">' + servers + '</select>' +
       '<p class="hint">Server có nhân vật nhận quà.</p>' + err("server") + "</div>" +
       '<div class="fld wide' + (errs.qua ? " err" : "") + '"><label class="q" for="gift-in">Quà muốn nhận<span class="star">*</span></label>' +
@@ -342,8 +342,11 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
       if (sending) return;
       addGift(); // a gift still typed in the box counts
       errs = {};
-      if (!d.acc.trim()) errs.acc = "Chúa Công chưa ghi tên tài khoản.";
-      else if (!/^[A-Za-z0-9._-]{1,32}$/.test(d.acc.trim())) errs.acc = "Tên tài khoản chỉ gồm chữ không dấu, số và . _ -";
+      // same rule as the server: any letters, marks, spaces and symbols, at most 32 characters, no invisible characters
+      var acc = d.acc.normalize("NFC").replace(/\s+/g, " ").trim();
+      if (!acc) errs.acc = "Chúa Công chưa ghi tên nhân vật.";
+      else if (/\p{C}/u.test(acc) || Array.from(acc).length > 32) errs.acc = "Tên nhân vật tối đa 32 ký tự và không chứa ký tự ẩn.";
+      else d.acc = acc;
       if (!d.qua.length) errs.qua = "Ghi ít nhất một món quà.";
       if (Object.keys(errs).length) { renderArea(); var f = document.querySelector(".fld.err .inp"); if (f) f.focus(); return; }
       sending = true; renderArea();
@@ -365,7 +368,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     $("#hist").innerHTML = list.length ? list.map(function (t) {
       return '<article class="tk"><div class="tk-top"><span class="tk-date">' + fmt(t.luc) + '</span><span class="stamp ' + esc(t.st) + '">' + (ST[t.st] || "") + "</span></div>" +
         "<ul>" + t.qua.map(function (g) { return "<li>" + esc(g) + "</li>"; }).join("") + "</ul>" +
-        '<div class="meta">Tài khoản ' + esc(t.acc) + " · " + esc(srvName(t.server)) + (t.ghiChu ? " · Ghi chú: " + esc(t.ghiChu) : "") + "</div>" +
+        '<div class="meta">Nhân vật ' + esc(t.acc) + " · " + esc(srvName(t.server)) + (t.ghiChu ? " · Ghi chú: " + esc(t.ghiChu) : "") + "</div>" +
         (t.phanHoi ? '<div class="reply">Phản hồi: ' + esc(t.phanHoi) + "</div>" : "") + "</article>";
     }).join("") : '<p class="empty">Chưa có phiếu nào. Phiếu đầu tiên sẽ hiện ở đây.</p>';
   }
