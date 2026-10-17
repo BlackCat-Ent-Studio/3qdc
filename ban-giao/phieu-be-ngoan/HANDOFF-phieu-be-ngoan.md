@@ -1,4 +1,11 @@
-# HANDOFF — Phiếu Bé Ngoan (cập nhật 15/10/2026 ~01:00 — ✅ ĐÃ LIVE)
+# HANDOFF — Phiếu Bé Ngoan (cập nhật 17/10/2026 — ✅ LIVE trên VPS .40 Ubuntu)
+
+## 00. Sau khi VPS .40 cài lại Ubuntu (15/10 tối) — đọc trước
+- Từ 15/10 ~19:52 .40 là **Ubuntu 22.04**: mọi đường dẫn `C:\web\...`, NSSM, script `nhap/*.ps1` ở các mục dưới ĐÃ CŨ. Code phiếu giờ ở `/srv/3qdc-unified/scripts/lib/phieu/`, dữ liệu `/srv/3qdc-unified/data/phieu-be-ngoan/phieu.json` (khôi phục từ gói bí mật 15/10 22:09), env `PHIEU_GOOGLE_CLIENT_ID` trong `/etc/3q/3qdc-unified.env`. Dựng lại / deploy: `van-hanh-vps40/HUONG-DAN-DUNG-LAI.md` (repo `3qdc`). Nháp giờ chạy cổng **13399** với đăng nhập thử bằng email (không cần Google).
+- **15/10 22:37 LIVE `eca0282`** (tag `pre-xoa-han`, backup `/srv/_backup/3qdc-unified-261015-xoa-han/`): `/quan-tri` → Phiếu Bé Ngoan có **xoá vĩnh viễn** phiếu (bấm 2 lần để chắc), bảng phiếu xuống dòng gọn trong cột.
+- **16/10 20:42 LIVE `8fbd970`** (tag `pre-phieu-ten-nhan-vat`, backup `/srv/_backup/3qdc-unified-261016-ten-nhan-vat/`): ô "Tên tài khoản game" đổi thành **"Tên nhân vật trong game"** (ví dụ "Ngụy Tử Vân"). `cleanAcc` trong `phieu-config.mjs`: chuẩn hoá NFC, gộp dấu cách, chặn ký tự ẩn `\p{C}`, tối đa 32 ký tự; nhận có dấu, chữ Hán, ký hiệu, emoji. Trang kiểm cùng luật. Kiểm nháp 21 kiểu tên ALL PASS: `plans\reports\phieu-be-ngoan-261014\kiem-nhieu-kieu-ten.cjs`, `kiem-ten-nhan-vat.cjs` (ảnh `ten-nhan-vat\`). LIVE: nhãn mới hiện, `DEV_LOGIN` tắt.
+- **Còn chờ user:** gửi 1 phiếu thật (Google) với tên có dấu rồi xem `/quan-tri` cột "Nhân vật"; khách duyệt hướng A trên điện thoại thật.
+
 
 ## 0. ✅ ĐÃ LIVE 15/10/2026 (~00:50)
 - `https://phieubengoan.3qdc.wanmeivn.com/` 200, HTTPS hợp lệ, nút "Đăng nhập bằng Google" thật, `/api/phieu/toi` → `"thu":false` (đăng nhập thử TẮT), 0 lỗi console. `/quan-tri` trên Host phiếu 404.

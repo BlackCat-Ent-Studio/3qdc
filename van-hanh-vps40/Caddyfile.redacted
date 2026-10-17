@@ -2,80 +2,18 @@
 	email tringuyen14071992@gmail.com
 }
 
-wanmeivn.com {
-	root * C:\app\wanmei\current
-	try_files {path} {path}.html {path}/index.html
-	file_server
-	encode gzip zstd
-	header {
-		Strict-Transport-Security "max-age=31536000"
-		X-Content-Type-Options "nosniff"
-		Referrer-Policy "strict-origin-when-cross-origin"
-		Cache-Control "no-cache, must-revalidate"
-	}
-	log {
-		output file C:\caddy\logs\wanmeivn-access.log {
-			roll_size 10MiB
-			roll_keep 5
-		}
-	}
-}
-
-www.wanmeivn.com {
-	redir https://wanmeivn.com{uri} permanent
-}
-
-yh.wanmeivn.com {
-	root * C:\app\wanmei-yh\current
-	try_files {path} {path}.html {path}/index.html
-	file_server
-	encode gzip zstd
-	header {
-		Strict-Transport-Security "max-age=31536000"
-		X-Content-Type-Options "nosniff"
-		Referrer-Policy "strict-origin-when-cross-origin"
-		Cache-Control "no-cache, must-revalidate"
-	}
-	log {
-		output file C:\caddy\logs\yh-wanmeivn-access.log {
-			roll_size 10MiB
-			roll_keep 5
-		}
-	}
-}
-
-ghrl.wanmeivn.com {
-	reverse_proxy localhost:3100 {
-		header_up X-Real-IP {remote_host}
-		header_up X-Forwarded-Proto {scheme}
-	}
+(bao-mat) {
 	encode gzip zstd
 	header {
 		Strict-Transport-Security "max-age=31536000"
 		X-Content-Type-Options "nosniff"
 		Referrer-Policy "strict-origin-when-cross-origin"
 	}
-	log {
-		output file C:\caddy\logs\ghrl-wanmeivn-access.log {
-			roll_size 10MiB
-			roll_keep 5
-		}
-	}
 }
 
-xiyu.wanmeivn.com {
-	reverse_proxy localhost:3200 {
-		header_up X-Real-IP {remote_host}
-		header_up X-Forwarded-Proto {scheme}
-	}
-	encode gzip zstd
-	header {
-		Strict-Transport-Security "max-age=31536000"
-		X-Content-Type-Options "nosniff"
-		Referrer-Policy "strict-origin-when-cross-origin"
-	}
+(nhat-ky) {
 	log {
-		output file C:\caddy\logs\xiyu-wanmeivn-access.log {
+		output file /var/log/caddy/{args[0]}-access.log {
 			roll_size 10MiB
 			roll_keep 5
 		}
@@ -83,333 +21,37 @@ xiyu.wanmeivn.com {
 }
 
 3qdc.wanmeivn.com {
-	# 3q-hoi-dap: begin (wiki public + bot hoi dap; xem trien-khai/3q/RUNBOOK-40.md)
+	import bao-mat
+	import nhat-ky 3qdc-wanmeivn
 	redir /hoi-dap /hoi-dap/ 308
 	redir /wiki /wiki/ 308
 	handle_path /wiki/* {
-		root * C:\app\3q-wiki\current
+		root * /srv/3q-hoi-dap/wiki/current
 		file_server
 	}
 	handle /hoi-dap/* {
 		reverse_proxy 127.0.0.1:8787
 	}
-	# 3q-hoi-dap: end
-	# 3q-duyet: begin (trang duyet noi bo, mat khau; xem trien-khai/3q/RUNBOOK-40.md)
 	redir /duyet /duyet/ 308
 	handle_path /duyet/* {
 		basic_auth {
-			team3q <bcrypt-hash-in-secret-zip>
+			team3q <bcrypt-hash trong goi bi mat>
 		}
 		header X-Robots-Tag "noindex, nofollow"
 		header Cache-Control "no-store"
 		reverse_proxy 127.0.0.1:8788
 	}
-	# 3q-duyet: end
 	handle {
 		reverse_proxy localhost:3399 {
 			header_up X-Real-IP {remote_host}
 			header_up X-Forwarded-Proto {scheme}
 		}
 	}
-	encode gzip zstd
-	header {
-		Strict-Transport-Security "max-age=31536000"
-		X-Content-Type-Options "nosniff"
-		Referrer-Policy "strict-origin-when-cross-origin"
-	}
-	log {
-		output file C:\caddy\logs\3qdc-wanmeivn-access.log {
-			roll_size 10MiB
-			roll_keep 5
-		}
-	}
-}
-
-3qdc-home.wanmeivn.com {
-	reverse_proxy localhost:3401 {
-		header_up X-Real-IP {remote_host}
-	}
-	encode gzip zstd
-	header {
-		Strict-Transport-Security "max-age=31536000"
-		X-Content-Type-Options "nosniff"
-		Referrer-Policy "strict-origin-when-cross-origin"
-	}
-	log {
-		output file C:\caddy\logs\3qdc-home-wanmeivn-access.log {
-			roll_size 10MiB
-			roll_keep 5
-		}
-	}
-}
-
-3qdc-main.wanmeivn.com {
-	reverse_proxy localhost:3402 {
-		header_up X-Real-IP {remote_host}
-	}
-	encode gzip zstd
-	header {
-		Strict-Transport-Security "max-age=31536000"
-		X-Content-Type-Options "nosniff"
-		Referrer-Policy "strict-origin-when-cross-origin"
-	}
-	log {
-		output file C:\caddy\logs\3qdc-main-wanmeivn-access.log {
-			roll_size 10MiB
-			roll_keep 5
-		}
-	}
-}
-
-3qdc-wiki.wanmeivn.com {
-	reverse_proxy localhost:3403 {
-		header_up X-Real-IP {remote_host}
-	}
-	encode gzip zstd
-	header {
-		Strict-Transport-Security "max-age=31536000"
-		X-Content-Type-Options "nosniff"
-		Referrer-Policy "strict-origin-when-cross-origin"
-	}
-	log {
-		output file C:\caddy\logs\3qdc-wiki-wanmeivn-access.log {
-			roll_size 10MiB
-			roll_keep 5
-		}
-	}
-}
-
-markline.wanmeivn.com {
-	reverse_proxy localhost:3400 {
-		header_up X-Real-IP {remote_host}
-		header_up X-Forwarded-Proto {scheme}
-	}
-	encode gzip zstd
-	header {
-		Strict-Transport-Security "max-age=31536000"
-		X-Content-Type-Options "nosniff"
-		Referrer-Policy "strict-origin-when-cross-origin"
-	}
-	log {
-		output file C:\caddy\logs\markline-wanmeivn-access.log {
-			roll_size 10MiB
-			roll_keep 5
-		}
-	}
-}
-
-# Old subdomain — 301 redirect to the new primary domain (lanaboutique.vn).
-shopthoitrang.wanmeivn.com {
-	redir https://lanaboutique.vn{uri} 301
-	log {
-		output file C:\caddy\logs\shopthoitrang-wanmeivn-access.log {
-			roll_size 10MiB
-			roll_keep 5
-		}
-	}
-}
-
-lanaboutique.vn {
-	encode gzip zstd
-	header {
-		Strict-Transport-Security "max-age=31536000"
-		X-Content-Type-Options "nosniff"
-		Referrer-Policy "strict-origin-when-cross-origin"
-		Cache-Control "no-cache, must-revalidate"
-	}
-
-	@pcache query page_cache_dynamics_mods=1
-	handle @pcache {
-		header Content-Type application/json
-		respond `{}` 200
-	}
-
-	@phpajax path *.php
-	handle @phpajax {
-		respond "" 200
-	}
-
-	@blog path /blog /blog/* /blog*.html
-	handle @blog {
-		redir https://lanaboutique.vn/ 302
-	}
-
-	handle {
-		root * C:\web\web1\webthoitrang\kkfashion-mirror\www.kkfashion.vn
-		file_server
-	}
-
-	handle_errors {
-		@notfound_page {
-			expression {err.status_code} == 404
-			not path *.js *.css *.png *.jpg *.jpeg *.gif *.webp *.svg *.ico *.woff *.woff2 *.ttf *.eot *.json *.xml *.map *.txt *.mp4 *.webm
-		}
-		redir @notfound_page / 302
-	}
-
-	log {
-		output file C:\caddy\logs\lanaboutique-vn-access.log {
-			roll_size 10MiB
-			roll_keep 5
-		}
-	}
-}
-
-www.lanaboutique.vn {
-	redir https://lanaboutique.vn{uri} 301
-}
-
-admin.ghrl.wanmeivn.com {
-	reverse_proxy 160.191.3.41:3010 {
-		header_up X-Real-IP {remote_host}
-		header_up X-Forwarded-Proto {scheme}
-	}
-	encode gzip zstd
-	header {
-		Strict-Transport-Security "max-age=31536000"
-		X-Content-Type-Options "nosniff"
-		Referrer-Policy "strict-origin-when-cross-origin"
-	}
-	log {
-		output file C:\caddy\logs\admin-ghrl-wanmeivn-access.log {
-			roll_size 10MiB
-			roll_keep 5
-		}
-	}
-}
-
-tieu3q.wanmeivn.com {
-	reverse_proxy https://160.191.3.41:9443 {
-		header_up Host {host}
-		transport http {
-			tls
-			tls_server_name tieu3q.wanmeivn.com
-			tls_insecure_skip_verify
-			read_timeout 24h
-			write_timeout 24h
-		}
-	}
-	log {
-		output file C:\caddy\logs\tieu3q-wanmeivn-access.log {
-			roll_size 10MiB
-			roll_keep 5
-		}
-	}
-}
-
-admin.tieu3q.wanmeivn.com {
-	reverse_proxy https://160.191.3.41:9443 {
-		header_up Host {host}
-		transport http {
-			tls
-			tls_server_name admin.tieu3q.wanmeivn.com
-			tls_insecure_skip_verify
-			read_timeout 24h
-			write_timeout 24h
-		}
-	}
-	log {
-		output file C:\caddy\logs\admin-tieu3q-wanmeivn-access.log {
-			roll_size 10MiB
-			roll_keep 5
-		}
-	}
-}
-webtask.wanmeivn.com {
-	reverse_proxy 127.0.0.1:3300 {
-		header_up X-Real-IP {remote_host}
-	}
-	encode gzip zstd
-	header {
-		Strict-Transport-Security "max-age=31536000"
-		X-Content-Type-Options "nosniff"
-		Referrer-Policy "strict-origin-when-cross-origin"
-	}
-	log {
-		output file C:\caddy\logs\webtask-wanmeivn-access.log {
-			roll_size 10MiB
-			roll_keep 5
-		}
-	}
-}
-
-# hotro.wanmeivn.com — trang 5180 SkyStory (spine-viewer), tinh + mat khau. Dong bo: tools/deploy/dong-bo-hotro.sh (repo skystory)
-hotro.wanmeivn.com {
-	basic_auth {
-		hotro <bcrypt-hash-in-secret-zip>
-	}
-	encode gzip zstd
-	header {
-		Strict-Transport-Security "max-age=31536000"
-		X-Content-Type-Options "nosniff"
-		Referrer-Policy "strict-origin-when-cross-origin"
-		X-Robots-Tag "noindex, nofollow"
-	}
-	handle_path /client/* {
-		root * C:\app\hotro\client
-		header Cache-Control "no-cache"
-		file_server
-	}
-	handle_path /spine/* {
-		root * C:\app\hotro\spine
-		header Cache-Control "no-cache"
-		file_server
-	}
-	handle_path /herobook/* {
-		root * C:\app\hotro\herobook
-		header Cache-Control "no-cache"
-		file_server
-	}
-	handle_path /hslh/* {
-		root * C:\app\hotro\hslh
-		header Cache-Control "no-cache"
-		file_server
-	}
-	handle_path /meomeo/* {
-		root * C:\app\hotro\meomeo
-		header Cache-Control "no-cache"
-		file_server
-	}
-	# Black Moon: player skill-flow (base /blackmoon/) + kho asset cho nguon thu 3 cua Xem spine
-	redir /blackmoon /blackmoon/ 308
-	handle_path /blackmoon/* {
-		root * C:\app\hotro\blackmoon
-		header Cache-Control "no-cache"
-		file_server
-	}
-	# (0929) bundle Vite co ma bam trong ten: doi noi dung = doi ten => giu 1 nam
-	
-handle /assets/* {
-		root * C:\app\hotro\site
-		header Cache-Control "public, max-age=31536000, immutable"
-		file_server
-	}
-	
-handle {
-		root * C:\app\hotro\site
-		header Cache-Control "no-cache"
-		# TAM (0929): xoa cache cu da ket trong trinh duyet (kho asset truoc day KHONG co
-		# Cache-Control => trinh duyet tu doan giu ~6 ngay). GO 2 dong duoi sau ~06/10.
-		header / Clear-Site-Data `"cache"`
-		header /index.html Clear-Site-Data `"cache"`
-		file_server
-	}
-	log {
-		output file C:\caddy\logs\hotro-wanmeivn-access.log {
-			roll_size 10MiB
-			roll_keep 5
-		}
-	}
 }
 
 3qdaichien.wanmeivn.com {
-	encode gzip zstd
-	header {
-		Strict-Transport-Security "max-age=31536000"
-		X-Content-Type-Options "nosniff"
-		Referrer-Policy "strict-origin-when-cross-origin"
-	}
-	# someone opening an article or the news list address directly lands on the one page, article open in its reader
+	import bao-mat
+	import nhat-ky 3qdaichien-wanmeivn
 	@artnav {
 		path_regexp art ^/tin-tuc/([a-z0-9-]+)/?$
 		header Sec-Fetch-Mode navigate
@@ -417,7 +59,6 @@ handle {
 	redir @artnav /#tin/{re.art.1} 302
 	redir /tin-tuc /#tin-tuc 302
 	redir /tin-tuc/ /#tin-tuc 302
-	# news list, article pages (read by the page's script), uploaded pictures and artwork come from the 3qdc service
 	@main path /api/tin-tuc /tin-tuc/* /tin-tuc-anh/* /3qdc-vi/*
 	handle @main {
 		reverse_proxy localhost:3399 {
@@ -425,54 +66,63 @@ handle {
 			header_up X-Forwarded-Proto {scheme}
 		}
 	}
-	# the page itself; nothing else of the 3qdc service (no /quan-tri) is reachable here
 	handle {
-		root * C:\app\3qdaichien\site
+		root * /srv/3qdaichien/site
 		header Cache-Control "no-cache"
 		file_server
-	}
-	log {
-		output file C:\caddy\logs\3qdaichien-wanmeivn-access.log {
-			roll_size 10MiB
-			roll_keep 5
-		}
-	}
-}
-
-portal.wanmeivn.com {
-	reverse_proxy 127.0.0.1:3500 {
-		header_up X-Real-IP {remote_host}
-	}
-	encode gzip zstd
-	header {
-		Strict-Transport-Security "max-age=31536000"
-		X-Content-Type-Options "nosniff"
-		Referrer-Policy "strict-origin-when-cross-origin"
-	}
-	log {
-		output file C:\caddy\logs\portal-wanmeivn-com-access.log {
-			roll_size 10MiB
-			roll_keep 5
-		}
 	}
 }
 
 phieubengoan.3qdc.wanmeivn.com {
-	encode gzip zstd
-	header {
-		Strict-Transport-Security "max-age=31536000"
-		X-Content-Type-Options "nosniff"
-		Referrer-Policy "strict-origin-when-cross-origin"
-	}
-	# the ticket page; the 3qdc service answers only the ticket page and its API on this host name
+	import bao-mat
+	import nhat-ky phieubengoan-wanmeivn
 	reverse_proxy localhost:3399 {
 		header_up X-Real-IP {remote_host}
 		header_up X-Forwarded-Proto {scheme}
 	}
-	log {
-		output file C:\caddy\logs\phieubengoan-wanmeivn-access.log {
-			roll_size 10MiB
-			roll_keep 5
-		}
+}
+
+# === hotro.wanmeivn.com - cong cu noi bo SkyStory (trang 5180) - dung lai 16/10/2026 sau khi .40 cai Ubuntu ===
+# nguon dong bo: tools/deploy/dong-bo-hotro.sh (repo skystory) -> /srv/hotro/<phan>
+hotro.wanmeivn.com {
+	import bao-mat
+	import nhat-ky hotro-wanmeivn
+	header X-Robots-Tag "noindex, nofollow"
+	basic_auth {
+		hotro <bcrypt-hash do nguoi phu trach hotro giu>
+	}
+	handle_path /client/* {
+		root * /srv/hotro/client
+		file_server
+	}
+	handle_path /spine/* {
+		root * /srv/hotro/spine
+		file_server
+	}
+	handle_path /herobook/* {
+		root * /srv/hotro/herobook
+		file_server
+	}
+	handle_path /hslh/* {
+		root * /srv/hotro/hslh
+		file_server
+	}
+	handle_path /meomeo/* {
+		root * /srv/hotro/meomeo
+		file_server
+	}
+	handle_path /blackmoon/* {
+		root * /srv/hotro/blackmoon
+		file_server
+	}
+	handle /assets/* {
+		root * /srv/hotro/site
+		header Cache-Control "public, max-age=31536000, immutable"
+		file_server
+	}
+	handle {
+		root * /srv/hotro/site
+		header Cache-Control "no-cache"
+		file_server
 	}
 }
