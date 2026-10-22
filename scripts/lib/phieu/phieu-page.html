@@ -132,6 +132,9 @@ h1 { font: 400 clamp(30px, 6vw, 44px)/1.15 var(--font-display); color: var(--gol
 #player .addrow .inp { flex: 1 1 auto; }
 #player .btn-add { cursor: pointer; white-space: nowrap; border: 1.5px solid #9c7a3c; background: #f3e3bd; color: var(--seal-dk); font: 700 14px var(--font-body); padding: 0 14px; border-radius: 3px; }
 #player .btn-add:disabled { opacity: .5; cursor: not-allowed; }
+/* "use these gifts again": pulls a past ticket's gift list into the form */
+#player .btn-reuse { justify-self: start; cursor: pointer; border: 1.5px dashed #9c7a3c; background: #fbf3df; color: var(--seal-dk); font: 700 13.5px var(--font-body); min-height: 36px; padding: 4px 12px; border-radius: 3px; }
+#player .btn-reuse:hover { background: #f3e3bd; }
 #player .form-err { color: var(--seal); font-weight: 600; margin: 0; }
 #player .actions { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; justify-content: space-between; border-top: 1px dashed #b89d6c; padding-top: 20px; }
 #player .send { cursor: pointer; border: 0; min-width: 230px; height: 58px; padding: 0 34px; font: 400 23px var(--font-display); color: #fff6dc; letter-spacing: .02em;
@@ -301,6 +304,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     if (!v || draft.qua.length >= MAX) return false;
     draft.qua.push(v.slice(0, 80)); giftText = ""; delete errs.qua; return true;
   }
+  // puts a past ticket's gifts back into the form (replacing what is there), so a regular ask needs no retyping
+  function reuseGifts(t) { draft.qua = t.qua.slice(0, MAX); giftText = ""; delete errs.qua; }
   function renderArea() {
     var a = $("#area");
     if (me.homNay) {
@@ -308,7 +313,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
         '<p>Phiếu mới mở lại lúc 00:00, còn <span class="clock" id="clock">' + untilMidnight() + '</span>.</p></div>';
       return;
     }
-    var d = draft, full = d.qua.length >= MAX, err = function (k) { return errs[k] ? '<div class="errmsg" role="alert">' + esc(errs[k]) + '</div>' : ""; };
+    var last = me.lichSu && me.lichSu[0];
+    var d = draft, full = d.qua.length >= MAX, err =function (k) { return errs[k] ? '<div class="errmsg" role="alert">' + esc(errs[k]) + '</div>' : ""; };
     var chips = d.qua.map(function (g, i) {
       return '<span class="chip"><span class="n">' + (i + 1) + '</span><span class="t">' + esc(g) + '</span><button type="button" class="x" data-rm="' + i + '" aria-label="Bỏ ' + esc(g) + '">×</button></span>';
     }).join("");
@@ -320,6 +326,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
       '<div class="fld' + (errs.server ? " err" : "") + '"><label class="q" for="srv">Server<span class="star">*</span></label><select class="inp" id="srv">' + servers + '</select>' +
       '<p class="hint">Server có nhân vật nhận quà.</p>' + err("server") + "</div>" +
       '<div class="fld wide' + (errs.qua ? " err" : "") + '"><label class="q" for="gift-in">Quà muốn nhận<span class="star">*</span></label>' +
+      (last ? '<button type="button" class="btn-reuse" id="reuse">↺ Lấy lại quà phiếu trước (' + last.qua.length + " món)</button>" : "") +
       (chips ? '<div class="chips">' + chips + "</div>" : "") +
       '<div class="addrow"><input class="inp" type="text" id="gift-in" value="' + esc(giftText) + '" placeholder="' + (full ? "Đã đủ " + MAX + " món" : "Gõ tên quà rồi Enter") + '" maxlength="80"' + (full ? " disabled" : "") + '>' +
       '<button type="button" class="btn-add" id="add"' + (full ? " disabled" : "") + '>Thêm</button></div>' +
@@ -335,6 +342,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     $("#gift-in").oninput = function (e) { giftText = e.target.value; clearErr(e.target, "qua"); };
     $("#gift-in").onkeydown = function (e) { if (e.key === "Enter") { e.preventDefault(); addAndFocus(); } };
     $("#add").onclick = addAndFocus;
+    if (last) $("#reuse").onclick = function () { reuseGifts(last); renderArea(); $("#reuse").focus(); };
     a.querySelectorAll("[data-rm]").forEach(function (b) { b.onclick = function () { d.qua.splice(+b.dataset.rm, 1); renderArea(); }; });
     $("#clear").onclick = function () { draft = { acc: "", server: "S1", qua: [], ghiChu: "" }; giftText = ""; errs = {}; renderArea(); };
     $("#f").onsubmit = function (ev) {
@@ -365,12 +373,17 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   function renderHist() {
     var list = me.lichSu || [];
     $("#count").textContent = list.length;
-    $("#hist").innerHTML = list.length ? list.map(function (t) {
+    $("#hist").innerHTML = list.length ? list.map(function (t, i) {
       return '<article class="tk"><div class="tk-top"><span class="tk-date">' + fmt(t.luc) + '</span><span class="stamp ' + esc(t.st) + '">' + (ST[t.st] || "") + "</span></div>" +
         "<ul>" + t.qua.map(function (g) { return "<li>" + esc(g) + "</li>"; }).join("") + "</ul>" +
         '<div class="meta">Nhân vật ' + esc(t.acc) + " · " + esc(srvName(t.server)) + (t.ghiChu ? " · Ghi chú: " + esc(t.ghiChu) : "") + "</div>" +
-        (t.phanHoi ? '<div class="reply">Phản hồi: ' + esc(t.phanHoi) + "</div>" : "") + "</article>";
+        (t.phanHoi ? '<div class="reply">Phản hồi: ' + esc(t.phanHoi) + "</div>" : "") +
+        // only while today's ticket is still open: copy these gifts into the form and jump to it
+        (me.homNay ? "" : '<button type="button" class="btn-reuse" data-reuse="' + i + '">↺ Dùng lại quà này</button>') + "</article>";
     }).join("") : '<p class="empty">Chưa có phiếu nào. Phiếu đầu tiên sẽ hiện ở đây.</p>';
+    $("#hist").querySelectorAll("[data-reuse]").forEach(function (b) {
+      b.onclick = function () { reuseGifts(list[+b.dataset.reuse]); renderArea(); showTab("gui", true); };
+    });
   }
 
   // tabs: click, or arrow keys / Home / End while a tab has focus
