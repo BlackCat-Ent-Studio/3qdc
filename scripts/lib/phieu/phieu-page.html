@@ -326,7 +326,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
       '<div class="fld' + (errs.server ? " err" : "") + '"><label class="q" for="srv">Server<span class="star">*</span></label><select class="inp" id="srv">' + servers + '</select>' +
       '<p class="hint">Server có nhân vật nhận quà.</p>' + err("server") + "</div>" +
       '<div class="fld wide' + (errs.qua ? " err" : "") + '"><label class="q" for="gift-in">Quà muốn nhận<span class="star">*</span></label>' +
-      (last ? '<button type="button" class="btn-reuse" id="reuse">↺ Lấy lại quà phiếu trước (' + last.qua.length + " món)</button>" : "") +
+      (last ? '<button type="button" class="btn-reuse" id="reuse">↺ Dùng lại quà hôm trước</button>' : "") +
       (chips ? '<div class="chips">' + chips + "</div>" : "") +
       '<div class="addrow"><input class="inp" type="text" id="gift-in" value="' + esc(giftText) + '" placeholder="' + (full ? "Đã đủ " + MAX + " món" : "Gõ tên quà rồi Enter") + '" maxlength="80"' + (full ? " disabled" : "") + '>' +
       '<button type="button" class="btn-add" id="add"' + (full ? " disabled" : "") + '>Thêm</button></div>' +
