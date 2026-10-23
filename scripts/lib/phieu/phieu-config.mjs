@@ -19,8 +19,8 @@ export const DEV_LOGIN = process.env.PHIEU_DEV_LOGIN === '1' && process.env.NEWS
 // The session cookie is Secure (HTTPS); only the plain-http draft server switches that off (same switch as /quan-tri).
 export const SECURE_COOKIE = process.env.NEWS_INSECURE_COOKIE !== '1';
 
-// Game servers a player can pick; one for now.
-export const SERVERS = [{ id: 'S1', name: 'S1 Trương Liêu' }];
+// Game servers a player can pick (S2 Mã Siêu mở 24/10/2026 10:00).
+export const SERVERS = [{ id: 'S1', name: 'S1 Trương Liêu' }, { id: 'S2', name: 'S2 Mã Siêu' }];
 // Tickets keep the id (S1); pages and the CSV show the name.
 export const serverName = (id) => SERVERS.find((s) => s.id === id)?.name || id;
 
