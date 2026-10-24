@@ -62,7 +62,7 @@ function readTicket(body) {
   const acc = cleanAcc(body.acc);
   if (!acc) return { field: 'acc', error: `Tên nhân vật tối đa ${ACC_MAX} ký tự và không chứa ký tự ẩn.` };
   const server = String(body.server ?? '');
-  if (!SERVERS.some((s) => s.id === server)) return { field: 'server', error: 'Chọn server.' };
+  if (!SERVERS.some((s) => s.id === server && !s.an)) return { field: 'server', error: 'Chọn server.' };
   if (!Array.isArray(body.qua)) return { field: 'qua', error: 'Ghi ít nhất một món quà.' };
   const qua = body.qua.map((g) => String(g ?? '').replace(/\s+/g, ' ').trim()).filter(Boolean);
   if (!qua.length) return { field: 'qua', error: 'Ghi ít nhất một món quà.' };

@@ -318,7 +318,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     var chips = d.qua.map(function (g, i) {
       return '<span class="chip"><span class="n">' + (i + 1) + '</span><span class="t">' + esc(g) + '</span><button type="button" class="x" data-rm="' + i + '" aria-label="Bỏ ' + esc(g) + '">×</button></span>';
     }).join("");
-    var servers = (me.servers || [{ id: "S1", name: "S1" }]).map(function (s) { return '<option value="' + esc(s.id) + '"' + (s.id === d.server ? " selected" : "") + ">" + esc(s.name) + "</option>"; }).join("");
+    var servers = (me.servers || [{ id: "S1", name: "S1" }]).filter(function (s) { return !s.an; }).map(function (s) { return '<option value="' + esc(s.id) + '"' + (s.id === d.server ? " selected" : "") + ">" + esc(s.name) + "</option>"; }).join("");
     a.innerHTML = '<form class="form" id="f" novalidate>' +
       '<div class="fld' + (errs.acc ? " err" : "") + '"><label class="q" for="acc">Tên nhân vật trong game<span class="star">*</span></label>' +
       '<input class="inp" type="text" id="acc" value="' + esc(d.acc) + '" placeholder="Ví dụ: Ngụy Tử Vân" maxlength="40" autocomplete="off">' +
