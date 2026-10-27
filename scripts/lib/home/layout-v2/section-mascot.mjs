@@ -160,6 +160,10 @@ const GROW = 1.26;
 const MAX_BOX = Math.round(250 * GROW);
 // square side on a phone: about a third of a 393px screen, small enough to leave the page readable
 const PHONE_BOX = 130;
+// Min, the cat, is drawn smaller inside her box than the old mascot was, and the owner asked for her 30% bigger
+// (2026-10-27; 50% was tried and found too big): both box sizes above are multiplied by this. Her box's empty corners let the mouse through to the
+// social bar behind, so the bigger top-left corner does not block its icons.
+const SIZE_UP = 1.3;
 // Min's model leaves an empty strip under her paws, 6.8% of the box at every size (measured 2026-10-27); the box is
 // pushed that far below the screen edge (a hair less) so she sits on the bottom edge, as the owner asked.
 const FEET_GAP = 0.065;
@@ -167,7 +171,7 @@ const FEET_GAP = 0.065;
 // the rules are written for the home page (html.hv2); alsoOnPages() gives each one to the other pages (html.hv2-m-page)
 export const MASCOT_CSS = MASCOT.enabled ? alsoOnPages(`
 #hv2-mascot,#hv2-mascot-toggle{display:none}
-html.hv2:not(.hv2-embed) #hv2-mascot{--hv2-m:min(${MAX_BOX}px,calc((100vh - ${SOCIAL_BAR_H}px) / 2 * ${GROW} - 8px));display:block;position:fixed;
+html.hv2:not(.hv2-embed) #hv2-mascot{--hv2-m:calc(min(${MAX_BOX}px,calc((100vh - ${SOCIAL_BAR_H}px) / 2 * ${GROW} - 8px)) * ${SIZE_UP});display:block;position:fixed;
   left:6px;bottom:calc(var(--hv2-m) * -${FEET_GAP});width:var(--hv2-m);height:var(--hv2-m);z-index:11;pointer-events:none;transition:transform .5s ease}
 #hv2-mascot.hv2-m-off{transform:translateY(110%)}
 #hv2-mascot canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:auto;cursor:grab}
@@ -193,7 +197,7 @@ html.hv2:not(.hv2-embed) #hv2-mascot-toggle.on:hover{color:#fff;background:#9a4a
 @media ${COMPACT_MQ}{
   /* flush with the bottom edge: an 8px gap here reads as a dark strip under her feet on a dense phone screen
      (about 22 device pixels on the owner's Redmi) */
-  html.hv2:not(.hv2-embed) #hv2-mascot{--hv2-m:${PHONE_BOX}px;left:8px;bottom:calc(var(--hv2-m) * -${FEET_GAP})}
+  html.hv2:not(.hv2-embed) #hv2-mascot{--hv2-m:${Math.round(PHONE_BOX * SIZE_UP)}px;left:8px;bottom:calc(var(--hv2-m) * -${FEET_GAP})}
   #hv2-mascot .hv2-m-tips{left:0;right:auto;bottom:100%;width:min(62vw,240px);margin-bottom:8px;font-size:13.5px}
   #hv2-mascot .hv2-m-tools{right:2px;bottom:auto;top:2px;opacity:1;gap:8px}
   #hv2-mascot .hv2-m-tools button{width:32px;height:32px;padding:7px;background:rgba(22,39,59,.92)}
