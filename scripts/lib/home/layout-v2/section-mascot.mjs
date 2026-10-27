@@ -35,6 +35,9 @@ export const MASCOT = {
   // Min's head-tilt parameter (ParamAngleY) is rigged the other way round from Live2D's usual "positive = look up":
   // with the mouse above her the eyes looked up but the head bowed down. true = turn that parameter round.
   flipHeadY: true,
+  // share of the body turn (ParamBodyAngleX/Y/Z) she keeps when she follows the mouse: at 1 her whole body leaned
+  // with her head and the customer said she looked "stuck in one lump"; 0.3 = the body only leans a little
+  bodyTurn: 0.3,
 };
 
 // [hour from, hour to, line]: greeting when the page opens
@@ -329,8 +332,8 @@ export const MASCOT_JS = MASCOT.enabled ? `(function(){
             var model = function(){ try { return app._subdelegates.at(0).getLive2DManager()._models.at(0); } catch (e) { return null; } };
             // The loader returns before the model's files have arrived, and the model does not move at all until its last
             // texture is in; the greeting waits for that (at most 15s) so her first face and mouth really show.
-            // flipHeadY: turn ParamAngleY round just before each frame is computed (the loader restores the parameters
-            // at the start of every frame, so this never adds up).
+            // flipHeadY / bodyTurn: turn ParamAngleY round and scale the body turn just before each frame is computed
+            // (the loader restores the parameters at the start of every frame, so this never adds up).
             var ready = new Promise(function(resolve){
               var tries = 0, poll = setInterval(function(){
                 var md = model(), cm = md && md._model, core = cm && cm._model;
@@ -338,9 +341,16 @@ export const MASCOT_JS = MASCOT.enabled ? `(function(){
                 if (!loaded && ++tries < 150) return;
                 clearInterval(poll);
                 resolve();
-                if (!core || !CFG.MASCOT.flipHeadY) return;
-                var i = core.parameters.ids.indexOf('ParamAngleY'), update = cm.update.bind(cm);
-                if (i >= 0) cm.update = function(){ core.parameters.values[i] = -core.parameters.values[i]; update(); };
+                if (!core) return;
+                var ids = core.parameters.ids, vals = core.parameters.values, update = cm.update.bind(cm);
+                var headY = CFG.MASCOT.flipHeadY ? ids.indexOf('ParamAngleY') : -1;
+                var turn = CFG.MASCOT.bodyTurn, body = turn == null || turn === 1 ? [] :
+                  ['ParamBodyAngleX', 'ParamBodyAngleY', 'ParamBodyAngleZ'].map(function(id){ return ids.indexOf(id); }).filter(function(k){ return k >= 0; });
+                cm.update = function(){
+                  if (headY >= 0) vals[headY] = -vals[headY];
+                  for (var b = 0; b < body.length; b++) vals[body[b]] *= turn;
+                  update();
+                };
               }, 100);
             });
             engine = {
