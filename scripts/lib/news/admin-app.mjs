@@ -218,12 +218,13 @@ export function adminApp() {
     });
   }
 
-  // A manager's invite link (/quan-tri/moi#<token>): the person picks a name and password and is in at once, with the
-  // invite's role ("Duyệt phiếu"). The token is taken from the # part and cleared from the address bar.
+  // A manager's invite link (/quan-tri/moi#<token>): the person picks a name and password; the account then waits for
+  // a manager's approval, with the invite's role ("Duyệt phiếu") preselected. The token is taken from the # part and
+  // cleared from the address bar.
   function renderAcceptInvite() {
     const token = location.hash.replace(/^#/, '');
     try { history.replaceState(null, '', '/quan-tri/moi'); } catch (e) { /* keep going */ }
-    authShell(`<h1>Nhận lời mời</h1><p class="meta">Bạn được mời làm <b>Duyệt phiếu</b> cho Phiếu Bé Ngoan. Tạo tài khoản để bắt đầu — link chỉ dùng được một lần.</p>
+    authShell(`<h1>Nhận lời mời</h1><p class="meta">Bạn được mời làm <b>Duyệt phiếu</b> cho Phiếu Bé Ngoan. Tạo tài khoản rồi chờ <b>Quản lý duyệt</b> là đăng nhập được — link chỉ dùng được một lần.</p>
 <form id="inv" novalidate>
 <div class="field"><label for="i-user">Tên đăng nhập</label><input class="inp" id="i-user" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="32" required>
 <span class="hint">3–32 ký tự: chữ thường không dấu, số, dấu chấm, gạch ngang, gạch dưới.</span></div>
@@ -254,8 +255,9 @@ export function adminApp() {
       const r = await api('POST', '/nhan-loi-moi', { token, username, name, password: a });
       btn.disabled = false;
       if (!r.ok) return say(r.data.error || 'Không tạo được tài khoản.');
-      authShell(`<h1>Đã tạo tài khoản</h1><p>Tài khoản <b>${esc(r.data.user.username)}</b> (${esc(r.data.user.name)}) đã sẵn sàng với vai trò <b>Duyệt phiếu</b>.</p>
-<a class="btn btn-fire auth-btn" href="/quan-tri">Đăng nhập</a>`);
+      authShell(`<h1>Đã tạo tài khoản</h1><p>Tài khoản <b>${esc(r.data.user.username)}</b> (${esc(r.data.user.name)}) đang <b>chờ Quản lý duyệt</b> làm Duyệt phiếu.</p>
+<p class="meta">Khi được duyệt, bạn đăng nhập bằng tên đăng nhập và mật khẩu vừa tạo. Hãy báo Quản lý tên đăng nhập của bạn để được duyệt nhanh.</p>
+<a class="btn btn-fire auth-btn" href="/quan-tri">Về trang đăng nhập</a>`);
     });
   }
 
@@ -293,7 +295,7 @@ export function adminApp() {
 <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><input class="inp" id="fresh-val" readonly value="${esc(shown.value)}" style="flex:1;min-width:260px;font-family:monospace"><button type="button" class="btn btn-fire btn-sm" id="fresh-copy">Sao chép</button></div></div>` : '';
     const accessHtml = `<section class="adm-access" style="margin:28px 0">
 <h2>Link mời Duyệt phiếu</h2>
-<p class="meta">Người nhận link tự tạo tài khoản và vào được ngay với vai trò <b>Duyệt phiếu</b>: chỉ thấy mục Phiếu Bé Ngoan, không thấy email người chơi, không xoá phiếu, không xuất CSV. Mỗi link dùng một lần, hết hạn sau 7 ngày.</p>
+<p class="meta">Người nhận link tự tạo tài khoản rồi <b>chờ bạn duyệt</b> trong bảng trên (vai trò <b>Duyệt phiếu</b> đã chọn sẵn). Duyệt phiếu chỉ thấy mục Phiếu Bé Ngoan, không thấy email người chơi, không xoá phiếu, không xuất CSV. Mỗi link dùng một lần, hết hạn sau 7 ngày.</p>
 <div class="acts" style="margin:10px 0"><button type="button" class="btn btn-fire btn-sm" id="inv-new">Tạo link mời</button></div>
 ${access.invites.length ? `<ul class="meta">${access.invites.map((i) => `<li>Link tạo bởi ${esc(i.createdBy)} lúc ${fmtTime(i.createdAt)} · hết hạn ${fmtTime(siteNowLocal(i.exp))} <button type="button" class="btn btn-ghost btn-xs" data-inv-huy="${esc(i.id)}">Huỷ</button></li>`).join('')}</ul>` : '<p class="meta">Không có link mời nào đang chờ dùng.</p>'}
 <h2 style="margin-top:22px">Mã cho Claude</h2>
@@ -312,13 +314,14 @@ ${rows.map((u) => {
     let acts;
     if (self) acts = '<span class="meta">Tài khoản của bạn</span>';
     else if (u.role === 'pending') {
-      acts = `${roleSelect({ role: 'editor', username: u.username }, 'role-' + esc(u.username))}<button type="button" class="btn btn-fire btn-sm" data-act="duyet" data-user="${esc(u.username)}">Duyệt</button><button type="button" class="btn btn-danger btn-sm" data-act="tu-choi" data-user="${esc(u.username)}">Từ chối</button>`;
+      // an account from an invite link comes with the invite's role already chosen
+      acts = `${roleSelect({ role: u.wantRole || 'editor', username: u.username }, 'role-' + esc(u.username))}<button type="button" class="btn btn-fire btn-sm" data-act="duyet" data-user="${esc(u.username)}">Duyệt</button><button type="button" class="btn btn-danger btn-sm" data-act="tu-choi" data-user="${esc(u.username)}">Từ chối</button>`;
     } else {
       acts = `${roleSelect(u, 'role-' + esc(u.username))}<button type="button" class="btn btn-ghost btn-sm" data-act="vai-tro" data-user="${esc(u.username)}">Đổi vai trò</button>${u.disabled
         ? `<button type="button" class="btn btn-ghost btn-sm" data-act="mo-khoa" data-user="${esc(u.username)}">Mở khoá</button>`
         : `<button type="button" class="btn btn-danger btn-sm" data-act="khoa" data-user="${esc(u.username)}">Khoá</button>`}`;
     }
-    return `<tr data-user="${esc(u.username)}"><td><div class="person">${avatar(u.name)}<b>${esc(u.name)}</b></div></td><td class="meta">${esc(u.username)}</td>
+    return `<tr data-user="${esc(u.username)}"><td><div class="person">${avatar(u.name)}<b>${esc(u.name)}</b></div></td><td class="meta">${esc(u.username)}${u.invitedBy ? `<div class="small">qua link mời của ${esc(u.invitedBy)}</div>` : ''}</td>
 <td><span class="pill ${cls}">${label}</span></td><td class="meta">${fmtTime(u.createdAt)}</td><td><div class="acts">${acts}</div></td></tr>`;
   }).join('')}
 </tbody></table></div>

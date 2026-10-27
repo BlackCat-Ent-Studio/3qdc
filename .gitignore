@@ -6,3 +6,5 @@ image-backup/
 /data/*
 !/data/news/
 /data/news/users.json
+/data/news/invites.json
+/data/news/mcp-tokens.json

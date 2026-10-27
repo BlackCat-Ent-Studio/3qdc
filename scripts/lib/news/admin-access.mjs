@@ -1,7 +1,8 @@
 // admin-access.mjs — two ways a manager lets someone in without the register-and-wait flow:
 //   invites       a one-time link (/quan-tri/moi#<token>, 7 days) for one role, today only "phieu" (Duyệt phiếu: the
-//                 gift tickets and nothing else). Whoever opens it picks a username, display name and password and the
-//                 account is active at once. data/news/invites.json; only a SHA-256 of the token is stored.
+//                 gift tickets and nothing else). Whoever opens it picks a username, display name and password; the
+//                 account then waits for a manager's approval (the owner wants to approve every account himself), with
+//                 the invite's role preselected. data/news/invites.json; only a SHA-256 of the token is stored.
 //   Claude codes  a bearer code for one "phieu" account, used by that person's Claude to reach /mcp (phieu-mcp.mjs)
 //                 over HTTPS without a browser. Shown once when made; only its SHA-256 is stored
 //                 (data/news/mcp-tokens.json). A code works only while its account is active and still allowed to
@@ -110,11 +111,13 @@ export async function acceptInvite(input) {
     return { save: true, invite: i };
   });
   if (taken.error) return taken;
+  // the account waits for a manager like a registration does ("pending"); wantRole preselects the invite's role on the
+  // managers' page, the manager confirms it with Duyệt
   const r = await changeUsers((users) => {
     if (users.some((u) => u.username === username)) return { status: 409, error: 'Tên đăng nhập này đã có người dùng. Hãy chọn tên khác.' };
-    users.push({ username, name, role: taken.invite.role, ...secret, disabled: false, createdAt: siteNow(), invitedBy: taken.invite.createdBy, invite: taken.invite.id });
-    console.log(`[news-auth] ${siteNow()} ${username} joined with invite ${taken.invite.id} (${taken.invite.role})`);
-    return { save: true, user: { username, name, role: taken.invite.role } };
+    users.push({ username, name, role: 'pending', wantRole: taken.invite.role, ...secret, disabled: false, createdAt: siteNow(), invitedBy: taken.invite.createdBy, invite: taken.invite.id });
+    console.log(`[news-auth] ${siteNow()} ${username} joined with invite ${taken.invite.id} (waiting for approval as ${taken.invite.role})`);
+    return { save: true, user: { username, name, role: 'pending', wantRole: taken.invite.role } };
   });
   if (r.error) await invites.change((list) => { const i = list.find((x) => x.id === taken.invite.id); if (i) { delete i.usedBy; delete i.usedAt; } return { save: true }; });
   return r;

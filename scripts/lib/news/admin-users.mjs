@@ -71,7 +71,7 @@ const activeManagers = (users) => users.filter((u) => u.role === 'manager' && !u
 export async function listUsers() {
   return (await readUsers()).map((u) => ({
     username: u.username, name: u.name, role: u.role, disabled: !!u.disabled, createdAt: u.createdAt || '',
-    passwordSet: !!u.hash, registered: !!u.registered,
+    passwordSet: !!u.hash, registered: !!u.registered, wantRole: u.wantRole || '', invitedBy: u.invitedBy || '',
   }));
 }
 
@@ -97,6 +97,7 @@ export async function manageUser(actor, username, { action, role } = {}) {
         if (!pending) return { status: 400, error: 'Tài khoản này không ở trạng thái chờ duyệt.' };
         if (!ACTIVE_ROLES.includes(role)) return { status: 400, error: 'Chọn vai trò Biên tập, Duyệt phiếu hoặc Quản lý.' };
         u.role = role;
+        delete u.wantRole;
         u.approvedBy = actor.username; u.approvedAt = siteNow();
         break;
       case 'tu-choi':
