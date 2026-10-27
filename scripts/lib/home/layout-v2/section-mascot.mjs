@@ -164,6 +164,10 @@ const PHONE_BOX = 130;
 // (2026-10-27; 50% was tried and found too big): both box sizes above are multiplied by this. Her box's empty corners let the mouse through to the
 // social bar behind, so the bigger top-left corner does not block its icons.
 const SIZE_UP = 1.3;
+// Warm rim light around her outline: a black cat on the page's dark navy sections melted into the background (customer
+// feedback 2026-10-27). In the page's gold, picked from five tried looks; the bright edge is softened a step ("mịn
+// vừa") because the customer wanted it smoother, but not so far that she sinks into the background again.
+const RIM_LIGHT = 'drop-shadow(0 0 3px rgba(255,228,170,.6)) drop-shadow(0 0 10px rgba(255,196,110,.4))';
 // Min's model leaves an empty strip under her paws, 6.8% of the box at every size (measured 2026-10-27); the box is
 // pushed that far below the screen edge (a hair less) so she sits on the bottom edge, as the owner asked.
 const FEET_GAP = 0.065;
@@ -174,7 +178,7 @@ export const MASCOT_CSS = MASCOT.enabled ? alsoOnPages(`
 html.hv2:not(.hv2-embed) #hv2-mascot{--hv2-m:calc(min(${MAX_BOX}px,calc((100vh - ${SOCIAL_BAR_H}px) / 2 * ${GROW} - 8px)) * ${SIZE_UP});display:block;position:fixed;
   left:6px;bottom:calc(var(--hv2-m) * -${FEET_GAP});width:var(--hv2-m);height:var(--hv2-m);z-index:11;pointer-events:none;transition:transform .5s ease}
 #hv2-mascot.hv2-m-off{transform:translateY(110%)}
-#hv2-mascot canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:auto;cursor:grab}
+#hv2-mascot canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:auto;cursor:grab;filter:${RIM_LIGHT}}
 #hv2-mascot .hv2-m-tips{position:absolute;left:76%;bottom:60%;width:220px;padding:8px 12px;box-sizing:border-box;
   background:rgba(255,246,227,.94);border:1px solid rgba(201,154,74,.8);border-radius:12px;
   box-shadow:0 3px 12px rgba(0,0,0,.35);color:#4a2e12;font:14px/1.45 system-ui,sans-serif;text-align:left;
