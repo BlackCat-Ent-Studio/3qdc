@@ -6,7 +6,8 @@ import { change, allPosts, listRevisions, readRevision, stampAfter, isVisible, l
 import { saveUpload, recentUploads } from './news-uploads.mjs';
 import { listSongs, saveSong, removeSong, SONG_MAX, FOLDER_MAX } from '../home/music-store.mjs';
 import { listSignups, signupsCsv, readMilestones, writeMilestones, cleanMilestones, deleteSignup, normalizePhone } from '../signup/signup-store.mjs';
-import { listPhieu, setStatus, phieuCsv, deletePhieu } from '../phieu/phieu-store.mjs';
+import { listPhieu, setStatus, phieuCsv, deletePhieu, withoutEmail } from '../phieu/phieu-store.mjs';
+import { listInvites, createInvite, revokeInvite, acceptInvite, listCodes, createCode, revokeCode } from './admin-access.mjs';
 import { STATES, REPLY_MAX } from '../phieu/phieu-config.mjs';
 import { decide, mayDelete, summaryOf } from './news-workflow.mjs';
 import { register, listUsers, manageUser } from './admin-users.mjs';
@@ -142,6 +143,12 @@ async function route(req, res, path) {
     endSession(req);
     return send(res, 200, { ok: true }, { 'Set-Cookie': clearedCookie() });
   }
+  // a manager's invite link: the account is created active, with the invite's role
+  if (method === 'POST' && path === '/nhan-loi-moi') {
+    const r = await acceptInvite(body);
+    if (r.error) return oops(res, r.status, r.error);
+    return send(res, 201, { user: r.user });
+  }
 
   // ----- signed in -----
   // the lock heartbeat alone must not keep a session alive
@@ -149,6 +156,12 @@ async function route(req, res, path) {
   if (!user) return oops(res, 401, 'Phiên đăng nhập đã hết. Hãy đăng nhập lại.');
 
   if (method === 'GET' && path === '/toi') return send(res, 200, { user: { username: user.username, name: user.name, role: user.role } });
+
+  // "Duyệt phiếu" accounts reach the ticket list and the give / refuse / back-to-waiting answer, nothing else
+  // (no articles, pictures, music, sign-ups, trash, accounts; no CSV and no deleting tickets)
+  if (user.role === 'phieu' && !((method === 'GET' && path === '/phieu-be-ngoan') || (method === 'POST' && /^\/phieu-be-ngoan\/[a-z0-9]{6,20}$/.test(path)))) {
+    return oops(res, 403, 'Tài khoản Duyệt phiếu chỉ dùng được mục Phiếu Bé Ngoan.');
+  }
 
   // pictures uploaded recently (both roles: editors write articles with pictures too)
   if (method === 'GET' && path === '/anh') return send(res, 200, { items: await recentUploads(40) });
@@ -205,13 +218,17 @@ async function route(req, res, path) {
     return oops(res, 404, 'Không có địa chỉ này.');
   }
 
-  // gift tickets from Phiếu Bé Ngoan (managers only: they carry players' email addresses): the list for one day and
-  // state, marking a ticket given / refused / waiting again with a reply the player sees, and the list as CSV
+  // gift tickets from Phiếu Bé Ngoan: the list for one day and state, marking a ticket given / refused / waiting again
+  // with a reply the player sees (managers and "Duyệt phiếu" accounts), the list as CSV and deleting a ticket (managers
+  // only: the CSV carries players' email addresses, which "Duyệt phiếu" accounts never see)
   if (path === '/phieu-be-ngoan' || path.startsWith('/phieu-be-ngoan/')) {
-    if (user.role !== 'manager') return oops(res, 403, 'Chỉ Quản lý mới xem được Phiếu Bé Ngoan.');
+    if (user.role !== 'manager' && user.role !== 'phieu') return oops(res, 403, 'Chỉ Quản lý hoặc người Duyệt phiếu mới xem được Phiếu Bé Ngoan.');
     const q = new URL(req.url, 'http://x').searchParams;
     const filter = { ngay: ['hom-nay', 'hom-qua', 'tat-ca'].includes(q.get('ngay')) ? q.get('ngay') : 'hom-nay', st: Object.hasOwn(STATES, q.get('st') || '') ? q.get('st') : 'all' };
-    if (method === 'GET' && path === '/phieu-be-ngoan') return send(res, 200, await listPhieu(filter));
+    if (method === 'GET' && path === '/phieu-be-ngoan') {
+      const list = await listPhieu(filter);
+      return send(res, 200, user.role === 'manager' ? list : { ...list, items: list.items.map(withoutEmail) });
+    }
     if (method === 'GET' && path === '/phieu-be-ngoan/csv') {
       const csv = await phieuCsv(filter);
       const stamp = siteNow().slice(0, 16).replace(/-/g, '').replace('T', '-').replace(':', '');
@@ -231,7 +248,7 @@ async function route(req, res, path) {
       const t = await setStatus(pm[1], st, phanHoi, user.username);
       if (!t) return oops(res, 404, 'Không tìm thấy phiếu này.');
       console.log(`[news] ${siteNow()} ${user.username} set ticket ${t.id} to ${st}`);
-      return send(res, 200, { item: t });
+      return send(res, 200, { item: user.role === 'manager' ? t : withoutEmail(t) });
     }
     const dm = path.match(/^\/phieu-be-ngoan\/([a-z0-9]{6,20})\/xoa$/);
     if (method === 'POST' && dm) {
@@ -273,10 +290,24 @@ async function route(req, res, path) {
     return oops(res, 404, 'Không có địa chỉ này.');
   }
 
+  // invite links for "Duyệt phiếu" accounts and codes for their Claude (managers only; shown on the accounts page).
+  // A new link or code is in the answer once and never again.
+  if (path === '/loi-moi' || path.startsWith('/loi-moi/') || path === '/ma-claude' || path.startsWith('/ma-claude/')) {
+    if (user.role !== 'manager') return oops(res, 403, 'Chỉ Quản lý mới quản lý link mời và mã Claude.');
+    let r = null, im, cm;
+    if (method === 'POST' && path === '/loi-moi') r = await createInvite(user, body.role);
+    else if (method === 'POST' && (im = path.match(/^\/loi-moi\/([a-f0-9]{12})\/huy$/))) r = await revokeInvite(user, im[1]);
+    else if (method === 'POST' && path === '/ma-claude') r = await createCode(user, String(body.username || ''), body.label);
+    else if (method === 'POST' && (cm = path.match(/^\/ma-claude\/([a-f0-9]{12})\/thu-hoi$/))) r = await revokeCode(user, cm[1]);
+    else return oops(res, 404, 'Không có địa chỉ này.');
+    if (r.error) return oops(res, r.status, r.error);
+    return send(res, 200, { token: r.token, code: r.code, invites: await listInvites(), codes: await listCodes() });
+  }
+
   // accounts page (managers only)
   if (path === '/nguoi-dung' || path.startsWith('/nguoi-dung/')) {
     if (user.role !== 'manager') return oops(res, 403, 'Chỉ Quản lý mới quản lý người dùng.');
-    if (method === 'GET' && path === '/nguoi-dung') return send(res, 200, { users: await listUsers(), me: user.username });
+    if (method === 'GET' && path === '/nguoi-dung') return send(res, 200, { users: await listUsers(), me: user.username, invites: await listInvites(), codes: await listCodes() });
     const name = path.slice('/nguoi-dung/'.length);
     if (method === 'POST' && USERNAME_RE.test(name)) {
       const r = await manageUser(user, name, { action: body.action, role: body.role });

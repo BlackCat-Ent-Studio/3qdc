@@ -79,8 +79,12 @@ export function adminApp() {
   const ACTION_WORDS = { luu: 'lưu', 'gui-duyet': 'gửi duyệt', 'rut-ve': 'rút về nháp', 'dang-ngay': 'đăng', 'hen-gio': 'hẹn giờ đăng', 'tra-lai': 'trả lại cho người viết', 'go-bai': 'gỡ bài', 'bo-ghim': 'bỏ ghim' };
 
   function header(active) {
-    const nav = me.role === 'manager'
-      ? `<nav class="adm-nav" aria-label="Mục quản trị">${[['posts', '#/', 'Bài viết'], ['music', '#/nhac', 'Nhạc nền'], ['signup', '#/dang-ky-som', 'Đăng ký sớm'], ['phieu', '#/phieu-be-ngoan', 'Phiếu Bé Ngoan'], ['trash', '#/thung-rac', 'Thùng rác'], ['users', '#/nguoi-dung', 'Người dùng']]
+    // a "Duyệt phiếu" account has one section only
+    const tabs = me.role === 'manager'
+      ? [['posts', '#/', 'Bài viết'], ['music', '#/nhac', 'Nhạc nền'], ['signup', '#/dang-ky-som', 'Đăng ký sớm'], ['phieu', '#/phieu-be-ngoan', 'Phiếu Bé Ngoan'], ['trash', '#/thung-rac', 'Thùng rác'], ['users', '#/nguoi-dung', 'Người dùng']]
+      : me.role === 'phieu' ? [['phieu', '#/phieu-be-ngoan', 'Phiếu Bé Ngoan']] : null;
+    const nav = tabs
+      ? `<nav class="adm-nav" aria-label="Mục quản trị">${tabs
         .map(([key, href, label]) => `<a href="${href}"${(active || 'posts') === key ? ' class="on" aria-current="page"' : ''}>${label}</a>`).join('')}</nav>`
       : '';
     // On phones the account row is folded behind this button (CSS hides .who until the header carries data-menu).
@@ -214,8 +218,49 @@ export function adminApp() {
     });
   }
 
+  // A manager's invite link (/quan-tri/moi#<token>): the person picks a name and password and is in at once, with the
+  // invite's role ("Duyệt phiếu"). The token is taken from the # part and cleared from the address bar.
+  function renderAcceptInvite() {
+    const token = location.hash.replace(/^#/, '');
+    try { history.replaceState(null, '', '/quan-tri/moi'); } catch (e) { /* keep going */ }
+    authShell(`<h1>Nhận lời mời</h1><p class="meta">Bạn được mời làm <b>Duyệt phiếu</b> cho Phiếu Bé Ngoan. Tạo tài khoản để bắt đầu — link chỉ dùng được một lần.</p>
+<form id="inv" novalidate>
+<div class="field"><label for="i-user">Tên đăng nhập</label><input class="inp" id="i-user" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="32" required>
+<span class="hint">3–32 ký tự: chữ thường không dấu, số, dấu chấm, gạch ngang, gạch dưới.</span></div>
+<div class="field"><label for="i-name">Tên hiển thị</label><input class="inp" id="i-name" autocomplete="name" maxlength="60" required></div>
+<div class="field"><label for="i-pass">Mật khẩu</label><input class="inp" id="i-pass" type="password" autocomplete="new-password" minlength="10" required>
+<span class="hint">Ít nhất 10 ký tự — nên là một câu dễ nhớ.</span></div>
+<div class="field"><label for="i-pass2">Nhập lại mật khẩu</label><input class="inp" id="i-pass2" type="password" autocomplete="new-password" minlength="10" required></div>
+<div class="err" id="i-err" role="alert" hidden></div>
+<button class="btn btn-fire auth-btn" type="submit">Tạo tài khoản</button>
+</form>`);
+    const err = $('#i-err');
+    const say = (msg) => { err.textContent = msg; err.hidden = false; };
+    if (!token) say('Link thiếu mã. Hãy mở đúng link Quản lý gửi cho bạn.');
+    $('#i-user').focus();
+    $('#i-user').addEventListener('change', (e) => { e.target.value = e.target.value.trim().toLowerCase(); });
+    $('#inv').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = e.target.querySelector('button[type=submit]');
+      const username = $('#i-user').value.trim().toLowerCase();
+      const name = $('#i-name').value.trim();
+      const a = $('#i-pass').value, b = $('#i-pass2').value;
+      err.hidden = true;
+      if (!/^[a-z0-9][a-z0-9._-]{2,31}$/.test(username)) return say('Tên đăng nhập 3–32 ký tự: chữ thường không dấu, số, dấu chấm, gạch ngang, gạch dưới; bắt đầu bằng chữ hoặc số.');
+      if (!name) return say('Nhập tên hiển thị.');
+      if (a.length < 10) return say('Mật khẩu cần ít nhất 10 ký tự.');
+      if (a !== b) return say('Hai lần nhập mật khẩu không giống nhau.');
+      btn.disabled = true;
+      const r = await api('POST', '/nhan-loi-moi', { token, username, name, password: a });
+      btn.disabled = false;
+      if (!r.ok) return say(r.data.error || 'Không tạo được tài khoản.');
+      authShell(`<h1>Đã tạo tài khoản</h1><p>Tài khoản <b>${esc(r.data.user.username)}</b> (${esc(r.data.user.name)}) đã sẵn sàng với vai trò <b>Duyệt phiếu</b>.</p>
+<a class="btn btn-fire auth-btn" href="/quan-tri">Đăng nhập</a>`);
+    });
+  }
+
   // ---------- accounts (managers) ----------
-  const ROLE_PILL = { manager: ['Quản lý', 's-published'], editor: ['Biên tập', 's-draft'], pending: ['Chờ duyệt', 's-pending'] };
+  const ROLE_PILL = { manager: ['Quản lý', 's-published'], editor: ['Biên tập', 's-draft'], phieu: ['Duyệt phiếu', 's-scheduled'], pending: ['Chờ duyệt', 's-pending'] };
 
   async function renderUsers() {
     cleanupEditor();
@@ -225,16 +270,41 @@ export function adminApp() {
     const r = await api('GET', '/nguoi-dung');
     if (mine !== screen || !me) return;
     if (!r.ok) { if (r.status !== 401) $('main').innerHTML = `<div class="err" style="margin:40px 0">${esc(r.data.error)}</div>`; return; }
+    access = { invites: r.data.invites || [], codes: r.data.codes || [] };
     drawUsers(r.data.users, r.data.me, '');
   }
 
+  // open invite links and live Claude codes, kept between redraws of the accounts page; a link or code just made is
+  // shown once in `fresh` and gone on the next redraw (the server never shows it again)
+  let access = { invites: [], codes: [] };
+  let fresh = null;
+
   function drawUsers(users, myName, notice) {
-    const order = { pending: 0, manager: 1, editor: 2 };
-    const rows = users.slice().sort((a, b) => (order[a.role] ?? 3) - (order[b.role] ?? 3) || String(b.createdAt).localeCompare(String(a.createdAt)));
+    const order = { pending: 0, manager: 1, editor: 2, phieu: 3 };
+    const rows = users.slice().sort((a, b) => (order[a.role] ?? 4) - (order[b.role] ?? 4) || String(b.createdAt).localeCompare(String(a.createdAt)));
     const waiting = users.filter((u) => u.role === 'pending').length;
-    const roleSelect = (u, id) => `<select class="sel" id="${id}" aria-label="Vai trò của ${esc(u.username)}"><option value="editor"${u.role === 'editor' ? ' selected' : ''}>Biên tập</option><option value="manager"${u.role === 'manager' ? ' selected' : ''}>Quản lý</option></select>`;
+    const roleSelect = (u, id) => `<select class="sel" id="${id}" aria-label="Vai trò của ${esc(u.username)}">${[['editor', 'Biên tập'], ['phieu', 'Duyệt phiếu'], ['manager', 'Quản lý']]
+      .map(([v, l]) => `<option value="${v}"${u.role === v ? ' selected' : ''}>${l}</option>`).join('')}</select>`;
+    const phieuUsers = users.filter((u) => u.role === 'phieu' && !u.disabled);
+    const nameOf = (un) => (users.find((u) => u.username === un) || {}).name || un;
+    const shown = fresh;
+    fresh = null;
+    const freshBox = shown ? `<div class="warnbar" style="margin:12px 0"><b>${shown.kind === 'link' ? 'Link mời mới' : 'Mã cho Claude mới'}</b> — chỉ hiện <b>một lần</b>, hãy sao chép và gửi riêng cho người dùng ngay:
+<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><input class="inp" id="fresh-val" readonly value="${esc(shown.value)}" style="flex:1;min-width:260px;font-family:monospace"><button type="button" class="btn btn-fire btn-sm" id="fresh-copy">Sao chép</button></div></div>` : '';
+    const accessHtml = `<section class="adm-access" style="margin:28px 0">
+<h2>Link mời Duyệt phiếu</h2>
+<p class="meta">Người nhận link tự tạo tài khoản và vào được ngay với vai trò <b>Duyệt phiếu</b>: chỉ thấy mục Phiếu Bé Ngoan, không thấy email người chơi, không xoá phiếu, không xuất CSV. Mỗi link dùng một lần, hết hạn sau 7 ngày.</p>
+<div class="acts" style="margin:10px 0"><button type="button" class="btn btn-fire btn-sm" id="inv-new">Tạo link mời</button></div>
+${access.invites.length ? `<ul class="meta">${access.invites.map((i) => `<li>Link tạo bởi ${esc(i.createdBy)} lúc ${fmtTime(i.createdAt)} · hết hạn ${fmtTime(siteNowLocal(i.exp))} <button type="button" class="btn btn-ghost btn-xs" data-inv-huy="${esc(i.id)}">Huỷ</button></li>`).join('')}</ul>` : '<p class="meta">Không có link mời nào đang chờ dùng.</p>'}
+<h2 style="margin-top:22px">Mã cho Claude</h2>
+<p class="meta">Mã để Claude của người Duyệt phiếu tự xem và xử lý phiếu qua <code>https://${esc(HOST)}/mcp</code>. Khoá tài khoản hoặc đổi vai trò thì mã của người đó tự hết hiệu lực.</p>
+${phieuUsers.length ? `<div class="acts" style="margin:10px 0"><select class="sel" id="code-user" aria-label="Tài khoản">${phieuUsers.map((u) => `<option value="${esc(u.username)}">${esc(u.name)} (${esc(u.username)})</option>`).join('')}</select>
+<input class="inp" id="code-label" maxlength="40" placeholder="Ghi chú, vd: Claude máy nhà" aria-label="Ghi chú cho mã" style="max-width:240px"><button type="button" class="btn btn-fire btn-sm" id="code-new">Tạo mã</button></div>` : '<p class="meta">Chưa có tài khoản Duyệt phiếu nào đang hoạt động.</p>'}
+${access.codes.length ? `<ul class="meta">${access.codes.map((c) => `<li><b>${esc(nameOf(c.username))}</b> · ${esc(c.label)} · mã …${esc(c.hint)} · tạo ${fmtTime(c.createdAt)} · ${c.lastUsedAt ? 'dùng lần cuối ' + fmtTime(c.lastUsedAt) : 'chưa dùng'} <button type="button" class="btn btn-danger btn-xs" data-code-thu="${esc(c.id)}">Thu hồi</button></li>`).join('')}</ul>` : '<p class="meta">Chưa có mã nào đang dùng.</p>'}
+</section>`;
     $('main').innerHTML = `<div class="adm-top"><div><h1>Người dùng</h1><p>${waiting ? `<b>${waiting}</b> tài khoản đăng ký đang chờ duyệt. Chỉ duyệt người bạn biết — Biên tập viết bài, Quản lý đăng bài và quản lý người dùng.` : 'Không có tài khoản nào chờ duyệt. Người mới đăng ký tại trang Đăng ký và sẽ hiện ở đây.'}</p></div></div>
 <div class="err" id="u-err" role="alert"${notice ? '' : ' hidden'}>${esc(notice)}</div>
+${freshBox}
 <div class="tbl-wrap"><table class="posts users"><thead><tr><th>Người dùng</th><th>Tên đăng nhập</th><th>Vai trò</th><th>Ngày tạo</th><th>Thao tác</th></tr></thead><tbody>
 ${rows.map((u) => {
     const [label, cls] = u.disabled ? ['Đã khoá', 's-locked'] : (ROLE_PILL[u.role] || [u.role, 's-draft']);
@@ -251,8 +321,45 @@ ${rows.map((u) => {
     return `<tr data-user="${esc(u.username)}"><td><div class="person">${avatar(u.name)}<b>${esc(u.name)}</b></div></td><td class="meta">${esc(u.username)}</td>
 <td><span class="pill ${cls}">${label}</span></td><td class="meta">${fmtTime(u.createdAt)}</td><td><div class="acts">${acts}</div></td></tr>`;
   }).join('')}
-</tbody></table></div>`;
+</tbody></table></div>
+${accessHtml}`;
     const armed = {};
+    if (shown) {
+      $('#fresh-val').addEventListener('focus', (e) => e.target.select());
+      $('#fresh-copy').addEventListener('click', async () => {
+        const v = $('#fresh-val');
+        try { await navigator.clipboard.writeText(v.value); toast('Đã sao chép'); } catch (e) { v.select(); toast('Bấm Ctrl+C để sao chép'); }
+      });
+    }
+    // invite links and Claude codes: each answer brings the new lists (and the new link or code, once)
+    const accessCall = async (path, body, b, onFresh) => {
+      if (b) b.disabled = true;
+      const mine = screen;
+      const r = await api('POST', path, body);
+      if (mine !== screen) return;
+      if (!r.ok) {
+        if (b) b.disabled = false;
+        if (r.status !== 401) { const e = $('#u-err'); e.textContent = r.data.error || 'Không thực hiện được.'; e.hidden = false; }
+        return;
+      }
+      access = { invites: r.data.invites || [], codes: r.data.codes || [] };
+      if (onFresh) fresh = onFresh(r.data);
+      drawUsers(users, myName, '');
+    };
+    $('#inv-new').addEventListener('click', (e) => accessCall('/loi-moi', { role: 'phieu' }, e.target,
+      (d) => ({ kind: 'link', value: `${location.origin}/quan-tri/moi#${d.token}` })));
+    $$('[data-inv-huy]').forEach((b) => b.addEventListener('click', () => accessCall(`/loi-moi/${b.getAttribute('data-inv-huy')}/huy`, {}, b)));
+    if ($('#code-new')) $('#code-new').addEventListener('click', (e) => accessCall('/ma-claude', { username: $('#code-user').value, label: $('#code-label').value }, e.target,
+      (d) => ({ kind: 'code', value: d.code })));
+    $$('[data-code-thu]').forEach((b) => b.addEventListener('click', () => {
+      if (!(armed['code' + b.getAttribute('data-code-thu')] > Date.now() - 4000)) {
+        armed['code' + b.getAttribute('data-code-thu')] = Date.now();
+        b.textContent = 'Bấm lần nữa';
+        setTimeout(() => { if (b.isConnected) b.textContent = 'Thu hồi'; }, 4000);
+        return;
+      }
+      accessCall(`/ma-claude/${b.getAttribute('data-code-thu')}/thu-hoi`, {}, b);
+    }));
     $$('[data-act]').forEach((b) => b.addEventListener('click', async () => {
       const action = b.getAttribute('data-act');
       const username = b.getAttribute('data-user');
@@ -585,17 +692,19 @@ ${d.pages > 1 ? `<div class="dks-pager"><button type="button" class="btn btn-gho
       return r.data;
     };
 
+    // "Duyệt phiếu" accounts see no email addresses, no CSV and no delete button (the server refuses those anyway)
+    const full = me.role === 'manager';
     const draw = (d) => {
       const c = d.counts;
       $('main').innerHTML = `<div class="adm-top"><div><h1>Phiếu Bé Ngoan</h1>
 <p>Người chơi gửi phiếu ở <a href="https://phieubengoan.3qdc.wanmeivn.com/" target="_blank" rel="noopener">phieubengoan.3qdc.wanmeivn.com</a>. Trả quà trong game xong thì bấm <b>Đã trả</b>, người chơi sẽ thấy trong lịch sử.</p></div>
-<a class="btn btn-fire" href="/quan-tri/api/phieu-be-ngoan/csv?${qs()}" download>Xuất CSV</a></div>
+${full ? `<a class="btn btn-fire" href="/quan-tri/api/phieu-be-ngoan/csv?${qs()}" download>Xuất CSV</a>` : ''}</div>
 <div class="filters">${['all', 'cho', 'tra', 'tu'].map((s) => `<button type="button" class="tab${phieuView.st === s ? ' on' : ''}" data-pst="${s}">${s === 'all' ? 'Tất cả' : PHIEU_ST[s]}<small>${fmtNum(c[s])}</small></button>`).join('')}
 <select id="fngay" aria-label="Ngày gửi">${[['hom-nay', 'Hôm nay'], ['hom-qua', 'Hôm qua'], ['tat-ca', 'Mọi ngày']].map(([v, l]) => `<option value="${v}"${phieuView.ngay === v ? ' selected' : ''}>${l}</option>`).join('')}</select>
 <span class="meta">${fmtNum(d.cho)} phiếu đang chờ (mọi ngày)</span></div>
 <div class="tbl-wrap"><table class="posts posts-phieu"><thead><tr><th>Phiếu</th><th>Nhân vật</th><th>Quà muốn nhận</th><th>Ghi chú</th><th>Trạng thái</th><th>Xử lý</th></tr></thead><tbody>
 ${d.items.map((t) => `<tr data-id="${esc(t.id)}">
-<td><b>${esc(t.email)}</b><div class="meta">${fmtTime(t.luc)}</div></td>
+<td>${full ? `<b>${esc(t.email)}</b>` : `<span class="meta">Mã ${esc(t.id)}</span>`}<div class="meta">${fmtTime(t.luc)}</div></td>
 <td><b>${esc(t.acc)}</b><div class="meta">Server ${esc(t.serverTen || t.server)}</div></td>
 <td><ul class="phieu-qua">${t.qua.map((g) => `<li>${esc(g)}</li>`).join('')}</ul></td>
 <td class="meta">${esc(t.ghiChu) || '—'}</td>
@@ -603,7 +712,7 @@ ${d.items.map((t) => `<tr data-id="${esc(t.id)}">
 <td>${t.st === 'cho'
     ? `<div class="phieu-act"><input class="inp" maxlength="160" placeholder="Phản hồi cho người chơi (không bắt buộc)" aria-label="Phản hồi" data-reply="${esc(t.id)}"><div class="acts"><button type="button" class="btn btn-fire btn-sm" data-set="tra" data-id="${esc(t.id)}">Đã trả</button><button type="button" class="btn btn-danger btn-sm" data-set="tu" data-id="${esc(t.id)}">Từ chối</button></div></div>`
     : `<div class="meta">${t.phanHoi ? esc(t.phanHoi) : 'Không có phản hồi.'}</div><button type="button" class="btn btn-ghost btn-xs" data-set="cho" data-id="${esc(t.id)}" style="margin-top:6px">Đưa về Đang chờ</button>`}
-<div style="margin-top:8px"><button type="button" class="btn btn-danger btn-xs" data-del-phieu="${esc(t.id)}">Xoá phiếu</button></div></td></tr>`).join('')}
+${full ? `<div style="margin-top:8px"><button type="button" class="btn btn-danger btn-xs" data-del-phieu="${esc(t.id)}">Xoá phiếu</button></div>` : ''}</td></tr>`).join('')}
 ${d.items.length ? '' : `<tr><td colspan="6" class="meta" style="text-align:center;padding:30px">${c.all ? 'Không có phiếu nào khớp bộ lọc.' : 'Chưa có phiếu nào trong ngày này.'}</td></tr>`}
 </tbody></table></div>`;
 
@@ -1040,7 +1149,8 @@ ${uploads.length ? `<div class="pop-row"><span class="lbl">Ảnh đã tải lên
     if (!me) return renderLogin();
     const h = location.hash.replace(/^#/, '') || '/';
     let m;
-    if (h === '/viet-bai') renderEditor(null);
+    if (me.role === 'phieu') renderPhieu();
+    else if (h === '/viet-bai') renderEditor(null);
     else if ((m = h.match(/^\/sua\/(\d+)$/))) renderEditor(+m[1]);
     else if (h === '/nhac' && me.role === 'manager') renderMusic();
     else if (h === '/dang-ky-som' && me.role === 'manager') renderSignups();
@@ -1098,6 +1208,7 @@ ${uploads.length ? `<div class="pop-row"><span class="lbl">Ảnh đã tải lên
   window.addEventListener('hashchange', () => {
     // a new set-password link pasted into the same tab: show the form for that token
     if (location.pathname.indexOf('/quan-tri/dat-mat-khau') === 0) { if (location.hash.length > 1) renderSetPassword(); return; }
+    if (location.pathname.indexOf('/quan-tri/moi') === 0) { if (location.hash.length > 1) renderAcceptInvite(); return; }
     if (dirty() && !window.confirm('Bài đang có thay đổi chưa lưu. Rời trang này?')) {
       try { history.replaceState(null, '', lastHash || '#/'); } catch (e) { /* ignore */ }
       return;
@@ -1111,6 +1222,7 @@ ${uploads.length ? `<div class="pop-row"><span class="lbl">Ảnh đã tải lên
     bindSwipe();
     if (location.pathname.replace(/\/+$/, '') === '/quan-tri/dat-mat-khau') return renderSetPassword();
     if (location.pathname.replace(/\/+$/, '') === '/quan-tri/dang-ky') return renderRegister();
+    if (location.pathname.replace(/\/+$/, '') === '/quan-tri/moi') return renderAcceptInvite();
     const r = await api('GET', '/toi');
     if (r.ok) { me = r.data.user; route(); } else if (r.status !== 401) renderLogin(r.data.error);
   })();

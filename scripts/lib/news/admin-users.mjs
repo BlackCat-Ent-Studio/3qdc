@@ -95,7 +95,7 @@ export async function manageUser(actor, username, { action, role } = {}) {
     switch (action) {
       case 'duyet':
         if (!pending) return { status: 400, error: 'Tài khoản này không ở trạng thái chờ duyệt.' };
-        if (!ACTIVE_ROLES.includes(role)) return { status: 400, error: 'Chọn vai trò Biên tập hoặc Quản lý.' };
+        if (!ACTIVE_ROLES.includes(role)) return { status: 400, error: 'Chọn vai trò Biên tập, Duyệt phiếu hoặc Quản lý.' };
         u.role = role;
         u.approvedBy = actor.username; u.approvedAt = siteNow();
         break;
@@ -113,7 +113,7 @@ export async function manageUser(actor, username, { action, role } = {}) {
         break;
       case 'vai-tro':
         if (pending) return { status: 400, error: 'Tài khoản đang chờ duyệt: hãy duyệt kèm vai trò.' };
-        if (!ACTIVE_ROLES.includes(role)) return { status: 400, error: 'Chọn vai trò Biên tập hoặc Quản lý.' };
+        if (!ACTIVE_ROLES.includes(role)) return { status: 400, error: 'Chọn vai trò Biên tập, Duyệt phiếu hoặc Quản lý.' };
         u.role = role;
         break;
       default:

@@ -328,7 +328,8 @@ export async function handleAdmin(req, res, cleanPath) {
     res.end('405');
     return true;
   }
-  if (cleanPath === '/quan-tri' || cleanPath === '/quan-tri/dat-mat-khau' || cleanPath === '/quan-tri/dang-ky') {
+  // /quan-tri/moi = a manager's invite link (its token is in the # part, read by the page)
+  if (cleanPath === '/quan-tri' || cleanPath === '/quan-tri/dat-mat-khau' || cleanPath === '/quan-tri/dang-ky' || cleanPath === '/quan-tri/moi') {
     sendHtml(req, res, 200, appPage(nonce), nonce);
     return true;
   }

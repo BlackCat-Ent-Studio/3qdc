@@ -73,6 +73,10 @@ export async function myPhieu(email, now = Date.now()) {
   return { homNay: list.find((t) => t.ngay === ngay) || null, lichSu: list };
 }
 
+// A ticket without the player's email address, for "Duyệt phiếu" accounts and Claude: they give gifts by in-game
+// character and server, and have no need for the address.
+export const withoutEmail = (t) => { const { email, ...rest } = t; return rest; };
+
 // Admin list: ngay = 'hom-nay' | 'hom-qua' | 'tat-ca', st = 'all' | a state. Counts are per state within the day filter.
 export async function listPhieu({ ngay = 'hom-nay', st = 'all' } = {}, now = Date.now()) {
   const items = await load();
@@ -95,6 +99,21 @@ export function setStatus(id, st, phanHoi, username) {
     t.xuLyBoi = st === 'cho' ? '' : username;
     t.xuLyLuc = st === 'cho' ? '' : siteNowSeconds();
     return { save: true, value: t };
+  });
+}
+
+// Gives or refuses a ticket only while it is still waiting (Claude's tools use this: a ticket somebody already handled
+// is never overwritten). → { item } | { notFound: true } | { already: ticket }
+export function answerPhieu(id, st, phanHoi, username) {
+  return exclusive(async (items) => {
+    const t = items.find((x) => x.id === id);
+    if (!t) return { value: { notFound: true } };
+    if (t.st !== 'cho') return { value: { already: t } };
+    t.st = st;
+    t.phanHoi = phanHoi;
+    t.xuLyBoi = username;
+    t.xuLyLuc = siteNowSeconds();
+    return { save: true, value: { item: t } };
   });
 }
 

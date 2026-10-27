@@ -45,6 +45,8 @@ import { NAV_SYNC_HTML } from './scripts/lib/nav-sync.mjs';
 import { handleNews } from './scripts/lib/news/news-routes.mjs';
 import { handleSignup } from './scripts/lib/signup/signup-routes.mjs';
 import { handlePhieu } from './scripts/lib/phieu/phieu-routes.mjs';
+// /mcp: the gift-ticket tools for a "Duyệt phiếu" person's own Claude (bearer code, see scripts/lib/phieu/phieu-mcp.mjs)
+import { handleMcp } from './scripts/lib/phieu/phieu-mcp.mjs';
 import { SITE_ORIGIN } from './scripts/lib/news/news-config.mjs';
 // Vietnamese title / description / share tags for the mirrored build-B entry page
 import { viHead } from './scripts/lib/site-head.mjs';
@@ -266,6 +268,7 @@ export function startServer(port = 8080) {
 
       // Phiếu Bé Ngoan has its own host name (phieubengoan.3qdc.wanmeivn.com): every address on it is answered there
       if (await handlePhieu(req, res, pathname)) return;
+      if (await handleMcp(req, res, pathname.replace(/\/+$/, ''))) return;
 
       // --- section entries (real-path → native build entry) ---
       // The home page (layout-v2) is the main site at /, for every device (it replaced the old fab landing).

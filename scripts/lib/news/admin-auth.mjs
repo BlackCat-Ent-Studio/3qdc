@@ -10,6 +10,7 @@
 //   sign-out   disabling or resetting an account (account command) or setting its password ends its older sessions
 //   register   anyone may register at /quan-tri/dang-ky (admin-users.mjs); the account waits as role "pending" and cannot
 //              sign in until a manager approves it with a role
+//   invite     a manager's one-time link (/quan-tri/moi, admin-access.mjs) creates an active "phieu" account directly
 import { scrypt as scryptCb, randomBytes, timingSafeEqual, createHash } from 'node:crypto';
 import { promisify } from 'node:util';
 import { join } from 'node:path';
@@ -54,7 +55,9 @@ export function changeUsers(fn) {
 }
 
 // Roles an account can hold; "pending" = registered on the site, waiting for a manager (cannot sign in yet).
-export const ACTIVE_ROLES = ['manager', 'editor'];
+// "phieu" (Duyệt phiếu) = the gift tickets of Phiếu Bé Ngoan and nothing else; such accounts come from an invite link
+// (admin-access.mjs) and admin-api.mjs keeps them out of every other section.
+export const ACTIVE_ROLES = ['manager', 'editor', 'phieu'];
 
 export async function hashPassword(password) {
   const salt = randomBytes(16).toString('hex');
@@ -125,7 +128,7 @@ export async function currentUser(req, { touch = true } = {}) {
   if (now - s.seen > IDLE_MS || now - s.created > MAX_AGE_S * 1000) { sessions.delete(token); return null; }
   const user = (await readUsers()).find((u) => u.username === s.username);
   // (no hash = the password was reset with the account command: signed out until a new one is set)
-  if (!user || user.disabled || !user.hash || !(user.role === 'manager' || user.role === 'editor') || s.created < (user.sessionsValidAfter || 0)) {
+  if (!user || user.disabled || !user.hash || !ACTIVE_ROLES.includes(user.role) || s.created < (user.sessionsValidAfter || 0)) {
     sessions.delete(token);
     return null;
   }
