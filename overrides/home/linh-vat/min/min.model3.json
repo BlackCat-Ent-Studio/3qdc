@@ -1,0 +1,78 @@
+{
+ "Version": 3,
+ "FileReferences": {
+  "Moc": "min.moc3",
+  "Textures": [
+   "textures/texture_00.png",
+   "textures/texture_01.png"
+  ],
+  "Physics": "min.physics3.json",
+  "DisplayInfo": "min.cdi3.json",
+  "Expressions": [
+   {
+    "Name": "thuong",
+    "File": "expressions/thuong.exp3.json"
+   },
+   {
+    "Name": "vui",
+    "File": "expressions/vui.exp3.json"
+   },
+   {
+    "Name": "ngac-nhien",
+    "File": "expressions/ngac-nhien.exp3.json"
+   },
+   {
+    "Name": "gian",
+    "File": "expressions/gian.exp3.json"
+   },
+   {
+    "Name": "khoc",
+    "File": "expressions/khoc.exp3.json"
+   },
+   {
+    "Name": "do-mat",
+    "File": "expressions/do-mat.exp3.json"
+   },
+   {
+    "Name": "mat-to",
+    "File": "expressions/mat-to.exp3.json"
+   },
+   {
+    "Name": "buon-ngu",
+    "File": "expressions/buon-ngu.exp3.json"
+   },
+   {
+    "Name": "chui-hop",
+    "File": "expressions/chui-hop.exp3.json"
+   },
+   {
+    "Name": "logo",
+    "File": "expressions/logo.exp3.json"
+   }
+  ],
+  "Motions": {
+   "Cry": [
+    {
+     "File": "khoc-nuoc-mat.motion3.json"
+    }
+   ]
+  }
+ },
+ "Groups": [
+  {
+   "Target": "Parameter",
+   "Name": "EyeBlink",
+   "Ids": [
+    "ParamEyeLOpen",
+    "ParamEyeROpen"
+   ]
+  },
+  {
+   "Target": "Parameter",
+   "Name": "LipSync",
+   "Ids": [
+    "ParamMouthOpenY"
+   ]
+  }
+ ]
+}
