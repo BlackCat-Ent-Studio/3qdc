@@ -20,8 +20,8 @@ export const DEV_LOGIN = process.env.PHIEU_DEV_LOGIN === '1' && process.env.NEWS
 export const SECURE_COOKIE = process.env.NEWS_INSECURE_COOKIE !== '1';
 
 // Game servers. `an: true` = hidden: players cannot pick it for a new ticket, but its name still shows on old
-// tickets (admin list, CSV, the player's history). S2 Mã Siêu (mở 24/10/2026 10:00) tạm ẩn từ 24/10 theo yêu cầu.
-export const SERVERS = [{ id: 'S1', name: 'S1 Trương Liêu' }, { id: 'S2', name: 'S2 Mã Siêu', an: true }];
+// tickets (admin list, CSV, the player's history). S2 Mã Siêu mở 24/10/2026 10:00, ẩn 24/10, mở lại 27/10.
+export const SERVERS = [{ id: 'S1', name: 'S1 Trương Liêu' }, { id: 'S2', name: 'S2 Mã Siêu' }];
 // Tickets keep the id (S1); pages and the CSV show the name.
 export const serverName = (id) => SERVERS.find((s) => s.id === id)?.name || id;
 
