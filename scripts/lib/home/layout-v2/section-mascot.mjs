@@ -364,6 +364,29 @@ export const MASCOT_JS = MASCOT.enabled ? `(function(){
                 var md = model();
                 if (!md || !md._wavFileHandler) return;
                 md._wavFileHandler.getRms = on ? function(){ return 0.15 + 0.45 * Math.abs(Math.sin(Date.now() / 90)); } : function(){ return 0; };
+              },
+              // Is this point of the window on her (on any visible piece of the model as it is drawn right now), or on
+              // the empty part of her square box? Window point -> canvas pixels -> the loader's view -> model units,
+              // then a point-in-triangle test against each visible mesh.
+              hit: function(cx, cy){
+                var md = model(), core = md && md._model && md._model._model;
+                if (!core || !md.getModelMatrix) return false;
+                var sd = app._subdelegates.at(0), r = sd.getCanvas().getBoundingClientRect(), mm = md.getModelMatrix();
+                var x = mm.invertTransformX(sd._view.transformViewX((cx - r.left) * window.devicePixelRatio));
+                var y = mm.invertTransformY(sd._view.transformViewY((cy - r.top) * window.devicePixelRatio));
+                var d = core.drawables;
+                for (var i = 0; i < d.count; i++){
+                  if (!(d.dynamicFlags[i] & 1) || d.opacities[i] < 0.1) continue;
+                  var v = d.vertexPositions[i], ix = d.indices[i];
+                  for (var k = 0; k + 2 < ix.length; k += 3){
+                    var ax = v[ix[k] * 2], ay = v[ix[k] * 2 + 1], bx = v[ix[k + 1] * 2], by = v[ix[k + 1] * 2 + 1];
+                    var qx = v[ix[k + 2] * 2], qy = v[ix[k + 2] * 2 + 1];
+                    var s1 = (bx - ax) * (y - ay) - (by - ay) * (x - ax), s2 = (qx - bx) * (y - by) - (qy - by) * (x - bx);
+                    var s3 = (ax - qx) * (y - qy) - (ay - qy) * (x - qx);
+                    if ((s1 >= 0 && s2 >= 0 && s3 >= 0) || (s1 <= 0 && s2 <= 0 && s3 <= 0)) return true;
+                  }
+                }
+                return false;
               }
             };
             return ready;
@@ -420,6 +443,7 @@ export const MASCOT_JS = MASCOT.enabled ? `(function(){
         if (!started || !e.target.closest || api.compact()) return;
         for (var i = 0; i < CFG.HOVER.length; i++){
           if (!e.target.closest(CFG.HOVER[i][0])) continue;
+          if (CFG.HOVER[i][0] === '#hv2-mascot canvas' && !onCat(e.clientX, e.clientY)) continue;
           if (last === CFG.HOVER[i][0]) return;
           last = CFG.HOVER[i][0];
           say(CFG.HOVER[i][1], 4000, CFG.PRIO.hover, CFG.HOVER[i][2]);
@@ -430,6 +454,17 @@ export const MASCOT_JS = MASCOT.enabled ? `(function(){
       // The Live2D loader handles the canvas's own touch events, and on a phone no click ever comes out of them, so
       // listen for the touch as well; the flag keeps a tap from speaking twice where both events do arrive.
       var canvasEl = box.querySelector('canvas'), tapped = 0, pokes = [];
+      // Only the cat herself answers the mouse, not the empty corners of her square box (the owner clicked beside her
+      // and she still said she was poked). Over the empty part the canvas lets the mouse through to the page, so the
+      // page under it and the Q&A widget's click (which listens for clicks on this canvas) behave as if she were not
+      // there. A model without a hit test (Cubism 2) keeps the whole box, as before.
+      function onCat(x, y){ return !engine || !engine.hit || engine.hit(x, y); }
+      document.addEventListener('mousemove', function(e){
+        if (!engine || !engine.hit) return;
+        var r = canvasEl.getBoundingClientRect();
+        var inBox = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+        canvasEl.style.pointerEvents = inBox && !engine.hit(e.clientX, e.clientY) ? 'none' : '';
+      }, { passive: true });
       // surprised by a poke, angry when poked again and again
       function poked(){
         var now = Date.now();
@@ -437,8 +472,14 @@ export const MASCOT_JS = MASCOT.enabled ? `(function(){
         if (pokes.length >= CFG.ANGRY_POKES) say(CFG.ANGRY, 4000, CFG.PRIO.action, CFG.MOODS.angry);
         else say(CFG.CLICK, 4000, CFG.PRIO.action, CFG.MOODS.poke);
       }
-      canvasEl.addEventListener('click', function(){ if (Date.now() - tapped > 500) poked(); });
-      canvasEl.addEventListener('touchend', function(){ tapped = Date.now(); poked(); }, { passive: true });
+      canvasEl.addEventListener('click', function(e){ if (Date.now() - tapped > 500 && onCat(e.clientX, e.clientY)) poked(); });
+      // a tap on the empty part of the box is not a poke; stopping it here also keeps the Q&A widget (whose touchend
+      // listener on this canvas comes after this one) from opening
+      canvasEl.addEventListener('touchend', function(e){
+        var t = e.changedTouches && e.changedTouches[0];
+        if (t && !onCat(t.clientX, t.clientY)){ e.stopImmediatePropagation(); return; }
+        tapped = Date.now(); poked();
+      }, { passive: true });
       document.addEventListener('copy', function(){ if (started) say(CFG.MESSAGES.copy, 6000, CFG.PRIO.chatter, CFG.MOODS.copy); });
       document.addEventListener('visibilitychange', function(){ if (started && !document.hidden) say(CFG.MESSAGES.back, 6000, CFG.PRIO.chatter, CFG.MOODS.back); });
       // She stays put while the page scrolls: the visitor decides when she goes, with the hide button, and brings her
