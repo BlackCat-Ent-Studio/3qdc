@@ -53,8 +53,11 @@ import { WRAPPERS_PATH, patchWrappers } from './scripts/lib/home/mobile-no-redir
 // the home player's songs (the folder overrides/home/nhac, read on every request)
 import { listSongs, publicList } from './scripts/lib/home/music-store.mjs';
 
-// Mun Van Su Thong Q&A widget (served by the bot service under /hoi-dap/); remove this line and its use in buildBEntry to roll back
-const MUN_WIDGET_HTML = '<script src="/hoi-dap/widget.js" defer></script>';
+// Mun Van Su Thong Q&A widget (served by the bot service under /hoi-dap/), opened by clicking the mascot.
+// Turned off 2026-10-27 at the owner's request; the bot service and its own /hoi-dap/ page keep running.
+// MUN_WIDGET_ON = true brings it back (restart).
+const MUN_WIDGET_ON = false;
+const MUN_WIDGET_HTML = MUN_WIDGET_ON ? '<script src="/hoi-dap/widget.js" defer></script>' : '';
 const ROOT = join(process.cwd(), 'mirror');
 const ENTRY_B = join(ROOT, 'index.html');          // build B entry (umi.62525e29)
 const ENTRY_FAB = join(ROOT, '_fab-index.html');   // build A entry (umi.ca75703e)
