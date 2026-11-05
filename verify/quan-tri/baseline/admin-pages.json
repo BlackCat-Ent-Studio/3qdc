@@ -6,8 +6,8 @@
   "robots": "noindex, nofollow",
   "csp": "default-src 'self'; script-src 'nonce-N'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
   "ui": true,
-  "len": 128939,
-  "sha": "f9ef54b718c6938980c2f781c2021c09c158e13552677761d42ba76df0d4b9f8"
+  "len": 128953,
+  "sha": "04282b24b69dcad0f8ca7410f49120d91a9b0dc9294ee6b9c7d817a00d53fd83"
  },
  "register": {
   "status": 200,
@@ -16,8 +16,8 @@
   "robots": "noindex, nofollow",
   "csp": "default-src 'self'; script-src 'nonce-N'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
   "ui": true,
-  "len": 128939,
-  "sha": "f9ef54b718c6938980c2f781c2021c09c158e13552677761d42ba76df0d4b9f8"
+  "len": 128953,
+  "sha": "04282b24b69dcad0f8ca7410f49120d91a9b0dc9294ee6b9c7d817a00d53fd83"
  },
  "set-password": {
   "status": 200,
@@ -26,8 +26,8 @@
   "robots": "noindex, nofollow",
   "csp": "default-src 'self'; script-src 'nonce-N'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
   "ui": true,
-  "len": 128939,
-  "sha": "f9ef54b718c6938980c2f781c2021c09c158e13552677761d42ba76df0d4b9f8"
+  "len": 128953,
+  "sha": "04282b24b69dcad0f8ca7410f49120d91a9b0dc9294ee6b9c7d817a00d53fd83"
  },
  "invite": {
   "status": 200,
@@ -36,8 +36,8 @@
   "robots": "noindex, nofollow",
   "csp": "default-src 'self'; script-src 'nonce-N'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
   "ui": true,
-  "len": 128939,
-  "sha": "f9ef54b718c6938980c2f781c2021c09c158e13552677761d42ba76df0d4b9f8"
+  "len": 128953,
+  "sha": "04282b24b69dcad0f8ca7410f49120d91a9b0dc9294ee6b9c7d817a00d53fd83"
  },
  "preview-anon": {
   "status": 302,

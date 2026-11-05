@@ -374,7 +374,7 @@ ${accessHtml}`;
       if (onFresh) fresh = onFresh(r.data);
       drawUsers(users, myName, '');
     };
-    $('#inv-new').addEventListener('click', (e) => accessCall('/loi-moi', { role: 'phieu' }, e.target,
+    $('#inv-new').addEventListener('click', (e) => accessCall('/loi-moi', { grants: PRESET_GRANTS.phieu }, e.target,
       (d) => ({ kind: 'link', value: `${location.origin}/quan-tri/moi#${d.token}` })));
     $$('[data-inv-huy]').forEach((b) => b.addEventListener('click', () => accessCall(`/loi-moi/${b.getAttribute('data-inv-huy')}/huy`, {}, b)));
     if ($('#code-new')) $('#code-new').addEventListener('click', (e) => accessCall('/ma-claude', { username: $('#code-user').value, label: $('#code-label').value }, e.target,

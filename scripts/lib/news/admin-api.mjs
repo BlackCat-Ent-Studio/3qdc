@@ -15,6 +15,7 @@ import { GAME_ID_RE, gameById } from '../admin/games.mjs';
 import { moduleOfPath } from '../admin/modules.mjs';
 import { can, gamesOf, hasAnyAccess, isOwner, cleanGrants } from '../admin/grants.mjs';
 import { send, oops } from '../admin/api-http.mjs';
+import { readAudit } from '../admin/audit-log.mjs';
 
 const BODY_MAX = 1_000_000;
 
@@ -115,7 +116,7 @@ async function route(req, res, path) {
     endSession(req);
     return send(res, 200, { ok: true }, { 'Set-Cookie': clearedCookie() });
   }
-  // a manager's invite link: the account is created active, with the invite's role
+  // an invite link: the account is created waiting for an owner's approval, with the invite's grants preselected
   if (method === 'POST' && path === '/nhan-loi-moi') {
     const r = await acceptInvite(body);
     if (r.error) return oops(res, r.status, r.error);
@@ -149,13 +150,20 @@ async function route(req, res, path) {
   if (path === '/loi-moi' || path.startsWith('/loi-moi/') || path === '/ma-claude' || path.startsWith('/ma-claude/')) {
     if (!isOwner(user)) return oops(res, 403, 'Chỉ chủ mới quản lý link mời và mã Claude.');
     let r = null, im, cm;
-    if (method === 'POST' && path === '/loi-moi') r = await createInvite(user, body.role);
+    if (method === 'POST' && path === '/loi-moi') r = await createInvite(user, body.grants);
     else if (method === 'POST' && (im = path.match(/^\/loi-moi\/([a-f0-9]{12})\/huy$/))) r = await revokeInvite(user, im[1]);
-    else if (method === 'POST' && path === '/ma-claude') r = await createCode(user, String(body.username || ''), body.label);
+    else if (method === 'POST' && path === '/ma-claude') r = await createCode(user, String(body.username || ''), body.label, body.scope);
     else if (method === 'POST' && (cm = path.match(/^\/ma-claude\/([a-f0-9]{12})\/thu-hoi$/))) r = await revokeCode(user, cm[1]);
     else return oops(res, 404, 'Không có địa chỉ này.');
     if (r.error) return oops(res, r.status, r.error);
     return send(res, 200, { token: r.token, code: r.code, invites: await listInvites(), codes: await listCodes() });
+  }
+
+  // the record of who changed whose rights, newest first, 50 a page (owners only)
+  if (method === 'GET' && path === '/nhat-ky') {
+    if (!isOwner(user)) return oops(res, 403, 'Chỉ chủ mới xem được nhật ký quyền.');
+    const trang = Number(new URL(req.url, 'http://x').searchParams.get('trang') || 1);
+    return send(res, 200, await readAudit(Number.isInteger(trang) && trang >= 1 && trang <= 10000 ? trang : 1));
   }
 
   // accounts page (owners only)

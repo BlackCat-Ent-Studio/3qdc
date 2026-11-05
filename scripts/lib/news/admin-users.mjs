@@ -6,6 +6,7 @@
 //             last active owner cannot be locked.
 import { changeUsers, readUsers, hashPassword, clientIp, USERNAME_RE, PASSWORD_MIN } from './admin-auth.mjs';
 import { cleanGrants } from '../admin/grants.mjs';
+import { appendAudit } from '../admin/audit-log.mjs';
 import { siteNow } from './news-files.mjs';
 
 const NAME_MAX = 60;
@@ -77,12 +78,6 @@ function readGrants(input) {
 
 const activeOwners = (users) => users.filter((u) => u.role === 'owner' && !u.disabled && u.hash).length;
 
-// Every change of what an account may do is written down. For now this goes to the service log; the permanent record
-// (data/he-thong/nhat-ky-quyen.jsonl) takes over from here.
-export function recordGrantChange(actor, username, action, before, after) {
-  console.log(`[news-auth] ${siteNow()} grants ${action} ${username} by ${actor} ${JSON.stringify({ before: before || null, after: after || null })}`);
-}
-
 // What the "Người dùng" page shows (no hashes, no tokens).
 export async function listUsers() {
   return (await readUsers()).map((u) => ({
@@ -100,6 +95,7 @@ export async function listUsers() {
 export async function manageUser(actor, username, { action, grants } = {}) {
   if (actor.role !== 'owner') return { status: 403, error: 'Chỉ chủ mới quản lý người dùng.' };
   if (username === actor.username) return { status: 400, error: 'Không tự thay đổi tài khoản của chính mình ở đây.' };
+  let written = null;
   const r = await changeUsers((users) => {
     // the actor is checked again at its turn in the queue: an owner locked meanwhile decides nothing
     const a = users.find((x) => x.username === actor.username);
@@ -150,9 +146,10 @@ export async function manageUser(actor, username, { action, grants } = {}) {
     // locking an account ends its current sessions
     if (action === 'khoa') u.sessionsValidAfter = Date.now();
     console.log(`[news-auth] ${siteNow()} ${actor.username} ${action} ${username}`);
-    if (change) recordGrantChange(actor.username, username, action, change[0], change[1]);
+    written = { ai: actor.username, qua: 'web', viec: action, doiTuong: username, ...(change ? { truoc: change[0], sau: change[1] } : {}) };
     return { save: true };
   });
   if (r.error) return r;
+  await appendAudit(written); // every decision about an account is written down (data/he-thong/nhat-ky-quyen.jsonl)
   return { users: await listUsers() };
 }

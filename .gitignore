@@ -9,3 +9,5 @@ image-backup/
 !/data/games/
 /data/games/*/*
 !/data/games/*/tin-tuc/
+# the record of who changed whose rights (appended by the server; names and rights only)
+/data/he-thong/nhat-ky-quyen.jsonl

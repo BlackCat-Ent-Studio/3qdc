@@ -1,14 +1,19 @@
-// phieu-mcp.mjs — /mcp: a small MCP server (Streamable HTTP, stateless, JSON answers only) through which a "Duyệt phiếu"
-// person's own Claude handles Phiếu Bé Ngoan tickets over HTTPS, with no browser and no access to the machine.
-//   auth    Authorization: Bearer <Claude code> (admin-access.mjs: made by a manager, revocable, dead as soon as its
-//           account is locked or loses the role). Requests from a web page (an Origin header) must be the site's own.
-//   tools   xem_phieu (list), tra_qua (gifts given), tu_choi (refused). Both answers only touch a ticket that is still
-//           waiting, never show players' email addresses, and record "<username> (Claude)" as the handler.
+// phieu-mcp.mjs — /mcp: a small MCP server (Streamable HTTP, stateless, JSON answers only) through which a person's own
+// Claude does what that person's rights allow over HTTPS, with no browser and no access to the machine.
+//   auth    Authorization: Bearer <Claude code> (admin-access.mjs: made by an owner, revocable, dead as soon as its
+//           account is locked or loses every right that has tools). Requests from a web page (an Origin header) must be the
+//           site's own.
+//   tools   each tool group needs a right, checked on every request and again on every call:
+//           tickets (`duyet` of Phiếu Bé Ngoan in 3qdc): xem_phieu (list), tra_qua (gifts given), tu_choi (refused). Both
+//             answers only touch a ticket that is still waiting, never show players' email addresses, and record
+//             "<username> (Claude)" as the handler.
+//           owner's tools (owner-mcp.mjs): only for a code made with scope 'owner'.
 //   limits  64 KB per request; 120 requests a minute per code; 30 refused codes per address per 15 minutes.
 import { ALLOWED_ORIGINS } from '../news/news-config.mjs';
 import { clientIp } from '../news/admin-auth.mjs';
 import { siteNow } from '../news/news-files.mjs';
-import { userOfCode } from '../news/admin-access.mjs';
+import { userOfCode, hasMcpTools } from '../news/admin-access.mjs';
+import { OWNER_TOOLS, OWNER_TOOL_NAMES, OWNER_INSTRUCTIONS, callOwnerTool } from '../admin/owner-mcp.mjs';
 import { listPhieu, answerPhieu, withoutEmail } from './phieu-store.mjs';
 import { STATES, REPLY_MAX, serverName } from './phieu-config.mjs';
 
@@ -18,13 +23,13 @@ const VERSIONS = ['2025-06-18', '2025-03-26', '2024-11-05'];
 const LIST_MAX = 100;
 const ID_RE = /^[a-z0-9]{6,20}$/;
 
-const INSTRUCTIONS = [
+const PHIEU_INSTRUCTIONS = [
   'Máy chủ Phiếu Bé Ngoan của 3Q Đại Chiến. Người chơi gửi phiếu xin quà (mỗi Gmail một phiếu một ngày); người duyệt trả quà',
   'trong game bằng tay rồi đánh dấu phiếu ở đây. xem_phieu liệt kê phiếu; tra_qua đánh dấu Đã trả; tu_choi đánh dấu Từ chối kèm lý do.',
   'Chỉ gọi tra_qua sau khi người dùng xác nhận đã trả quà trong game. Phản hồi người chơi đọc được, viết tiếng Việt lịch sự, ngắn gọn.',
 ].join(' ');
 
-const TOOLS = [
+const PHIEU_TOOLS = [
   {
     name: 'xem_phieu',
     title: 'Xem phiếu Bé Ngoan',
@@ -70,6 +75,13 @@ const TOOLS = [
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
   },
 ];
+
+const PHIEU_TOOL_NAMES = new Set(PHIEU_TOOLS.map((t) => t.name));
+// the tool groups this account may use right now (rights are read from the account on every request)
+const mayTickets = (user) => hasMcpTools(user);
+const mayOwner = (user) => user.scope === 'owner' && user.role === 'owner';
+const toolsFor = (user) => [...(mayTickets(user) ? PHIEU_TOOLS : []), ...(mayOwner(user) ? OWNER_TOOLS : [])];
+const instructionsFor = (user) => [mayTickets(user) ? PHIEU_INSTRUCTIONS : '', mayOwner(user) ? OWNER_INSTRUCTIONS : ''].filter(Boolean).join('\n\n');
 
 // ---------- limits ----------
 const refused = new Map(); // address → { count, first }
@@ -175,12 +187,12 @@ async function answer(msg, user) {
         protocolVersion: VERSIONS.includes(p.protocolVersion) ? p.protocolVersion : VERSIONS[0],
         capabilities: { tools: { listChanged: false } },
         serverInfo: { name: '3qdc-phieu-be-ngoan', title: 'Phiếu Bé Ngoan — 3Q Đại Chiến', version: '1.0.0' },
-        instructions: INSTRUCTIONS,
+        instructions: instructionsFor(user),
       });
     case 'ping':
       return ok({});
     case 'tools/list':
-      return ok({ tools: TOOLS });
+      return ok({ tools: toolsFor(user) });
     case 'tools/call':
       return ok(await callTool(String(p.name || ''), p.arguments && typeof p.arguments === 'object' ? p.arguments : {}, user));
     default:
@@ -206,6 +218,8 @@ function describe(t) {
 }
 
 async function callTool(name, args, user) {
+  if (OWNER_TOOL_NAMES.has(name)) return mayOwner(user) ? callOwnerTool(name, args, user) : fail(`Không có công cụ ${name}.`);
+  if (PHIEU_TOOL_NAMES.has(name) && !mayTickets(user)) return fail(`Không có công cụ ${name}.`);
   if (name === 'xem_phieu') {
     const ngay = ['hom-nay', 'hom-qua', 'tat-ca'].includes(args.ngay) ? args.ngay : 'hom-nay';
     const st = args.trang_thai === 'tat-ca' ? 'all' : Object.hasOwn(STATES, args.trang_thai || '') ? args.trang_thai : 'cho';
