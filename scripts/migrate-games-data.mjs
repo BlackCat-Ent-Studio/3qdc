@@ -3,9 +3,13 @@
 //
 //   node scripts/migrate-games-data.mjs [--root <data folder>] [--dry-run]            list what would move (default; writes nothing)
 //   node scripts/migrate-games-data.mjs [--root <data folder>] --apply [--nhap]       move the files, count before and after
-//   node scripts/migrate-games-data.mjs [--root <data folder>] --undo                 put every moved file back
+//   node scripts/migrate-games-data.mjs [--root <data folder>] --undo [--dry-run] [--force]   put every moved file back
 //   --cho-phep <name>   an unknown entry in the old news folder (as listed) to move into he-thong/chua-phan-loai/<name> too
-//   --nhap              skip the "service is stopped" check (a draft copy, nothing listens on the live port)
+//   --nhap              skip the "service is stopped" check (a draft copy, nothing listens on the live port 3399 nor on $PORT)
+//   --force             (undo) also move back the files made after the move (new articles, pictures, sign-ups); without it the
+//                       undo lists them and stops, so nothing is silently left behind
+// Undo order: the accounts first (migrate-users-grants.mjs --undo), the data afterwards. The undo refuses while
+// he-thong/users.json still has owner / member accounts: the old server would read them and lock everybody out.
 //
 // --root defaults to $DATA_ROOT, else ./data. Files are renamed (same disk: instant, never copied). Counts (files, bytes,
 // sha256 of the sorted file names) are taken per destination folder before and after; a difference puts everything back
@@ -129,14 +133,21 @@ function printTable(moves, before) {
   for (const [g, c] of Object.entries(before)) console.log(`  ${g.padEnd(18)} ${String(c.files).padStart(5)} file(s) ${String(c.bytes).padStart(10)} bytes  names sha256 ${c.names.slice(0, 16)}`);
 }
 
-async function serviceIsUp() {
-  const port = Number(process.env.PORT) || 3399;
+// the live port is always tried, whatever $PORT says (a shell left over from the draft must not hide the live service)
+const LIVE_PORT = 3399;
+async function portAnswers(port) {
   return new Promise((ok) => {
     const s = connect({ port, host: '127.0.0.1' });
     s.once('connect', () => { s.destroy(); ok(true); });
     s.once('error', () => ok(false));
     s.setTimeout(1500, () => { s.destroy(); ok(false); });
   });
+}
+async function stopIfUp() {
+  if (flag('--nhap')) return;
+  for (const port of new Set([Number(process.env.PORT) || 0, LIVE_PORT])) {
+    if (port && await portAnswers(port)) die(`the service answers on port ${port}: stop it first (or add --nhap for a draft copy)`);
+  }
 }
 
 // folders made by the script get the owner of the data folder (the script may run as root, the server does not)
@@ -178,7 +189,7 @@ async function rollback(done, created) {
 }
 
 async function apply() {
-  if (!flag('--nhap') && await serviceIsUp()) die(`the service answers on port ${Number(process.env.PORT) || 3399}: stop it first (or add --nhap for a draft copy)`);
+  await stopIfUp();
   const { moves, unknown, conflicts } = await plan();
   if (unknown.length) die(`unknown entries in the old data folders (name each with --cho-phep): ${unknown.join(', ')}`);
   if (conflicts.length) die(`not moving anything: ${conflicts.join('; ')}`);
@@ -186,6 +197,9 @@ async function apply() {
   if (process.getuid && process.getuid() === 0) { const s = await stat(ROOT); owner = { uid: s.uid, gid: s.gid }; }
   const before = await countGroups(moves);
   printTable(moves, before);
+  // files already at their new place before the move (git put them there): the undo must not mistake them for new ones
+  const kept = [];
+  for (const [, to] of RULES) kept.push(...await filesBelow(to));
   const done = [];
   const created = [];
   try {
@@ -199,7 +213,7 @@ async function apply() {
     if (bad.length) throw new Error(`counts differ after the move in: ${bad.join(', ')}`);
     await removeEmptyDirs(await oldFolders());
     await mkdirs(dirname(LOG_REL), created);
-    await writeFile(abs(LOG_REL), JSON.stringify({ at: new Date().toISOString(), root: ROOT, before, after, moves: done.map(({ from, to }) => ({ from, to })), created }, null, 2) + '\n');
+    await writeFile(abs(LOG_REL), JSON.stringify({ at: new Date().toISOString(), root: ROOT, before, after, moves: done.map(({ from, to }) => ({ from, to })), kept, created }, null, 2) + '\n');
     if (owner) await chown(abs(LOG_REL), owner.uid, owner.gid);
     console.log(`done: ${done.length} file(s) moved, counts before = after. Undo: node scripts/migrate-games-data.mjs --root ${ROOT} --undo`);
   } catch (e) {
@@ -210,15 +224,41 @@ async function apply() {
 }
 
 async function undo() {
-  if (!flag('--nhap') && await serviceIsUp()) die(`the service answers on port ${Number(process.env.PORT) || 3399}: stop it first (or add --nhap for a draft copy)`);
+  const dry = flag('--dry-run');
   let log;
   try { log = JSON.parse(await readFile(abs(LOG_REL), 'utf8')); } catch { die(`${LOG_REL} not found: nothing to undo`); }
+  // order: accounts first. The old server does not know owner / member and would lock everybody out
+  try {
+    const users = JSON.parse(await readFile(abs('he-thong/users.json'), 'utf8'));
+    const newForm = Array.isArray(users) ? users.filter((u) => u && (u.role === 'owner' || u.role === 'member')).length : 0;
+    if (newForm) die(`he-thong/users.json still has ${newForm} owner / member account(s): undo the accounts first (node scripts/migrate-users-grants.mjs --root ${ROOT} --undo), then run this again`);
+  } catch (e) { if (e.code !== 'ENOENT' && !(e instanceof SyntaxError)) throw e; }
   for (const m of log.moves) {
     if (!(await exists(abs(m.to)))) die(`cannot undo: ${m.to} is missing`);
     if (await exists(abs(m.from))) die(`cannot undo: ${m.from} exists again`);
   }
+  // files made after the move below the new folders (the move log does not know them): they go back too, or the run stops
+  const known = new Set([...log.moves.map((m) => m.to), ...(log.kept || [])]);
+  const later = [];
+  for (const [from, to] of RULES) {
+    if (to.startsWith('he-thong/')) continue;
+    for (const rel of await filesBelow(to)) if (!known.has(rel)) later.push({ from: from + rel.slice(to.length), to: rel });
+  }
+  const laterNames = later.map((m) => m.to);
+  const hereOnly = (await filesBelow('he-thong')).filter((r) => r !== LOG_REL && !known.has(r));
+  if (later.length) {
+    console.log(`${later.length} file(s) made after the move (the old server reads them from the old place):`);
+    for (const m of later.slice(0, 50)) console.log(`  ${m.to} -> ${m.from}`);
+    if (later.length > 50) console.log(`  ... and ${later.length - 50} more`);
+  }
+  if (hereOnly.length) console.log(`stay in he-thong (the old server ignores them): ${hereOnly.join(', ')}`);
+  console.log('order: the accounts first (migrate-users-grants.mjs --undo), the data afterwards (this script)');
+  if (dry) { console.log(`dry run: nothing was changed (${log.moves.length + later.length} file(s) would go back)`); return; }
+  if (later.length && !flag('--force')) die(`stopped, nothing changed: ${later.length} file(s) were made after the move; add --force to move them back too`);
+  for (const m of later) if (await exists(abs(m.from))) die(`cannot undo: ${m.from} exists (needed for ${m.to})`);
+  await stopIfUp();
   if (process.getuid && process.getuid() === 0) { const s = await stat(ROOT); owner = { uid: s.uid, gid: s.gid }; }
-  for (const m of log.moves) {
+  for (const m of [...log.moves, ...later]) {
     await mkdirs(dirname(m.from), []);
     await rename(abs(m.to), abs(m.from));
   }
@@ -227,7 +267,7 @@ async function undo() {
   await removeEmptyDirs([...dirs].reverse());
   await rename(abs(LOG_REL), abs(UNDONE_REL));
   await removeEmptyDirs(['he-thong', 'games/3qdc', 'games']); // only when empty
-  console.log(`undone: ${log.moves.length} file(s) back in the old layout (log kept as ${UNDONE_REL})`);
+  console.log(`undone: ${log.moves.length + laterNames.length} file(s) back in the old layout (log kept as ${UNDONE_REL})`);
 }
 
 if (mode === 'undo') await undo();

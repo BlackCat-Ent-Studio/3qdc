@@ -1,6 +1,7 @@
 // check-grants.mjs — who may do what, per game and part (scripts/lib/admin/grants.mjs), and the move of old accounts to
 // grants (scripts/migrate-users-grants.mjs). Needs no running server:   node verify/quan-tri/check-grants.mjs
 import assert from 'node:assert/strict';
+import net from 'node:net';
 import { spawnSync } from 'node:child_process';
 import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -174,21 +175,95 @@ ok('move: the table, secrets untouched, invites get grants, a copy is kept', () 
   assert.deepEqual(users(root).filter((x) => x.role === 'owner').map((x) => x.username), ['chu']);
   rmSync(root, { recursive: true });
 });
-ok('move: --undo puts the old roles back (a new account gets the nearest old role)', () => {
+const textOf = (root, f) => readFileSync(join(root, 'he-thong', f), 'utf8');
+ok('move: --undo copies the old files back byte for byte when nothing changed after the move', () => {
   const root = mk();
-  const old = users(root);
+  const oldUsers = textOf(root, 'users.json'), oldInvites = textOf(root, 'invites.json');
   assert.equal(run(root, '--owner', 'chu', '--apply').status, 0);
-  const list = users(root);
-  list.push({ username: 'neu', name: 'neu', role: 'member', grants: { '3qdc': { 'tin-tuc': ['duyet'] } }, salt: 's', hash: 'h' });
-  list.push({ username: 'neu2', name: 'neu2', role: 'member', grants: { '3qdc': { 'phieu-be-ngoan': ['duyet'] } }, salt: 's', hash: 'h' });
-  writeFileSync(join(root, 'he-thong', 'users.json'), JSON.stringify(list));
-  assert.equal(run(root, '--undo').status, 0);
-  const back = users(root);
-  assert.deepEqual(back.slice(0, old.length), old);
-  assert.deepEqual(back.slice(old.length).map((x) => [x.username, x.role, x.grants, x.legacyRole]), [['neu', 'manager', undefined, undefined], ['neu2', 'phieu', undefined, undefined]]);
-  assert.equal(JSON.parse(readFileSync(join(root, 'he-thong', 'invites.json'), 'utf8'))[0].grants, undefined);
+  assert.equal(textOf(root, 'invites.truoc-chuyen-quyen.json'), oldInvites);
+  assert.ok(existsSync(join(root, 'he-thong', 'chuyen-quyen.json')));
+  // a second apply (nothing left to move) keeps the copy of the old files
+  assert.equal(run(root, '--owner', 'chu', '--apply').status, 0);
+  assert.equal(textOf(root, 'users.truoc-chuyen-quyen.json'), oldUsers);
+  const dry = run(root, '--undo', '--dry-run');
+  assert.equal(dry.status, 0, dry.stderr);
+  assert.match(dry.stdout, /nothing changed since the move/);
+  assert.match(dry.stdout, /dry run: nothing was changed/);
+  assert.notEqual(textOf(root, 'users.json'), oldUsers);
+  const r = run(root, '--undo');
+  assert.equal(r.status, 0, r.stderr);
+  assert.equal(textOf(root, 'users.json'), oldUsers);
+  assert.equal(textOf(root, 'invites.json'), oldInvites);
+  assert.ok(!existsSync(join(root, 'he-thong', 'chuyen-quyen.json')) && existsSync(join(root, 'he-thong', 'chuyen-quyen.da-hoan-tac.json')));
+  // the move can be done again afterwards
+  assert.equal(run(root, '--owner', 'chu', '--apply').status, 0);
+  assert.equal(users(root).find((x) => x.username === 'chu').role, 'owner');
   rmSync(root, { recursive: true });
 });
+ok('move: --undo after changes stops and names them; nobody is promoted; --dry-run only shows; --force restores the old file', () => {
+  const root = mk();
+  const oldUsers = textOf(root, 'users.json');
+  assert.equal(run(root, '--owner', 'chu', '--apply').status, 0);
+  const list = users(root);
+  // a former manager had her rights cut after the move; two members were added with rights the old roles never had
+  list.find((x) => x.username === 'quanly2').grants = { '3qdc': { 'tin-tuc': ['viet'] } };
+  list.push({ username: 'neu', name: 'neu', role: 'member', grants: { '3qdc': { nhac: ['quan-ly'] } }, salt: 's', hash: 'h' });
+  list.push({ username: 'neu2', name: 'neu2', role: 'member', grants: {}, salt: 's', hash: 'h' });
+  writeFileSync(join(root, 'he-thong', 'users.json'), JSON.stringify(list));
+  const changed = textOf(root, 'users.json');
+  for (const extra of [[], ['--dry-run']]) {
+    const r = run(root, '--undo', ...extra);
+    assert.match(r.stdout, /account "quanly2" changed after the move \(grants\)/);
+    assert.match(r.stdout, /account "neu" was added after the move: it is lost/);
+    assert.match(r.stdout, /account "neu2" was added after the move: it is lost/);
+    assert.ok(!/h-chu|s-chu/.test(r.stdout + r.stderr), 'no password data is printed');
+    assert.equal(r.status, extra.length ? 0 : 1, r.stderr);
+    if (!extra.length) assert.match(r.stderr, /add --force/);
+    assert.equal(textOf(root, 'users.json'), changed, 'nothing was written');
+  }
+  const forced = run(root, '--undo', '--force');
+  assert.equal(forced.status, 0, forced.stderr);
+  assert.equal(textOf(root, 'users.json'), oldUsers);
+  assert.equal(users(root).some((x) => x.username === 'neu'), false);
+  rmSync(root, { recursive: true });
+});
+ok('move: --undo without the record of the move (older run) or without the copy is refused unless forced', () => {
+  const root = mk();
+  const oldUsers = textOf(root, 'users.json');
+  assert.equal(run(root, '--owner', 'chu', '--apply').status, 0);
+  rmSync(join(root, 'he-thong', 'chuyen-quyen.json'));
+  const r = run(root, '--undo');
+  assert.equal(r.status, 1);
+  assert.match(r.stdout, /no record of the move/);
+  assert.equal(run(root, '--undo', '--force').status, 0);
+  assert.equal(textOf(root, 'users.json'), oldUsers);
+  const root2 = mk();
+  const none = run(root2, '--undo');
+  assert.equal(none.status, 1);
+  assert.match(none.stderr, /users\.truoc-chuyen-quyen\.json not found/);
+  rmSync(root, { recursive: true }); rmSync(root2, { recursive: true });
+});
+{
+  // the "service is stopped" check tries $PORT and the live port 3399; --nhap skips it
+  const srv = net.createServer((c) => c.destroy());
+  await new Promise((done) => srv.listen(0, '127.0.0.1', done));
+  const port = srv.address().port;
+  const root = mk();
+  const before = textOf(root, 'users.json');
+  const live = (...a) => spawnSync(process.execPath, [SCRIPT, '--root', root, ...a], { encoding: 'utf8', cwd: ROOT, env: { ...process.env, PORT: String(port) } });
+  const r = live('--owner', 'chu', '--apply');
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, new RegExp(`answers on port ${port}`));
+  assert.equal(textOf(root, 'users.json'), before);
+  assert.equal(live('--owner', 'chu', '--dry-run').status, 0, 'a dry run needs no stopped service');
+  srv.close();
+  const liveUp = await new Promise((done) => { const c = net.connect(3399, '127.0.0.1'); c.once('connect', () => { c.destroy(); done(true); }); c.once('error', () => done(false)); });
+  const unused = await new Promise((done) => { const s = net.createServer(); s.listen(0, '127.0.0.1', () => { const p = s.address().port; s.close(() => done(p)); }); });
+  const other = spawnSync(process.execPath, [SCRIPT, '--root', root, '--owner', 'chu', '--apply'], { encoding: 'utf8', cwd: ROOT, env: { ...process.env, PORT: String(unused) } });
+  if (liveUp) { assert.equal(other.status, 1); assert.match(other.stderr, /answers on port 3399/); assert.equal(textOf(root, 'users.json'), before); } else assert.equal(other.status, 0, other.stderr);
+  rmSync(root, { recursive: true });
+  n++; console.log(`ok   move: a service on $PORT stops the run${liveUp ? ' and so does one on the live port 3399' : ' (nothing listens on 3399 here: that half is not exercised)'}`);
+}
 ok('move: a server with old roles in users.json refuses to start (data-layout)', () => {
   const root = mk();
   assert.match(layoutProblems(root, {}).join('\n'), /still have the old roles[^]*migrate-users-grants/);

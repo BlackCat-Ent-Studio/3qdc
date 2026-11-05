@@ -112,6 +112,66 @@ function oldLayout() {
   ok('migrate: undo puts every file back (same names, same content)');
 }
 {
+  // files made after the move are not dropped by the undo
+  const root = oldLayout();
+  assert.equal(migrate(root, '--apply', '--nhap').status, 0);
+  put(root, 'games/3qdc/tin-tuc/posts/9.json', post(9, 'bai-moi'));
+  put(root, 'games/3qdc/tin-tuc/uploads/2026/11/fedcba9876543210.png', 'png2');
+  put(root, 'games/3qdc/dang-ky-som/dang-ky-moi.jsonl', 'c\n');
+  put(root, 'he-thong/nhat-ky-quyen.jsonl', '{}\n');
+  const moved = treeSum(root);
+  const dry = migrate(root, '--undo', '--dry-run', '--nhap');
+  assert.equal(dry.status, 0, dry.stderr);
+  assert.match(dry.stdout, /3 file\(s\) made after the move/);
+  assert.match(dry.stdout, /games\/3qdc\/tin-tuc\/posts\/9\.json -> news\/posts\/9\.json/);
+  assert.match(dry.stdout, /stay in he-thong[^\n]*nhat-ky-quyen\.jsonl/);
+  assert.equal(treeSum(root), moved, 'a dry run writes nothing');
+  const refused = migrate(root, '--undo', '--nhap');
+  assert.equal(refused.status, 1);
+  assert.match(refused.stderr, /3 file\(s\) were made after the move.*--force/);
+  assert.equal(treeSum(root), moved, 'a refused undo moves nothing');
+  const forced = migrate(root, '--undo', '--force', '--nhap');
+  assert.equal(forced.status, 0, forced.stderr);
+  for (const f of ['news/posts/9.json', 'news/uploads/2026/11/fedcba9876543210.png', 'dang-ky-som/dang-ky-moi.jsonl', 'news/posts/4.json']) assert.ok(existsSync(join(root, f)), f);
+  assert.ok(!existsSync(join(root, 'games', '3qdc', 'tin-tuc', 'posts', '9.json')));
+  assert.ok(existsSync(join(root, 'he-thong', 'nhat-ky-quyen.jsonl')), 'the record of rights stays where it is');
+  ok('migrate: undo lists the files made after the move and stops; --force moves them back too (nothing is left behind)');
+}
+{
+  // order: the accounts are undone before the data
+  const root = oldLayout();
+  assert.equal(migrate(root, '--apply', '--nhap').status, 0);
+  put(root, 'he-thong/users.json', JSON.stringify([{ username: 'a', role: 'owner' }, { username: 'b', role: 'member', grants: {} }]));
+  const moved = treeSum(root);
+  for (const extra of [[], ['--force'], ['--dry-run']]) {
+    const r = migrate(root, '--undo', '--nhap', ...extra);
+    assert.equal(r.status, 1, extra.join(' '));
+    assert.match(r.stderr, /2 owner \/ member account\(s\): undo the accounts first.*migrate-users-grants\.mjs/);
+  }
+  assert.equal(treeSum(root), moved, 'nothing moved');
+  ok('migrate: undo of the data is refused while accounts are still owner / member (also with --force)');
+}
+{
+  // the "service is stopped" check does not depend on the shell's $PORT only: a service on $PORT stops it, --nhap skips it
+  const root = oldLayout();
+  const srv = net.createServer((c) => c.destroy());
+  await new Promise((done) => srv.listen(0, '127.0.0.1', done));
+  const port = srv.address().port;
+  const run = (...a) => spawnSync(process.execPath, [MIGRATE, '--root', root, ...a], { encoding: 'utf8', env: { ...process.env, PORT: String(port) } });
+  const before = treeSum(root);
+  const r = run('--apply');
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, new RegExp(`answers on port ${port}`));
+  assert.equal(treeSum(root), before);
+  // the live port 3399 counts even when $PORT is something else (only where something really listens there)
+  const liveUp = await new Promise((done) => { const c = net.connect(3399, '127.0.0.1'); c.once('connect', () => { c.destroy(); done(true); }); c.once('error', () => done(false)); });
+  srv.close();
+  const unused = (await new Promise((done) => { const s = net.createServer(); s.listen(0, '127.0.0.1', () => { const p = s.address().port; s.close(() => done(p)); }); }));
+  const other = spawnSync(process.execPath, [MIGRATE, '--root', root, '--apply'], { encoding: 'utf8', env: { ...process.env, PORT: String(unused) } });
+  if (liveUp) { assert.equal(other.status, 1); assert.match(other.stderr, /answers on port 3399/); assert.equal(treeSum(root), before); } else assert.equal(other.status, 0, other.stderr);
+  ok(`migrate: a service on $PORT stops the run${liveUp ? ' and so does one on the live port 3399' : ' (nothing listens on 3399 here: that half is not exercised)'}`);
+}
+{
   const root = oldLayout();
   put(root, 'news/zzz-unknown.txt', 'who');
   const r = migrate(root, '--apply', '--nhap');
