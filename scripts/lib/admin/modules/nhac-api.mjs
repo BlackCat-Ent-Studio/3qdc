@@ -1,16 +1,17 @@
 // nhac-api.mjs — background music of the home page (managers only): the songs are plain files in overrides/home/nhac,
 // so the list is the folder itself and a change is live at once (the player reads the same folder).
 import { currentUser } from '../../news/admin-auth.mjs';
+import { can } from '../grants.mjs';
 import { listSongs, saveSong, removeSong, SONG_MAX, FOLDER_MAX } from '../../home/music-store.mjs';
 import { siteNow } from '../../news/news-files.mjs';
 import { send, oops, sendAndClose } from '../api-http.mjs';
 
 // One song of the home page's player. The file name (with its Vietnamese text) travels in a header because the body is
 // the sound itself; the store cleans it and keeps names unique.
-async function uploadSong(req, res) {
+async function uploadSong(req, res, game) {
   const user = await currentUser(req);
   if (!user) return sendAndClose(req, res, 401, { error: 'Phiên đăng nhập đã hết. Hãy đăng nhập lại.' });
-  if (user.role !== 'manager') return sendAndClose(req, res, 403, { error: 'Chỉ Quản lý mới thêm được nhạc nền.' });
+  if (!can(user, game.id, 'nhac', 'quan-ly')) return sendAndClose(req, res, 403, { error: 'Chỉ Quản lý mới thêm được nhạc nền.' });
   let raw = '';
   try { raw = decodeURIComponent(String(req.headers['x-ten-file'] || '')); } catch { raw = ''; }
   const r = await saveSong(req, raw);
@@ -20,9 +21,9 @@ async function uploadSong(req, res) {
 }
 
 // A POST whose body is raw audio: handled before any JSON reading. Returns true when it took the request.
-export async function upload(req, res, path) {
+export async function upload(req, res, path, game) {
   if (path !== '/nhac') return false;
-  await uploadSong(req, res);
+  await uploadSong(req, res, game);
   return true;
 }
 

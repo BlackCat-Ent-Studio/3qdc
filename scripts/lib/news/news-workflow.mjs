@@ -8,8 +8,9 @@ import { SLUG_RE, SLUG_MAX, isCat, IMAGE_PATH_RE, TITLE_MAX, SUMMARY_MAX, CONTEN
 import { cleanContent, textOf } from './news-sanitize.mjs';
 import { PUBLISH_AT_RE, isValid } from './news-store.mjs';
 
-// phieu (Duyệt phiếu) only handles Phiếu Bé Ngoan tickets; decide() below refuses it every article action
-export const ROLES = { manager: 'Quản lý', editor: 'Biên tập', phieu: 'Duyệt phiếu' };
+// Labels the pages show for the three kinds of work (and "owner"). decide() and mayDelete() know only "manager" and
+// "editor": the callers pass the news role an account holds in the game (grants.mjs newsRoleOf); any other gets refused.
+export const ROLES = { owner: 'Chủ', manager: 'Quản lý', editor: 'Biên tập', phieu: 'Duyệt phiếu' };
 export const ACTIONS = ['luu', 'gui-duyet', 'rut-ve', 'dang-ngay', 'hen-gio', 'tra-lai', 'go-bai'];
 
 const fail = (status, error) => ({ status, error });

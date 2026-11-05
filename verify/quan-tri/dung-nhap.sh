@@ -3,11 +3,18 @@
 # /srv/_nhap-nhieu-game-data and a draft server on 127.0.0.1:${PORT_NHAP:-13399} (unit nhap-nhieu-game).
 # "restart" only restarts the draft server; "reset-data" also re-copies the live data (drops test accounts).
 # The copy is moved to the per-game layout (data/he-thong, data/games/<game>/...) by scripts/migrate-games-data.mjs while the
-# live data is still in the old layout; the server finds the copy through DATA_ROOT.
+# live data is still in the old layout; scripts/migrate-users-grants.mjs then moves the accounts to owner / grants.
+# The server finds the copy through DATA_ROOT. Test accounts: NEWS_INSECURE_COOKIE=1 DATA_ROOT=$D node verify/quan-tri/make-test-accounts.mjs
 set -e
 R=/srv/3qdc-unified W=/srv/_nhap-nhieu-game D=/srv/_nhap-nhieu-game-data U=nhap-nhieu-game
 PORT=${PORT_NHAP:-13399}
 if ss -ltn | grep -q ":$PORT " && ! systemctl is-active --quiet $U; then echo "port $PORT busy by something else"; exit 2; fi
+# old roles -> owner / grants (only while a copy still has old roles; the owner is the one manager of the live data)
+migrate_users() {
+  if grep -qE '"role": "(manager|editor|phieu)"' $D/he-thong/users.json 2>/dev/null; then
+    node $W/scripts/migrate-users-grants.mjs --root $D --owner "${OWNER_NHAP:-hieule05072003}" --apply --nhap
+  fi
+}
 if [ "$1" != "restart" ]; then
   cd $R
   if [ ! -d $W ]; then
@@ -17,9 +24,11 @@ if [ "$1" != "restart" ]; then
     ln -sfn $R/node_modules $W/node_modules
     rm -rf $D; cp -a $R/data $D
     [ -d $D/news ] && node $W/scripts/migrate-games-data.mjs --root $D --apply --nhap
+    migrate_users
   elif [ "$1" = "reset-data" ]; then
     rm -rf $D; cp -a $R/data $D
     [ -d $D/news ] && node $W/scripts/migrate-games-data.mjs --root $D --apply --nhap
+    migrate_users
   fi
 fi
 chown -R web3q:web3q $W $D

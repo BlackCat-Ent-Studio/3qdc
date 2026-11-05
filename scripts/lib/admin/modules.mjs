@@ -1,6 +1,6 @@
 // modules.mjs — the book of parts (modules) a game can switch on. One entry per part:
 //   perms        the permissions of the part and their labels
-//   legacyRoles  which of today's account roles hold each permission (replaced by per-game grants later)
+//   implies      a permission that includes others: holding the key holds every permission listed for it
 //   menu         [tab, hash, label, permission needed] — what the editor pages show
 //   paths        API address prefixes owned by the part (below /quan-tri/api/g/<game>/)
 //   dataDir      where the part keeps its data for a game
@@ -18,25 +18,25 @@ const part = (id, name, def, impl) => ({ id, name, ...def, dataDir: (gameId) => 
 export const MODULES = {
   'tin-tuc': part('tin-tuc', 'Tin tức', {
     perms: { viet: 'Viết bài, gửi duyệt, đưa ảnh lên', duyet: 'Đăng, hẹn giờ, trả lại, gỡ, ghim, xoá bài, thùng rác' },
-    legacyRoles: { viet: ['manager', 'editor'], duyet: ['manager'] },
+    implies: { duyet: ['viet'] },
     menu: [['posts', '#/', 'Bài viết', 'viet'], ['trash', '#/thung-rac', 'Thùng rác', 'duyet']],
     paths: ['/anh', '/bai', '/thung-rac'],
   }, tinTuc),
   'phieu-be-ngoan': part('phieu-be-ngoan', 'Phiếu Bé Ngoan', {
     perms: { duyet: 'Xem phiếu (không email), trả quà hoặc từ chối', 'quan-ly': 'Xem email, tải CSV, xoá phiếu' },
-    legacyRoles: { duyet: ['manager', 'phieu'], 'quan-ly': ['manager'] },
+    implies: { 'quan-ly': ['duyet'] },
     menu: [['phieu', '#/phieu-be-ngoan', 'Phiếu Bé Ngoan', 'duyet']],
     paths: ['/phieu-be-ngoan'],
   }, phieu),
   'dang-ky-som': part('dang-ky-som', 'Đăng ký sớm', {
     perms: { 'quan-ly': 'Xem, tải, xoá danh sách đăng ký sớm và đặt mốc' },
-    legacyRoles: { 'quan-ly': ['manager'] },
+    implies: {},
     menu: [['signup', '#/dang-ky-som', 'Đăng ký sớm', 'quan-ly']],
     paths: ['/dang-ky-som'],
   }, dangKySom),
   'nhac': part('nhac', 'Nhạc nền', {
     perms: { 'quan-ly': 'Thêm, xoá nhạc nền trang chủ' },
-    legacyRoles: { 'quan-ly': ['manager'] },
+    implies: {},
     menu: [['music', '#/nhac', 'Nhạc nền', 'quan-ly']],
     paths: ['/nhac'],
   }, nhac),
@@ -74,19 +74,4 @@ export function checkGames(games = GAMES, modules = MODULES) {
       }
     }
   }
-}
-
-// What /toi tells the page about the games this account can use: the games with at least one menu entry it may open.
-export function gamesFor(user, games = GAMES) {
-  const out = [];
-  for (const g of games) {
-    const menu = [];
-    for (const mid of Object.keys(g.modules)) {
-      const m = MODULES[mid];
-      if (!m) continue;
-      for (const [tab, hash, label, perm] of m.menu) if ((m.legacyRoles[perm] || []).includes(user.role)) menu.push([tab, hash, label]);
-    }
-    if (menu.length) out.push({ id: g.id, name: g.name, logo: g.logo, menu });
-  }
-  return out;
 }

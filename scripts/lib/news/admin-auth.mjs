@@ -9,8 +9,8 @@
 //              and at most 8 password checks run at once (scrypt shares Node's small thread pool with file serving)
 //   sign-out   disabling or resetting an account (account command) or setting its password ends its older sessions
 //   register   anyone may register at /quan-tri/dang-ky (admin-users.mjs); the account waits as role "pending" and cannot
-//              sign in until a manager approves it with a role
-//   invite     a manager's one-time link (/quan-tri/moi, admin-access.mjs) creates an active "phieu" account directly
+//              sign in until an owner approves it with grants
+//   invite     an owner's one-time link (/quan-tri/moi, admin-access.mjs) makes a waiting account with the invite's grants chosen
 import { scrypt as scryptCb, randomBytes, timingSafeEqual, createHash } from 'node:crypto';
 import { promisify } from 'node:util';
 import { join } from 'node:path';
@@ -55,10 +55,10 @@ export function changeUsers(fn) {
   return run;
 }
 
-// Roles an account can hold; "pending" = registered on the site, waiting for a manager (cannot sign in yet).
-// "phieu" (Duyệt phiếu) = the gift tickets of Phiếu Bé Ngoan and nothing else; such accounts come from an invite link
-// (admin-access.mjs) and admin-api.mjs keeps them out of every other section.
-export const ACTIVE_ROLES = ['manager', 'editor', 'phieu'];
+// Roles an account can hold: "owner" (everything, including accounts), "member" (only its `grants`, see
+// scripts/lib/admin/grants.mjs) and "pending" = registered on the site or through an invite, waiting for an owner (cannot
+// sign in yet). Nobody becomes owner through the site: only the account scripts set it.
+export const ACTIVE_ROLES = ['owner', 'member'];
 
 export async function hashPassword(password) {
   const salt = randomBytes(16).toString('hex');
@@ -85,7 +85,7 @@ export function newResetToken(user) {
   return token;
 }
 
-export const publicUser = (u) => ({ username: u.username, name: u.name, role: u.role });
+export const publicUser = (u) => ({ username: u.username, name: u.name, role: u.role, grants: u.role === 'member' && u.grants && typeof u.grants === 'object' ? u.grants : {} });
 
 // ---------- sessions ----------
 const sessions = new Map(); // token → { username, created, seen }
@@ -213,7 +213,7 @@ export async function signIn(req, username, password) {
   }
   failures.delete(keyName);
   // the right password on an account still waiting for approval: say so (only its owner knows the password)
-  if (user.role === 'pending') return { status: 403, error: 'Tài khoản đang chờ Quản lý duyệt. Khi được duyệt, bạn đăng nhập bằng tên và mật khẩu này.' };
+  if (user.role === 'pending') return { status: 403, error: 'Tài khoản đang chờ chủ duyệt. Khi được duyệt, bạn đăng nhập bằng tên và mật khẩu này.' };
   if (!ACTIVE_ROLES.includes(user.role)) return { status: 401, error: 'Sai tên đăng nhập hoặc mật khẩu.' };
   console.log(`[news-auth] ${siteNow()} signed in ${name} ip=${ip}`);
   return { token: startSession(user.username), user: publicUser(user) };

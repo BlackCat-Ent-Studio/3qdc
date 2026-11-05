@@ -1,7 +1,7 @@
 // data-layout.mjs — stops a server that would otherwise come up with the wrong (empty) data: the old data folders are
 // still there because scripts/migrate-games-data.mjs was not run, or an old per-part environment variable still points
 // somewhere. Checked when the server starts, before it listens.
-import { readdirSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { DATA_ROOT } from './paths.mjs';
 
@@ -18,6 +18,13 @@ function hasFiles(dir) {
   }
 }
 
+// accounts still holding one of the old roles (or an old "wanted" role), which nobody could sign in with any more
+function oldRoleAccounts(root) {
+  let list;
+  try { list = JSON.parse(readFileSync(join(root, 'he-thong', 'users.json'), 'utf8')); } catch { return 0; } // missing / unreadable: not this check's business
+  return Array.isArray(list) ? list.filter((u) => u && (['manager', 'editor', 'phieu'].includes(u.role) || u.wantRole)).length : 0;
+}
+
 // → list of sentences, empty when the layout is fine
 export function layoutProblems(root = DATA_ROOT, env = process.env) {
   const out = [];
@@ -27,6 +34,10 @@ export function layoutProblems(root = DATA_ROOT, env = process.env) {
   const old = OLD_DIRS.filter((d) => hasFiles(join(root, d)));
   if (old.length) {
     out.push(`data in the old layout is still in ${root} (${old.map((d) => d + '/').join(', ')}): stop the service, then run  node scripts/migrate-games-data.mjs --dry-run  and  --apply`);
+  }
+  const oldAccounts = oldRoleAccounts(root);
+  if (oldAccounts) {
+    out.push(`${oldAccounts} account(s) in ${join(root, 'he-thong', 'users.json')} still have the old roles (manager / editor / phieu): stop the service, then run  node scripts/migrate-users-grants.mjs --owner <username of the owner> --dry-run  and  --apply`);
   }
   return out;
 }

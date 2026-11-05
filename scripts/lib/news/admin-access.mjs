@@ -1,23 +1,26 @@
-// admin-access.mjs — two ways a manager lets someone in without the register-and-wait flow:
-//   invites       a one-time link (/quan-tri/moi#<token>, 7 days) for one role, today only "phieu" (Duyệt phiếu: the
-//                 gift tickets and nothing else). Whoever opens it picks a username, display name and password; the
-//                 account then waits for a manager's approval (the owner wants to approve every account himself), with
-//                 the invite's role preselected. data/news/invites.json; only a SHA-256 of the token is stored.
-//   Claude codes  a bearer code for one "phieu" account, used by that person's Claude to reach /mcp (phieu-mcp.mjs)
-//                 over HTTPS without a browser. Shown once when made; only its SHA-256 is stored
-//                 (data/news/mcp-tokens.json). A code works only while its account is active and still allowed to
-//                 handle tickets, so locking the account or changing its role switches its codes off as well.
+// admin-access.mjs — two ways an owner lets someone in without the register-and-wait flow:
+//   invites       a one-time link (/quan-tri/moi#<token>, 7 days) carrying the grants it offers (today the preset "phieu":
+//                 Duyệt phiếu of 3qdc, the gift tickets and nothing else). Whoever opens it picks a username, display name
+//                 and password; the account then waits for an owner's approval (the owner approves every account himself),
+//                 with the invite's grants preselected. data/he-thong/invites.json; only a SHA-256 of the token is stored.
+//   Claude codes  a bearer code for one account, used by that person's Claude to reach /mcp (phieu-mcp.mjs) over HTTPS
+//                 without a browser. Shown once when made; only its SHA-256 is stored (data/he-thong/mcp-tokens.json).
+//                 A code works only while its account is active and still allowed to handle the tickets (an owner, or a
+//                 member with `duyet` of Phiếu Bé Ngoan in 3qdc), so locking the account or taking the right away
+//                 switches its codes off as well.
 import { randomBytes, createHash, timingSafeEqual } from 'node:crypto';
 import { join } from 'node:path';
 import { mkdir } from 'node:fs/promises';
 import { systemDir } from '../admin/paths.mjs';
 import { readJson, writeJsonAtomic, siteNow } from './news-files.mjs';
 import { changeUsers, readUsers, hashPassword, USERNAME_RE, PASSWORD_MIN } from './admin-auth.mjs';
+import { can, isOwner } from '../admin/grants.mjs';
 
 const INVITE_MS = 7 * 86400e3;
-const INVITE_ROLES = ['phieu'];
-// roles whose codes keep working (a manager can also use a code made before; anything else switches it off)
-const CODE_ROLES = ['phieu', 'manager'];
+// what an invite offers, by the name the invite page sends
+const INVITE_PRESETS = { phieu: { '3qdc': { 'phieu-be-ngoan': ['duyet'] } } };
+// an account whose Claude may use /mcp: the tickets are those of 3qdc
+const mayUseCode = (u) => !!u && !u.disabled && (isOwner(u) || can(u, '3qdc', 'phieu-be-ngoan', 'duyet'));
 const NAME_MAX = 60;
 const OPEN_MAX = 20; // unused invites / live codes kept at once
 export const CODE_PREFIX = '3qp_';
@@ -46,10 +49,10 @@ function store(name) {
 const invites = store('invites.json');
 const codes = store('mcp-tokens.json');
 
-const isManager = (u) => u && u.role === 'manager';
+// invites and Claude codes belong to owners (isOwner, grants.mjs)
 
 // ---------- invites ----------
-const inviteView = (i) => ({ id: i.id, role: i.role, createdBy: i.createdBy, createdAt: i.createdAt, exp: i.exp });
+const inviteView = (i) => ({ id: i.id, role: i.role, grants: i.grants || INVITE_PRESETS[i.role] || {}, createdBy: i.createdBy, createdAt: i.createdAt, exp: i.exp });
 const openInvite = (i, now) => !i.usedBy && !i.revoked && i.exp > now;
 
 // Unused, unexpired invites for the managers' page.
@@ -60,15 +63,15 @@ export async function listInvites() {
 
 // A new invite → { token, invite } (the token goes into the link once and is never stored) or { status, error }.
 export async function createInvite(actor, role) {
-  if (!isManager(actor)) return { status: 403, error: 'Chỉ Quản lý mới tạo được link mời.' };
-  if (!INVITE_ROLES.includes(role)) return { status: 400, error: 'Vai trò không hợp lệ cho link mời.' };
+  if (!isOwner(actor)) return { status: 403, error: 'Chỉ chủ mới tạo được link mời.' };
+  if (!Object.hasOwn(INVITE_PRESETS, role)) return { status: 400, error: 'Vai trò không hợp lệ cho link mời.' };
   const token = randomBytes(32).toString('base64url');
   return invites.change((list) => {
     const now = Date.now();
     // used, cancelled and expired invites older than 30 days are dropped
     for (let k = list.length - 1; k >= 0; k--) if (!openInvite(list[k], now) && now - list[k].exp > 30 * 86400e3) list.splice(k, 1);
     if (list.filter((i) => openInvite(i, now)).length >= OPEN_MAX) return { status: 400, error: `Đang có ${OPEN_MAX} link mời chưa dùng. Hãy huỷ bớt trước.` };
-    const invite = { id: randomBytes(6).toString('hex'), hash: sha256(token), role, createdBy: actor.username, createdAt: siteNow(), exp: now + INVITE_MS };
+    const invite = { id: randomBytes(6).toString('hex'), hash: sha256(token), role, grants: INVITE_PRESETS[role], createdBy: actor.username, createdAt: siteNow(), exp: now + INVITE_MS };
     list.push(invite);
     console.log(`[news-auth] ${siteNow()} ${actor.username} created invite ${invite.id} (${role})`);
     return { save: true, token, invite: inviteView(invite) };
@@ -76,7 +79,7 @@ export async function createInvite(actor, role) {
 }
 
 export async function revokeInvite(actor, id) {
-  if (!isManager(actor)) return { status: 403, error: 'Chỉ Quản lý mới huỷ được link mời.' };
+  if (!isOwner(actor)) return { status: 403, error: 'Chỉ chủ mới huỷ được link mời.' };
   return invites.change((list) => {
     const i = list.find((x) => x.id === id && openInvite(x, Date.now()));
     if (!i) return { status: 404, error: 'Không tìm thấy link mời (có thể đã được dùng hoặc hết hạn).' };
@@ -92,7 +95,7 @@ export async function acceptInvite(input) {
   const username = String(input.username ?? '').trim().toLowerCase();
   const name = plain(input.name);
   const password = input.password;
-  const bad = { status: 400, error: 'Link mời không hợp lệ, đã được dùng hoặc đã hết hạn. Hãy xin Quản lý link mới.' };
+  const bad = { status: 400, error: 'Link mời không hợp lệ, đã được dùng hoặc đã hết hạn. Hãy xin chủ link mới.' };
   if (!/^[A-Za-z0-9_-]{40,60}$/.test(token)) return bad;
   if (!USERNAME_RE.test(username)) return { status: 400, error: 'Tên đăng nhập 3–32 ký tự: chữ thường không dấu, số, dấu chấm, gạch ngang, gạch dưới; bắt đầu bằng chữ hoặc số.' };
   if (!name || name.length > NAME_MAX) return { status: 400, error: `Tên hiển thị cần 1–${NAME_MAX} ký tự.` };
@@ -111,13 +114,14 @@ export async function acceptInvite(input) {
     return { save: true, invite: i };
   });
   if (taken.error) return taken;
-  // the account waits for a manager like a registration does ("pending"); wantRole preselects the invite's role on the
-  // managers' page, the manager confirms it with Duyệt
+  // the account waits for an owner like a registration does ("pending"); wantGrants preselects the invite's grants on the
+  // accounts page, the owner confirms them with Duyệt
   const r = await changeUsers((users) => {
     if (users.some((u) => u.username === username)) return { status: 409, error: 'Tên đăng nhập này đã có người dùng. Hãy chọn tên khác.' };
-    users.push({ username, name, role: 'pending', wantRole: taken.invite.role, ...secret, disabled: false, createdAt: siteNow(), invitedBy: taken.invite.createdBy, invite: taken.invite.id });
+    const wantGrants = taken.invite.grants || INVITE_PRESETS[taken.invite.role] || {};
+    users.push({ username, name, role: 'pending', wantGrants, ...secret, disabled: false, createdAt: siteNow(), invitedBy: taken.invite.createdBy, invite: taken.invite.id });
     console.log(`[news-auth] ${siteNow()} ${username} joined with invite ${taken.invite.id} (waiting for approval as ${taken.invite.role})`);
-    return { save: true, user: { username, name, role: 'pending', wantRole: taken.invite.role } };
+    return { save: true, user: { username, name, role: 'pending', wantGrants } };
   });
   if (r.error) await invites.change((list) => { const i = list.find((x) => x.id === taken.invite.id); if (i) { delete i.usedBy; delete i.usedAt; } return { save: true }; });
   return r;
@@ -133,10 +137,10 @@ export async function listCodes() {
 
 // A new code for one account → { code, item } (the code is shown once) or { status, error }.
 export async function createCode(actor, username, label) {
-  if (!isManager(actor)) return { status: 403, error: 'Chỉ Quản lý mới tạo được mã cho Claude.' };
+  if (!isOwner(actor)) return { status: 403, error: 'Chỉ chủ mới tạo được mã cho Claude.' };
   const u = (await readUsers()).find((x) => x.username === username);
   if (!u) return { status: 404, error: 'Không tìm thấy tài khoản.' };
-  if (u.disabled || !CODE_ROLES.includes(u.role)) return { status: 400, error: 'Chỉ tạo mã cho tài khoản Duyệt phiếu (hoặc Quản lý) đang hoạt động.' };
+  if (!mayUseCode(u)) return { status: 400, error: 'Chỉ tạo mã cho tài khoản Duyệt phiếu (hoặc chủ) đang hoạt động.' };
   const code = CODE_PREFIX + randomBytes(32).toString('base64url');
   return codes.change((list) => {
     if (list.filter((c) => !c.revoked).length >= OPEN_MAX * 2) return { status: 400, error: 'Có quá nhiều mã đang dùng. Hãy thu hồi bớt trước.' };
@@ -148,7 +152,7 @@ export async function createCode(actor, username, label) {
 }
 
 export async function revokeCode(actor, id) {
-  if (!isManager(actor)) return { status: 403, error: 'Chỉ Quản lý mới thu hồi được mã.' };
+  if (!isOwner(actor)) return { status: 403, error: 'Chỉ chủ mới thu hồi được mã.' };
   return codes.change((list) => {
     const c = list.find((x) => x.id === id && !x.revoked);
     if (!c) return { status: 404, error: 'Không tìm thấy mã (có thể đã bị thu hồi).' };
@@ -168,7 +172,7 @@ export async function userOfCode(code) {
   const c = (await codes.read()).find((x) => !x.revoked && sameHash(x.hash, want));
   if (!c) return null;
   const u = (await readUsers()).find((x) => x.username === c.username);
-  if (!u || u.disabled || !u.hash || !CODE_ROLES.includes(u.role)) return null;
+  if (!u || !u.hash || !mayUseCode(u)) return null;
   const now = Date.now();
   if (!(now - (lastNoted.get(c.id) || 0) < 60e3)) {
     lastNoted.set(c.id, now);

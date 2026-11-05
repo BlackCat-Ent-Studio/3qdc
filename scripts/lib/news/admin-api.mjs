@@ -2,15 +2,18 @@
 // Every change (POST) must: come from the site's own page (Origin), be JSON, be at most 1 MB, and — apart from signing
 // in and setting a password — belong to a signed-in account allowed to make it (news-workflow.mjs decides).
 //
-// This file keeps what belongs to no game: signing in, accounts, invites, Claude codes. Everything about one game's
-// content lives in a part (scripts/lib/admin/modules/) and is reached at /quan-tri/api/g/<game>/<address>.
+// This file keeps what belongs to no game: signing in, accounts, invites, Claude codes (owners only). Everything about
+// one game's content lives in a part (scripts/lib/admin/modules/) and is reached at /quan-tri/api/g/<game>/<address>;
+// the account must hold a grant in that game (403 otherwise, before the part is even looked at) and each part checks its
+// own permissions with ctx.can().
 import { signIn, endSession, setPassword, currentUser, sameOrigin, sessionCookie, clearedCookie, clientIp } from './admin-auth.mjs';
 import { listInvites, createInvite, revokeInvite, acceptInvite, listCodes, createCode, revokeCode } from './admin-access.mjs';
 import { register, listUsers, manageUser } from './admin-users.mjs';
 import { USERNAME_RE } from './admin-auth.mjs';
 import { siteNow } from './news-files.mjs';
 import { GAME_ID_RE, gameById } from '../admin/games.mjs';
-import { moduleOfPath, gamesFor } from '../admin/modules.mjs';
+import { moduleOfPath } from '../admin/modules.mjs';
+import { can, gamesOf, hasAnyAccess, isOwner, cleanGrants } from '../admin/grants.mjs';
 import { send, oops } from '../admin/api-http.mjs';
 
 const BODY_MAX = 1_000_000;
@@ -43,7 +46,8 @@ function refuseTooBig(req, res) {
 //   /g/<game>/<address>  the game's own address
 //   /<address>           the first tabs of the editor pages call addresses without a game; they mean the game 3qdc.
 //                        Kept so those tabs keep working until the pages name the game themselves.
-// → null when the address belongs to no part (or the game's part is not switched on); `sub` is the address below the game.
+// → null when the address belongs to no part of a known game; `sub` is the address below the game and `on` tells whether
+// the game has switched that part on.
 const GAME_PREFIX_RE = /^\/g\/([^/]+)(\/.*)$/;
 function resolveTarget(path) {
   let m = GAME_PREFIX_RE.exec(path);
@@ -52,8 +56,8 @@ function resolveTarget(path) {
   const mod = moduleOfPath(sub);
   if (!mod) return null;
   const game = gameById(m ? m[1] : '3qdc');
-  if (!game || !Object.hasOwn(game.modules, mod.id)) return null;
-  return { game, mod, sub };
+  if (!game) return null;
+  return { game, mod, sub, on: Object.hasOwn(game.modules, mod.id) };
 }
 
 // path = everything after /quan-tri/api. Unexpected failures are logged and answered with a plain 500 (no file paths).
@@ -79,7 +83,7 @@ async function route(req, res, path) {
     }
     // a picture or song upload: raw body, so the session is checked before a single byte is read
     const target = resolveTarget(path);
-    if (target && target.mod.upload && await target.mod.upload(req, res, target.sub, target.game)) return;
+    if (target && target.on && target.mod.upload && await target.mod.upload(req, res, target.sub, target.game)) return;
     if (!/^application\/json(\s*;|$)/i.test(String(req.headers['content-type'] || ''))) return oops(res, 415, 'Chỉ nhận dữ liệu JSON.');
     const got = await readBody(req);
     if (got.tooBig) return refuseTooBig(req, res);
@@ -124,29 +128,26 @@ async function route(req, res, path) {
   if (!user) return oops(res, 401, 'Phiên đăng nhập đã hết. Hãy đăng nhập lại.');
 
   if (method === 'GET' && path === '/toi') {
-    return send(res, 200, { user: { username: user.username, name: user.name, role: user.role }, games: gamesFor(user) });
+    const dropped = cleanGrants(user.grants, { lenient: true }).dropped;
+    if (dropped.length) console.warn(`[news-auth] ${siteNow()} ${user.username} has grants that are not in the books and are ignored: ${dropped.join('; ')}`);
+    return send(res, 200, { user: { username: user.username, name: user.name, role: user.role, grants: user.grants }, games: gamesOf(user) });
   }
 
+  // a game's own address: first the account's right to the game at all (403, so the answer does not tell which parts
+  // the game has), then whether the game has the part (404), then the part's own permission checks
   const target = resolveTarget(path);
-  const sub = target ? target.sub : path;
-
-  // "Duyệt phiếu" accounts reach the ticket list and the give / refuse / back-to-waiting answer, nothing else
-  // (no articles, pictures, music, sign-ups, trash, accounts; no CSV and no deleting tickets)
-  if (user.role === 'phieu' && !((method === 'GET' && sub === '/phieu-be-ngoan') || (method === 'POST' && /^\/phieu-be-ngoan\/[a-z0-9]{6,20}$/.test(sub)))) {
-    return oops(res, 403, 'Tài khoản Duyệt phiếu chỉ dùng được mục Phiếu Bé Ngoan.');
-  }
-
-  // a game's own address
   if (target) {
-    const ctx = { game: target.game, user, method, can: (perm) => (target.mod.legacyRoles[perm] || []).includes(user.role) };
+    if (!hasAnyAccess(user, target.game.id)) return oops(res, 403, 'Tài khoản này không có quyền ở game này.');
+    if (!target.on) return oops(res, 404, 'Không có địa chỉ này.');
+    const ctx = { game: target.game, user, method, can: (perm) => can(user, target.game.id, target.mod.id, perm) };
     if (await target.mod.api(ctx, req, res, target.sub, body)) return;
     return oops(res, 404, 'Không có địa chỉ này.');
   }
 
-  // invite links for "Duyệt phiếu" accounts and codes for their Claude (managers only; shown on the accounts page).
+  // invite links and codes for Claude (owners only; shown on the accounts page).
   // A new link or code is in the answer once and never again.
   if (path === '/loi-moi' || path.startsWith('/loi-moi/') || path === '/ma-claude' || path.startsWith('/ma-claude/')) {
-    if (user.role !== 'manager') return oops(res, 403, 'Chỉ Quản lý mới quản lý link mời và mã Claude.');
+    if (!isOwner(user)) return oops(res, 403, 'Chỉ chủ mới quản lý link mời và mã Claude.');
     let r = null, im, cm;
     if (method === 'POST' && path === '/loi-moi') r = await createInvite(user, body.role);
     else if (method === 'POST' && (im = path.match(/^\/loi-moi\/([a-f0-9]{12})\/huy$/))) r = await revokeInvite(user, im[1]);
@@ -157,13 +158,13 @@ async function route(req, res, path) {
     return send(res, 200, { token: r.token, code: r.code, invites: await listInvites(), codes: await listCodes() });
   }
 
-  // accounts page (managers only)
+  // accounts page (owners only)
   if (path === '/nguoi-dung' || path.startsWith('/nguoi-dung/')) {
-    if (user.role !== 'manager') return oops(res, 403, 'Chỉ Quản lý mới quản lý người dùng.');
+    if (!isOwner(user)) return oops(res, 403, 'Chỉ chủ mới quản lý người dùng.');
     if (method === 'GET' && path === '/nguoi-dung') return send(res, 200, { users: await listUsers(), me: user.username, invites: await listInvites(), codes: await listCodes() });
     const name = path.slice('/nguoi-dung/'.length);
     if (method === 'POST' && USERNAME_RE.test(name)) {
-      const r = await manageUser(user, name, { action: body.action, role: body.role });
+      const r = await manageUser(user, name, { action: body.action, grants: body.grants });
       if (r.error) return oops(res, r.status, r.error);
       return send(res, 200, { users: r.users, me: user.username });
     }

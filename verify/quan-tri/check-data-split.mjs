@@ -168,8 +168,11 @@ const preload = join(tmpDir(), 'preload.mjs');
 writeFileSync(preload, `import { GAMES } from ${JSON.stringify(pathToFileURL(join(ROOT, 'scripts/lib/admin/games.mjs')).href)};\nGAMES.find((g) => g.id === 'skystory').modules['tin-tuc'] = {};\n`);
 const { hashPassword } = await import(pathToFileURL(join(ROOT, 'scripts/lib/news/admin-auth.mjs')).href);
 const now = new Date().toISOString();
-const acct = async (username, name, role) => ({ username, name, role, ...(await hashPassword(PASSWORD)), disabled: false, createdAt: now, passwordSetAt: now });
-put(root, 'he-thong/users.json', JSON.stringify([await acct('quan-ly', 'Quản Lý', 'manager'), await acct('bien-tap', 'Biên Tập', 'editor')]));
+const acct = async (username, name, role, grants) => ({ username, name, role, ...(grants ? { grants } : {}), ...(await hashPassword(PASSWORD)), disabled: false, createdAt: now, passwordSetAt: now });
+put(root, 'he-thong/users.json', JSON.stringify([
+  await acct('quan-ly', 'Quản Lý', 'owner'),
+  await acct('bien-tap', 'Biên Tập', 'member', { '3qdc': { 'tin-tuc': ['viet'] }, skystory: { 'tin-tuc': ['viet'] } }),
+]));
 put(root, 'games/3qdc/tin-tuc/posts/1.json', post(1, 'bai-cua-3qdc'));
 const OLD_PIC = '0123456789abcdef';
 mkdirSync(join(root, 'games', '3qdc', 'tin-tuc', 'uploads', '2026', '09'), { recursive: true });

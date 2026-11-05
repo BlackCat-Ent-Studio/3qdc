@@ -78,10 +78,32 @@ export function adminApp() {
   const STATE = { published: 'Đã đăng', scheduled: 'Hẹn giờ', pending: 'Chờ duyệt', draft: 'Nháp' };
   const ACTION_WORDS = { luu: 'lưu', 'gui-duyet': 'gửi duyệt', 'rut-ve': 'rút về nháp', 'dang-ngay': 'đăng', 'hen-gio': 'hẹn giờ đăng', 'tra-lai': 'trả lại cho người viết', 'go-bai': 'gỡ bài', 'bo-ghim': 'bỏ ghim' };
 
+  // These pages still work on one game (3qdc) with the three old kinds of view; the page that names the games replaces
+  // this. The server decides what an account may do (403), so the view only chooses what to show:
+  //   manager = the whole game or any management right in it · editor = writes news · phieu = reviews tickets only
+  //   kind = the account's real role (owner / member): only owners see the accounts page
+  const PRESET_GRANTS = { manager: { '3qdc': '*' }, editor: { '3qdc': { 'tin-tuc': ['viet'] } }, phieu: { '3qdc': { 'phieu-be-ngoan': ['duyet'] } } };
+  function presetOf(grants) {
+    const s = JSON.stringify(grants || {});
+    return Object.keys(PRESET_GRANTS).find((k) => JSON.stringify(PRESET_GRANTS[k]) === s) || 'custom';
+  }
+  function viewOf(u) {
+    const g = u.role === 'owner' ? '*' : (u.grants || {})['3qdc'];
+    let role = 'none';
+    if (g === '*') role = 'manager';
+    else if (g && typeof g === 'object') {
+      const has = (m, p) => Array.isArray(g[m]) && g[m].includes(p);
+      if (has('tin-tuc', 'duyet') || has('nhac', 'quan-ly') || has('dang-ky-som', 'quan-ly') || has('phieu-be-ngoan', 'quan-ly')) role = 'manager';
+      else if (has('tin-tuc', 'viet')) role = 'editor';
+      else if (has('phieu-be-ngoan', 'duyet')) role = 'phieu';
+    }
+    return Object.assign({}, u, { kind: u.role, role });
+  }
+
   function header(active) {
     // a "Duyệt phiếu" account has one section only
     const tabs = me.role === 'manager'
-      ? [['posts', '#/', 'Bài viết'], ['music', '#/nhac', 'Nhạc nền'], ['signup', '#/dang-ky-som', 'Đăng ký sớm'], ['phieu', '#/phieu-be-ngoan', 'Phiếu Bé Ngoan'], ['trash', '#/thung-rac', 'Thùng rác'], ['users', '#/nguoi-dung', 'Người dùng']]
+      ? [['posts', '#/', 'Bài viết'], ['music', '#/nhac', 'Nhạc nền'], ['signup', '#/dang-ky-som', 'Đăng ký sớm'], ['phieu', '#/phieu-be-ngoan', 'Phiếu Bé Ngoan'], ['trash', '#/thung-rac', 'Thùng rác']].concat(me.kind === 'owner' ? [['users', '#/nguoi-dung', 'Người dùng']] : [])
       : me.role === 'phieu' ? [['phieu', '#/phieu-be-ngoan', 'Phiếu Bé Ngoan']] : null;
     const nav = tabs
       ? `<nav class="adm-nav" aria-label="Mục quản trị">${tabs
@@ -91,7 +113,7 @@ export function adminApp() {
     const menuBtn = `<button type="button" class="adm-menu" id="adm-menu" aria-expanded="false" aria-controls="adm-who" aria-label="Tài khoản và tuỳ chọn">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>`;
     return `<header class="adm-h"><div class="wrap"><a href="#/" class="adm-logo"><img src="${esc(LOGO)}" alt="3Q Đại Chiến"></a><span class="ttl">Quản trị tin tức</span>${menuBtn}${nav}
-<div class="who" id="adm-who">${THEME_BUTTON}${avatar(me.name)}<span><b>${esc(me.name)}</b> · ${esc(ROLES[me.role] || me.role)}</span>
+<div class="who" id="adm-who">${THEME_BUTTON}${avatar(me.name)}<span><b>${esc(me.name)}</b> · ${esc(ROLES[me.kind === 'owner' ? 'owner' : me.role] || me.role)}</span>
 <a class="btn btn-ghost btn-sm" href="/tin-tuc" target="_blank" rel="noopener">Xem trang tin</a><button type="button" class="btn btn-ghost btn-sm" id="logout">Đăng xuất</button></div></div></header>`;
   }
   function bindHeader() {
@@ -147,7 +169,7 @@ export function adminApp() {
       const r = await api('POST', '/dang-nhap', { username: $('#l-user').value, password: $('#l-pass').value });
       btn.disabled = false;
       if (!r.ok) { err.textContent = r.data.error || 'Không đăng nhập được.'; err.hidden = false; $('#l-pass').select(); return; }
-      me = r.data.user;
+      me = viewOf(r.data.user);
       route();
     });
   }
@@ -262,7 +284,7 @@ export function adminApp() {
   }
 
   // ---------- accounts (managers) ----------
-  const ROLE_PILL = { manager: ['Quản lý', 's-published'], editor: ['Biên tập', 's-draft'], phieu: ['Duyệt phiếu', 's-scheduled'], pending: ['Chờ duyệt', 's-pending'] };
+  const ROLE_PILL = { owner: ['Chủ', 's-published'], manager: ['Quản lý', 's-published'], editor: ['Biên tập', 's-draft'], phieu: ['Duyệt phiếu', 's-scheduled'], custom: ['Tuỳ chỉnh', 's-draft'], pending: ['Chờ duyệt', 's-pending'] };
 
   async function renderUsers() {
     cleanupEditor();
@@ -282,12 +304,15 @@ export function adminApp() {
   let fresh = null;
 
   function drawUsers(users, myName, notice) {
-    const order = { pending: 0, manager: 1, editor: 2, phieu: 3 };
-    const rows = users.slice().sort((a, b) => (order[a.role] ?? 4) - (order[b.role] ?? 4) || String(b.createdAt).localeCompare(String(a.createdAt)));
+    // the kind shown for an account: owner, pending, or the preset its grants equal ("custom" = anything else)
+    const kindOf = (u) => (u.role === 'member' ? presetOf(u.grants) : u.role);
+    const order = { pending: 0, owner: 1, manager: 2, editor: 3, phieu: 4 };
+    const rows = users.slice().sort((a, b) => (order[kindOf(a)] ?? 5) - (order[kindOf(b)] ?? 5) || String(b.createdAt).localeCompare(String(a.createdAt)));
     const waiting = users.filter((u) => u.role === 'pending').length;
-    const roleSelect = (u, id) => `<select class="sel" id="${id}" aria-label="Vai trò của ${esc(u.username)}">${[['editor', 'Biên tập'], ['phieu', 'Duyệt phiếu'], ['manager', 'Quản lý']]
-      .map(([v, l]) => `<option value="${v}"${u.role === v ? ' selected' : ''}>${l}</option>`).join('')}</select>`;
-    const phieuUsers = users.filter((u) => u.role === 'phieu' && !u.disabled);
+    const roleSelect = (kind, username, id) => `<select class="sel" id="${id}" aria-label="Vai trò của ${esc(username)}">${[['editor', 'Biên tập'], ['phieu', 'Duyệt phiếu'], ['manager', 'Quản lý'], ['custom', 'Tuỳ chỉnh (giữ nguyên)']]
+      .filter(([v]) => v !== 'custom' || kind === 'custom')
+      .map(([v, l]) => `<option value="${v}"${kind === v ? ' selected' : ''}>${l}</option>`).join('')}</select>`;
+    const phieuUsers = users.filter((u) => kindOf(u) === 'phieu' && !u.disabled);
     const nameOf = (un) => (users.find((u) => u.username === un) || {}).name || un;
     const shown = fresh;
     fresh = null;
@@ -304,20 +329,20 @@ ${phieuUsers.length ? `<div class="acts" style="margin:10px 0"><select class="se
 <input class="inp" id="code-label" maxlength="40" placeholder="Ghi chú, vd: Claude máy nhà" aria-label="Ghi chú cho mã" style="max-width:240px"><button type="button" class="btn btn-fire btn-sm" id="code-new">Tạo mã</button></div>` : '<p class="meta">Chưa có tài khoản Duyệt phiếu nào đang hoạt động.</p>'}
 ${access.codes.length ? `<ul class="meta">${access.codes.map((c) => `<li><b>${esc(nameOf(c.username))}</b> · ${esc(c.label)} · mã …${esc(c.hint)} · tạo ${fmtTime(c.createdAt)} · ${c.lastUsedAt ? 'dùng lần cuối ' + fmtTime(c.lastUsedAt) : 'chưa dùng'} <button type="button" class="btn btn-danger btn-xs" data-code-thu="${esc(c.id)}">Thu hồi</button></li>`).join('')}</ul>` : '<p class="meta">Chưa có mã nào đang dùng.</p>'}
 </section>`;
-    $('main').innerHTML = `<div class="adm-top"><div><h1>Người dùng</h1><p>${waiting ? `<b>${waiting}</b> tài khoản đăng ký đang chờ duyệt. Chỉ duyệt người bạn biết — Biên tập viết bài, Quản lý đăng bài và quản lý người dùng.` : 'Không có tài khoản nào chờ duyệt. Người mới đăng ký tại trang Đăng ký và sẽ hiện ở đây.'}</p></div></div>
+    $('main').innerHTML = `<div class="adm-top"><div><h1>Người dùng</h1><p>${waiting ? `<b>${waiting}</b> tài khoản đăng ký đang chờ duyệt. Chỉ duyệt người bạn biết — Biên tập viết bài, Quản lý đăng bài và quản lý các phần của game.` : 'Không có tài khoản nào chờ duyệt. Người mới đăng ký tại trang Đăng ký và sẽ hiện ở đây.'}</p></div></div>
 <div class="err" id="u-err" role="alert"${notice ? '' : ' hidden'}>${esc(notice)}</div>
 ${freshBox}
 <div class="tbl-wrap"><table class="posts users"><thead><tr><th>Người dùng</th><th>Tên đăng nhập</th><th>Vai trò</th><th>Ngày tạo</th><th>Thao tác</th></tr></thead><tbody>
 ${rows.map((u) => {
-    const [label, cls] = u.disabled ? ['Đã khoá', 's-locked'] : (ROLE_PILL[u.role] || [u.role, 's-draft']);
+    const [label, cls] = u.disabled ? ['Đã khoá', 's-locked'] : (ROLE_PILL[kindOf(u)] || [u.role, 's-draft']);
     const self = u.username === myName;
     let acts;
     if (self) acts = '<span class="meta">Tài khoản của bạn</span>';
     else if (u.role === 'pending') {
       // an account from an invite link comes with the invite's role already chosen
-      acts = `${roleSelect({ role: u.wantRole || 'editor', username: u.username }, 'role-' + esc(u.username))}<button type="button" class="btn btn-fire btn-sm" data-act="duyet" data-user="${esc(u.username)}">Duyệt</button><button type="button" class="btn btn-danger btn-sm" data-act="tu-choi" data-user="${esc(u.username)}">Từ chối</button>`;
+      acts = `${roleSelect(presetOf(u.wantGrants) === 'custom' ? 'editor' : presetOf(u.wantGrants), u.username, 'role-' + esc(u.username))}<button type="button" class="btn btn-fire btn-sm" data-act="duyet" data-user="${esc(u.username)}">Duyệt</button><button type="button" class="btn btn-danger btn-sm" data-act="tu-choi" data-user="${esc(u.username)}">Từ chối</button>`;
     } else {
-      acts = `${roleSelect(u, 'role-' + esc(u.username))}<button type="button" class="btn btn-ghost btn-sm" data-act="vai-tro" data-user="${esc(u.username)}">Đổi vai trò</button>${u.disabled
+      acts = `${u.role === 'owner' ? '' : roleSelect(kindOf(u), u.username, 'role-' + esc(u.username)) + `<button type="button" class="btn btn-ghost btn-sm" data-act="vai-tro" data-user="${esc(u.username)}">Đổi vai trò</button>`}${u.disabled
         ? `<button type="button" class="btn btn-ghost btn-sm" data-act="mo-khoa" data-user="${esc(u.username)}">Mở khoá</button>`
         : `<button type="button" class="btn btn-danger btn-sm" data-act="khoa" data-user="${esc(u.username)}">Khoá</button>`}`;
     }
@@ -376,9 +401,14 @@ ${accessHtml}`;
       }
       const sel = document.getElementById('role-' + username);
       const role = sel ? sel.value : undefined;
+      // "Tuỳ chỉnh" has no preset to send: such an account keeps its rights unless another kind is chosen
+      if ((action === 'duyet' || action === 'vai-tro') && !PRESET_GRANTS[role]) {
+        const e = $('#u-err'); e.textContent = 'Chọn Biên tập, Duyệt phiếu hoặc Quản lý.'; e.hidden = false;
+        return;
+      }
       $$('[data-act]').forEach((x) => { x.disabled = true; });
       const mine = screen;
-      const r = await api('POST', '/nguoi-dung/' + encodeURIComponent(username), { action, role });
+      const r = await api('POST', '/nguoi-dung/' + encodeURIComponent(username), { action: action === 'vai-tro' ? 'quyen' : action, grants: PRESET_GRANTS[role] });
       if (mine !== screen) return;
       if (!r.ok) {
         if (r.status === 401) return;
@@ -459,8 +489,8 @@ ${rows.length ? '' : `<tr><td colspan="6" class="meta" style="text-align:center;
       }));
     };
     draw();
-    // managers: point at registrations waiting for approval
-    if (me.role === 'manager') {
+    // owners: point at registrations waiting for approval
+    if (me.kind === 'owner') {
       const u = await api('GET', '/nguoi-dung');
       if (mine !== screen || !u.ok) return;
       const waiting = u.data.users.filter((x) => x.role === 'pending').length;
@@ -1158,7 +1188,7 @@ ${uploads.length ? `<div class="pop-row"><span class="lbl">Ảnh đã tải lên
     else if (h === '/nhac' && me.role === 'manager') renderMusic();
     else if (h === '/dang-ky-som' && me.role === 'manager') renderSignups();
     else if (h === '/phieu-be-ngoan' && me.role === 'manager') renderPhieu();
-    else if (h === '/nguoi-dung' && me.role === 'manager') renderUsers();
+    else if (h === '/nguoi-dung' && me.kind === 'owner') renderUsers();
     else if (h === '/thung-rac' && me.role === 'manager') renderTrash();
     else renderList();
     lastHash = location.hash;
@@ -1227,6 +1257,6 @@ ${uploads.length ? `<div class="pop-row"><span class="lbl">Ảnh đã tải lên
     if (location.pathname.replace(/\/+$/, '') === '/quan-tri/dang-ky') return renderRegister();
     if (location.pathname.replace(/\/+$/, '') === '/quan-tri/moi') return renderAcceptInvite();
     const r = await api('GET', '/toi');
-    if (r.ok) { me = r.data.user; route(); } else if (r.status !== 401) renderLogin(r.data.error);
+    if (r.ok) { me = viewOf(r.data.user); route(); } else if (r.status !== 401) renderLogin(r.data.error);
   })();
 }

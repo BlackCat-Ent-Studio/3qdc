@@ -4,6 +4,7 @@ import { newsStore, stampAfter, isVisible, TRASH_NAME_RE } from '../../news/news
 import { uploadsOf } from '../../news/news-uploads.mjs';
 import { decide, mayDelete, summaryOf } from '../../news/news-workflow.mjs';
 import { currentUser } from '../../news/admin-auth.mjs';
+import { can, newsRoleOf } from '../grants.mjs';
 import { siteNow, siteNowSeconds } from '../../news/news-files.mjs';
 import { send, oops, sendAndClose } from '../api-http.mjs';
 
@@ -14,6 +15,7 @@ const lockKey = (ctx, id) => `${ctx.game.id}:${id}`;
 async function uploadPicture(req, res, game) {
   const user = await currentUser(req);
   if (!user) return sendAndClose(req, res, 401, { error: 'Phiên đăng nhập đã hết. Hãy đăng nhập lại.' });
+  if (!can(user, game.id, 'tin-tuc', 'viet')) return sendAndClose(req, res, 403, { error: 'Tài khoản này không có quyền viết bài.' });
   const r = await uploadsOf(game.id).saveUpload(req);
   if (r.error) return sendAndClose(req, res, r.status, { error: r.error });
   console.log(`[news] ${siteNow()} ${user.username} uploaded ${r.url} (${r.bytes} bytes)`);
@@ -39,6 +41,8 @@ function otherLock(ctx, id) {
 // Returns true when it answered, false for an address it does not know.
 export async function api(ctx, req, res, path, body) {
   const { user, method } = ctx;
+  // the article rules (news-workflow.mjs) speak of "manager" and "editor": this account's role for this game's news
+  const writer = { ...user, role: newsRoleOf(user, ctx.game.id) };
   const { change, allPosts, listRevisions, readRevision, listTrash } = newsStore(ctx.game.id);
   const done = (status, data) => { send(res, status, data); return true; };
   const fail = (status, error) => { oops(res, status, error); return true; };
@@ -110,7 +114,7 @@ export async function api(ctx, req, res, path, body) {
       }
       const now = Date.now();
       const dctx = { posts, now, nowText: stampAfter(cur && cur.updatedAt), nowPublish: siteNowSeconds(now), newId: cur ? cur.id : await nextId(posts) };
-      const d = decide(user, cur, body, dctx);
+      const d = decide(writer, cur, body, dctx);
       if (d.error) return d;
       // unpin the others first: if that fails, nothing of this save is stored and a retry starts clean
       for (const otherId of d.unpin) {
@@ -140,7 +144,7 @@ export async function api(ctx, req, res, path, body) {
   }
 
   if ((m = path.match(/^\/bai\/(\d{1,9})\/xoa$/)) && method === 'POST') {
-    if (!mayDelete(user)) return fail(403, 'Chỉ Quản lý mới xoá bài.');
+    if (!mayDelete(writer)) return fail(403, 'Chỉ Quản lý mới xoá bài.');
     const id = +m[1];
     const r = await change(async ({ posts, remove }) => {
       const cur = posts.find((p) => p.id === id);

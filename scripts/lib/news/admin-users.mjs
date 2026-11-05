@@ -1,9 +1,11 @@
-// admin-users.mjs — registration on the site and the managers' "Người dùng" page.
+// admin-users.mjs — registration on the site and the owners' "Người dùng" page.
 //   register  anyone: username + display name + password → account with role "pending" (cannot sign in);
 //             at most 5 registrations per address per hour, and none while 20 accounts are already waiting
-//   manage    managers only: approve a waiting account as editor or manager, refuse it (removed), lock / unlock,
-//             change role. Nobody changes their own account here, and the last active manager cannot be removed.
-import { changeUsers, readUsers, hashPassword, clientIp, USERNAME_RE, PASSWORD_MIN, ACTIVE_ROLES } from './admin-auth.mjs';
+//   manage    owners only: approve a waiting account with grants (what it may do in which game), refuse it (removed),
+//             lock / unlock, change its grants. Nobody changes their own account here, no call makes an owner, and the
+//             last active owner cannot be locked.
+import { changeUsers, readUsers, hashPassword, clientIp, USERNAME_RE, PASSWORD_MIN } from './admin-auth.mjs';
+import { cleanGrants } from '../admin/grants.mjs';
 import { siteNow } from './news-files.mjs';
 
 const NAME_MAX = 60;
@@ -65,41 +67,61 @@ export async function register(req, input) {
   });
 }
 
-const activeManagers = (users) => users.filter((u) => u.role === 'manager' && !u.disabled && u.hash).length;
+// grants sent by an owner (or asked for by a person): checked against the books, and at least one right is needed
+function readGrants(input) {
+  const r = cleanGrants(input);
+  if (r.error) return { error: `Quyền không hợp lệ: ${r.error}.` };
+  if (!Object.keys(r.grants).length) return { error: 'Chọn ít nhất một quyền.' };
+  return { grants: r.grants };
+}
+
+const activeOwners = (users) => users.filter((u) => u.role === 'owner' && !u.disabled && u.hash).length;
+
+// Every change of what an account may do is written down. For now this goes to the service log; the permanent record
+// (data/he-thong/nhat-ky-quyen.jsonl) takes over from here.
+export function recordGrantChange(actor, username, action, before, after) {
+  console.log(`[news-auth] ${siteNow()} grants ${action} ${username} by ${actor} ${JSON.stringify({ before: before || null, after: after || null })}`);
+}
 
 // What the "Người dùng" page shows (no hashes, no tokens).
 export async function listUsers() {
   return (await readUsers()).map((u) => ({
     username: u.username, name: u.name, role: u.role, disabled: !!u.disabled, createdAt: u.createdAt || '',
-    passwordSet: !!u.hash, registered: !!u.registered, wantRole: u.wantRole || '', invitedBy: u.invitedBy || '',
+    grants: u.role === 'member' && u.grants && typeof u.grants === 'object' ? u.grants : {}, wantGrants: u.role === 'pending' && u.wantGrants && typeof u.wantGrants === 'object' ? u.wantGrants : {},
+    passwordSet: !!u.hash, registered: !!u.registered, invitedBy: u.invitedBy || '',
   }));
 }
 
 /**
- * A manager's decision about one account.
- *   action  duyet (role) · tu-choi · khoa · mo-khoa · vai-tro (role)
+ * An owner's decision about one account.
+ *   action  duyet (grants; without them the grants the person asked for are used) · tu-choi · khoa · mo-khoa · quyen (grants)
  * Returns { users } (the new list) or { status, error }.
  */
-export async function manageUser(actor, username, { action, role } = {}) {
-  if (actor.role !== 'manager') return { status: 403, error: 'Chỉ Quản lý mới quản lý người dùng.' };
+export async function manageUser(actor, username, { action, grants } = {}) {
+  if (actor.role !== 'owner') return { status: 403, error: 'Chỉ chủ mới quản lý người dùng.' };
   if (username === actor.username) return { status: 400, error: 'Không tự thay đổi tài khoản của chính mình ở đây.' };
   const r = await changeUsers((users) => {
-    // the actor is checked again at its turn in the queue: a manager locked or demoted meanwhile decides nothing
+    // the actor is checked again at its turn in the queue: an owner locked meanwhile decides nothing
     const a = users.find((x) => x.username === actor.username);
-    if (!a || a.role !== 'manager' || a.disabled || !a.hash || (actor.sessionCreated || 0) < (a.sessionsValidAfter || 0)) {
-      return { status: 403, error: 'Chỉ Quản lý mới quản lý người dùng.' };
+    if (!a || a.role !== 'owner' || a.disabled || !a.hash || (actor.sessionCreated || 0) < (a.sessionsValidAfter || 0)) {
+      return { status: 403, error: 'Chỉ chủ mới quản lý người dùng.' };
     }
     const u = users.find((x) => x.username === username);
     if (!u) return { status: 404, error: 'Không tìm thấy tài khoản.' };
     const pending = u.role === 'pending';
+    let change = null; // [before, after] when the grants of the account change
     switch (action) {
-      case 'duyet':
+      case 'duyet': {
         if (!pending) return { status: 400, error: 'Tài khoản này không ở trạng thái chờ duyệt.' };
-        if (!ACTIVE_ROLES.includes(role)) return { status: 400, error: 'Chọn vai trò Biên tập, Duyệt phiếu hoặc Quản lý.' };
-        u.role = role;
-        delete u.wantRole;
+        const g = readGrants(grants === undefined ? u.wantGrants : grants);
+        if (g.error) return { status: 400, error: g.error };
+        u.role = 'member';
+        u.grants = g.grants;
+        delete u.wantGrants;
         u.approvedBy = actor.username; u.approvedAt = siteNow();
+        change = [null, g.grants];
         break;
+      }
       case 'tu-choi':
         if (!pending) return { status: 400, error: 'Chỉ từ chối được tài khoản đang chờ duyệt. Tài khoản đã duyệt thì dùng Khoá.' };
         users.splice(users.indexOf(u), 1);
@@ -112,18 +134,23 @@ export async function manageUser(actor, username, { action, role } = {}) {
         if (pending) return { status: 400, error: 'Tài khoản đang chờ duyệt: hãy duyệt hoặc từ chối.' };
         u.disabled = false;
         break;
-      case 'vai-tro':
-        if (pending) return { status: 400, error: 'Tài khoản đang chờ duyệt: hãy duyệt kèm vai trò.' };
-        if (!ACTIVE_ROLES.includes(role)) return { status: 400, error: 'Chọn vai trò Biên tập, Duyệt phiếu hoặc Quản lý.' };
-        u.role = role;
-        break;
+      case 'quyen': {
+        if (pending) return { status: 400, error: 'Tài khoản đang chờ duyệt: hãy duyệt kèm quyền.' };
+        if (u.role !== 'member') return { status: 400, error: 'Tài khoản chủ không đổi quyền ở đây.' };
+        const g = readGrants(grants);
+        if (g.error) return { status: 400, error: g.error };
+        change = [u.grants || {}, g.grants];
+        u.grants = g.grants;
+        break; // takes effect on the account's next request (the account list is read every time)
+      }
       default:
         return { status: 400, error: 'Thao tác không hợp lệ.' };
     }
-    if (activeManagers(users) < 1) return { status: 400, error: 'Phải còn ít nhất một Quản lý đang hoạt động.' };
-    // anything that takes rights away ends the account's current sessions
-    if (action === 'khoa' || action === 'vai-tro') u.sessionsValidAfter = Date.now();
-    console.log(`[news-auth] ${siteNow()} ${actor.username} ${action}${ACTIVE_ROLES.includes(role) ? ' ' + role : ''} ${username}`);
+    if (activeOwners(users) < 1) return { status: 400, error: 'Phải còn ít nhất một chủ đang hoạt động.' };
+    // locking an account ends its current sessions
+    if (action === 'khoa') u.sessionsValidAfter = Date.now();
+    console.log(`[news-auth] ${siteNow()} ${actor.username} ${action} ${username}`);
+    if (change) recordGrantChange(actor.username, username, action, change[0], change[1]);
     return { save: true };
   });
   if (r.error) return r;

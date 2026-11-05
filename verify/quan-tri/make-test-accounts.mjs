@@ -12,10 +12,13 @@ import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 export const TEST_PASSWORD = 'Thu-nghiem-khong-dung-that-0123';
+// `matrix` = the column of the permission matrix of check-behavior-baseline.mjs the account stands for (the old role names:
+// manager = the whole game 3qdc, editor, phieu); `legacyRole` is what migrate-users-grants.mjs would have written.
 export const TEST_ACCOUNTS = [
-  { username: 'thu-quanly', name: 'Thử Quản lý', role: 'manager' },
-  { username: 'thu-bientap', name: 'Thử Biên tập', role: 'editor' },
-  { username: 'thu-duyetphieu', name: 'Thử Duyệt phiếu', role: 'phieu' },
+  { username: 'thu-chu', name: 'Thử Chủ', matrix: 'owner', role: 'owner' },
+  { username: 'thu-quanly', name: 'Thử Quản lý', matrix: 'manager', role: 'member', grants: { '3qdc': '*' }, legacyRole: 'manager' },
+  { username: 'thu-bientap', name: 'Thử Biên tập', matrix: 'editor', role: 'member', grants: { '3qdc': { 'tin-tuc': ['viet'] } }, legacyRole: 'editor' },
+  { username: 'thu-duyetphieu', name: 'Thử Duyệt phiếu', matrix: 'phieu', role: 'member', grants: { '3qdc': { 'phieu-be-ngoan': ['duyet'] } }, legacyRole: 'phieu' },
 ];
 // a Claude code with the real shape (3qp_ + 43 url-safe characters); it only exists in the draft copy
 export const TEST_MCP_CODE = '3qp_ThuNghiemChiCoTrongBanChepNhap0123456789a';
@@ -41,7 +44,8 @@ async function main() {
   for (const a of TEST_ACCOUNTS) {
     const i = users.findIndex((u) => u.username === a.username);
     if (i >= 0) users.splice(i, 1);
-    users.push({ ...a, ...(await hashPassword(TEST_PASSWORD)), disabled: false, createdAt: now, passwordSetAt: now, testFixture: true });
+    const { matrix, ...stored } = a;
+    users.push({ ...stored, ...(await hashPassword(TEST_PASSWORD)), disabled: false, createdAt: now, passwordSetAt: now, testFixture: true });
   }
   await writeFile(usersFile, JSON.stringify(users, null, 2));
 

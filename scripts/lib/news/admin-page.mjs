@@ -8,6 +8,7 @@ import { handleAdminApi } from './admin-api.mjs';
 import { currentUser } from './admin-auth.mjs';
 import { newsStore } from './news-store.mjs';
 import { gameById } from '../admin/games.mjs';
+import { can } from '../admin/grants.mjs';
 import { renderDetailPage } from './news-pages.mjs';
 import { ROLES } from './news-workflow.mjs';
 import { adminApp } from './admin-app.mjs';
@@ -339,13 +340,21 @@ export async function handleAdmin(req, res, cleanPath) {
   }
   const m = cleanPath.match(/^\/quan-tri\/xem-truoc\/(\d{1,9})$/);
   if (m) {
-    if (!(await currentUser(req))) {
+    const who = await currentUser(req);
+    if (!who) {
       res.writeHead(302, { Location: '/quan-tri', ...securityHeaders(nonce) });
       res.end();
       return true;
     }
     // ?game=<id> picks the game; without it the preview is of 3qdc, so the old links keep working
-    const html = await previewPage(+m[1], nonce, new URL(req.url, 'http://x').searchParams.get('game') || '3qdc');
+    const gameId = new URL(req.url, 'http://x').searchParams.get('game') || '3qdc';
+    // a draft is the writers' business: whoever may write (or review) the news of that game, nobody else
+    const game = gameById(gameId);
+    if (game && Object.hasOwn(game.modules, 'tin-tuc') && !can(who, gameId, 'tin-tuc', 'viet')) {
+      sendHtml(req, res, 403, `<!doctype html><meta charset="utf-8"><title>Không có quyền</title><p>Tài khoản này không có quyền xem bài của game này. <a href="/quan-tri">Về trang quản trị</a></p>`, nonce);
+      return true;
+    }
+    const html = await previewPage(+m[1], nonce, gameId);
     if (html) sendHtml(req, res, 200, html, nonce);
     else sendHtml(req, res, 404, `<!doctype html><meta charset="utf-8"><title>Không tìm thấy</title><p>Không tìm thấy bài. <a href="/quan-tri">Về trang quản trị</a></p>`, nonce);
     return true;

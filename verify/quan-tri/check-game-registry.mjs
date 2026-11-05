@@ -2,7 +2,8 @@
 // Offline part: node verify/quan-tri/check-game-registry.mjs
 // Online part (the draft server with the test accounts of make-test-accounts.mjs): add --port 13399
 import assert from 'node:assert/strict';
-import { checkGames, gamesFor, MODULES } from '../../scripts/lib/admin/modules.mjs';
+import { checkGames, MODULES } from '../../scripts/lib/admin/modules.mjs';
+import { gamesOf } from '../../scripts/lib/admin/grants.mjs';
 import { GAMES, GAME_ID_RE } from '../../scripts/lib/admin/games.mjs';
 import { TEST_PASSWORD } from './make-test-accounts.mjs';
 import { SITES, siteOfHost, IMAGE_LIBRARY } from '../../scripts/lib/news/news-config.mjs';
@@ -44,12 +45,14 @@ ok('3qdc lists the pages without an admin part; skystory has nothing on', () => 
   assert.equal(sky.name, 'Thiên Không Kỳ Truyện');
   assert.deepEqual(Object.keys(sky.modules), []);
 });
-ok('menus by account role', () => {
-  const tabs = (role) => gamesFor({ role }).map((g) => [g.id, g.menu.map((m) => m[0]).join(',')]);
-  assert.deepEqual(new Set(tabs('manager')[0][1].split(',')), new Set(['posts', 'trash', 'phieu', 'signup', 'music']));
-  assert.deepEqual(tabs('editor'), [['3qdc', 'posts']]);
-  assert.deepEqual(tabs('phieu'), [['3qdc', 'phieu']]);
-  assert.deepEqual(tabs('pending'), []);
+ok('menus by account', () => {
+  const tabs = (user) => gamesOf(user).map((g) => [g.id, g.menu.map((m) => m[0]).join(',')]);
+  const all = new Set(['posts', 'trash', 'phieu', 'signup', 'music']);
+  assert.deepEqual(new Set(tabs({ role: 'owner' })[0][1].split(',')), all);
+  assert.deepEqual(new Set(tabs({ role: 'member', grants: { '3qdc': '*' } })[0][1].split(',')), all);
+  assert.deepEqual(tabs({ role: 'member', grants: { '3qdc': { 'tin-tuc': ['viet'] } } }), [['3qdc', 'posts']]);
+  assert.deepEqual(tabs({ role: 'member', grants: { '3qdc': { 'phieu-be-ngoan': ['duyet'] } } }), [['3qdc', 'phieu']]);
+  assert.deepEqual(tabs({ role: 'pending', grants: { '3qdc': '*' } }), []);
 });
 
 // ---- online part ----
@@ -59,7 +62,7 @@ if (portAt > 0) {
   const base = `http://127.0.0.1:${port}`;
   const origin = base;
   const pass = TEST_PASSWORD;
-  const user = process.env.TEST_USER || 'thu-quanly';
+  const user = process.env.TEST_USER || 'thu-chu';
   {
     const login = await fetch(`${base}/quan-tri/api/dang-nhap`, { method: 'POST', headers: { 'Content-Type': 'application/json', Origin: origin }, body: JSON.stringify({ username: user, password: pass }) });
     assert.equal(login.status, 200, 'test account sign-in');

@@ -1,6 +1,6 @@
 // phieu-api.mjs — gift tickets from Phiếu Bé Ngoan: the list for one day and state, marking a ticket given / refused /
-// waiting again with a reply the player sees (managers and "Duyệt phiếu" accounts), the list as CSV and deleting a ticket
-// (managers only: the CSV carries players' email addresses, which "Duyệt phiếu" accounts never see).
+// waiting again with a reply the player sees (`duyet`), the list as CSV and deleting a ticket (`quan-ly` only: the CSV
+// carries players' email addresses, which accounts with only `duyet` never see).
 import { listPhieu, setStatus, phieuCsv, deletePhieu, withoutEmail } from '../../phieu/phieu-store.mjs';
 import { STATES, REPLY_MAX } from '../../phieu/phieu-config.mjs';
 import { siteNow } from '../../news/news-files.mjs';
@@ -10,6 +10,7 @@ import { send, oops } from '../api-http.mjs';
 export async function api(ctx, req, res, path, body) {
   const { user, method } = ctx;
   if (!ctx.can('duyet')) { oops(res, 403, 'Chỉ Quản lý hoặc người Duyệt phiếu mới xem được Phiếu Bé Ngoan.'); return true; }
+  const onlyManager = (what) => { oops(res, 403, `Chỉ Quản lý mới ${what}.`); return true; };
   const seesEmail = ctx.can('quan-ly');
   const q = new URL(req.url, 'http://x').searchParams;
   const filter = { ngay: ['hom-nay', 'hom-qua', 'tat-ca'].includes(q.get('ngay')) ? q.get('ngay') : 'hom-nay', st: Object.hasOwn(STATES, q.get('st') || '') ? q.get('st') : 'all' };
@@ -19,6 +20,7 @@ export async function api(ctx, req, res, path, body) {
     return true;
   }
   if (method === 'GET' && path === '/phieu-be-ngoan/csv') {
+    if (!seesEmail) return onlyManager('tải được danh sách phiếu');
     const csv = await phieuCsv(filter);
     const stamp = siteNow().slice(0, 16).replace(/-/g, '').replace('T', '-').replace(':', '');
     console.log(`[news] ${siteNow()} ${user.username} downloaded the gift tickets (${csv.rows})`);
@@ -43,6 +45,7 @@ export async function api(ctx, req, res, path, body) {
   }
   const dm = path.match(/^\/phieu-be-ngoan\/([a-z0-9]{6,20})\/xoa$/);
   if (method === 'POST' && dm) {
+    if (!seesEmail) return onlyManager('xoá được phiếu');
     const t = await deletePhieu(dm[1]);
     if (!t) { oops(res, 404, 'Không tìm thấy phiếu này (có thể vừa bị xoá).'); return true; }
     console.log(`[news] ${siteNow()} ${user.username} deleted ticket ${t.id} (${t.email}, ${t.ngay})`);

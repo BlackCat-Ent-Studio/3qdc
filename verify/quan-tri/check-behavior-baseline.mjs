@@ -118,12 +118,13 @@ async function signInAll() {
     const r = await request({ host: MAIN, method: 'POST', path: '/quan-tri/api/dang-nhap', headers: { Origin: ORIGIN, 'Content-Type': 'application/json' }, body: { username: a.username, password: TEST_PASSWORD } });
     const c = [].concat(r.headers['set-cookie'] || [])[0];
     if (r.status !== 200 || !c) throw new Error(`test account ${a.username} could not sign in (status ${r.status}); run make-test-accounts.mjs and restart the draft server`);
-    cookies[a.role] = c.split(';')[0];
+    cookies[a.matrix] = c.split(';')[0];
   }
 }
 
 // ---------- the list of things to ask ----------
-const ROLES = ['anon', 'manager', 'editor', 'phieu'];
+// manager / editor / phieu = the three old kinds of account (now: Quản lý game 3qdc, Biên tập, Duyệt phiếu); owner = the owner
+const ROLES = ['anon', 'manager', 'editor', 'phieu', 'owner'];
 const JSON_H = { 'Content-Type': 'application/json' };
 
 function buildPlan(d) {
@@ -193,7 +194,7 @@ function buildPlan(d) {
   page('unknown', '/quan-tri/khong-co');
   page('unknown-deep', '/quan-tri/api-khong-co/x');
   add('admin-pages', 'post-not-allowed', { method: 'POST', path: '/quan-tri', draftOnly: true, headers: { Origin: ORIGIN }, ui: true });
-  for (const r of ['manager', 'editor', 'phieu']) {
+  for (const r of ['manager', 'editor', 'phieu', 'owner']) {
     page(`preview-${r}`, `/quan-tri/xem-truoc/${d.postId}`, { role: r, draftOnly: true, ui: false, loose: false });
     page(`preview-missing-${r}`, '/quan-tri/xem-truoc/999999', { role: r, draftOnly: true });
   }

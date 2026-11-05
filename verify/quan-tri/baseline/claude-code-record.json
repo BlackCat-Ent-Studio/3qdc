@@ -2,13 +2,13 @@
  "record": {
   "liveRealCodes": 1,
   "liveRealCodeRoles": [
-   "phieu"
+   "member"
   ],
   "allHaveSha256": true,
   "accountsActiveForCodes": true,
   "userRoles": [
-   "manager",
-   "phieu"
+   "member",
+   "owner"
   ],
   "openInvites": 0
  }
