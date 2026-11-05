@@ -48,6 +48,9 @@ export function moduleOfPath(sub) {
   return null;
 }
 
+// Tickets, early sign-ups and the music keep their data for 3qdc only (their stores take no game id): another game
+// switching one of them on would read or write 3qdc's data, so the server refuses to start.
+const ONLY_3QDC = ['phieu-be-ngoan', 'dang-ky-som', 'nhac'];
 const HOST_RE = /^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$/;
 
 // Refuses a wrong book of games when the server starts (the server does not come up and the log says why).
@@ -61,6 +64,7 @@ export function checkGames(games = GAMES, modules = MODULES) {
     if (!g.name || typeof g.name !== 'string') throw new Error(`games: game "${g.id}" has no name`);
     for (const mid of Object.keys(g.modules || {})) {
       if (!Object.hasOwn(modules, mid)) throw new Error(`games: game "${g.id}" uses unknown module "${mid}"`);
+      if (ONLY_3QDC.includes(mid) && g.id !== '3qdc') throw new Error(`games: module "${mid}" is only for 3qdc (its data is not kept per game yet), game "${g.id}" cannot switch it on`);
     }
     const siteIds = new Set();
     for (const s of g.sites || []) {

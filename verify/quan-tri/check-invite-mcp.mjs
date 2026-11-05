@@ -153,6 +153,21 @@ try {
   expect(await get('moi1', '/nguoi-dung'), 403, 'no accounts page');
   ok('approved: signs in and sees only the news of 3qdc');
 
+  // a link whose rights match none of the kinds of the accounts page: approving without rights gives exactly the link's rights
+  const CUSTOM = { '3qdc': { 'tin-tuc': ['viet', 'duyet'] } };
+  const customToken = json(await post('chu', '/loi-moi', { grants: CUSTOM })).token;
+  expect(await accept(customToken, 'moi-tc'), 201, 'accept the custom link');
+  const wanted = userOf('moi-tc').wantGrants;
+  assert.deepEqual(wanted, CUSTOM);
+  const shown = json(await get('chu', '/nguoi-dung')).users.find((u) => u.username === 'moi-tc');
+  assert.deepEqual(shown.wantGrants, CUSTOM, 'the accounts page gets the rights the link offers');
+  expect(await post('chu', '/nguoi-dung/moi-tc', { action: 'duyet' }), 200, 'approve a custom link without rights');
+  assert.deepEqual(userOf('moi-tc').grants, wanted, 'exactly the rights of the link, not a kind picked by the page');
+  assert.equal(userOf('moi-tc').wantGrants, undefined);
+  const page = (await req('GET', '/quan-tri', { cookie: cookies.chu })).text;
+  assert.ok(page.includes('Quyền theo link mời') && page.includes("byLink ? undefined : PRESET_GRANTS[role]"), 'the page shows the link rights text and sends no rights for it');
+  ok('a custom link: approving sends no rights, the account gets exactly the link rights; the page shows "Quyền theo link mời"');
+
   const second = json(await post('chu', '/loi-moi', { grants: TV3 })).token;
   const file = join(root, 'he-thong', 'invites.json');
   const list = JSON.parse(readFileSync(file, 'utf8'));
@@ -309,8 +324,9 @@ try {
   assert.equal((await call(oc2.code, 'xem_quyen', { username: 'rong' })).isError, undefined);
   ok('a revoked owner code is 401');
 
-  // ---------- the limit: 20 writes an hour per code ----------
-  const lim = (await mk('chu-limit')).code;
+  // ---------- the limit: 20 writes an hour per owner, all his codes together ----------
+  const mk2 = async (label) => { const r = await post('chu2', '/ma-claude', { username: 'chu2', label, scope: 'owner' }); expect(r, 200, 'owner code'); return json(r).code; };
+  const lim = await mk2('chu2-limit');
   for (let i = 0; i < 20; i++) {
     const r = await call(lim, 'cap_quyen', { username: 'viet3', game: '3qdc', phan: 'tin-tuc', quyen: ['viet'] });
     assert.ok(!r.isError, `write ${i + 1}: ${say(r)}`);
@@ -323,8 +339,15 @@ try {
   assert.equal((await call(lim, 'tao_link_moi', { grants: PHIEU })).isError, true);
   assert.deepEqual(userOf('viet3').grants, TV3);
   assert.ok(!(await call(lim, 'xem_quyen', { username: 'viet3' })).isError, 'reading is not limited');
-  assert.ok(!(await call(oc2.code, 'cap_quyen', { username: 'viet3', game: '3qdc', phan: 'tin-tuc', quyen: ['duyet'] })).isError, 'another code has its own count');
-  ok('the 21st write in an hour is refused with a clear message (all 3 write tools); reads and other codes are not affected');
+  assert.ok(!(await call(oc2.code, 'cap_quyen', { username: 'viet3', game: '3qdc', phan: 'tin-tuc', quyen: ['duyet'] })).isError, 'another owner has his own count');
+  // a second code of the owner who used up the count shares it (the number of owner codes is limited, so one of chu's is given up first)
+  const ocId = JSON.parse(readFileSync(join(root, 'he-thong', 'mcp-tokens.json'), 'utf8')).find((c) => c.hash === sha256(oc2.code)).id;
+  expect(await post('chu2', '/ma-claude/' + ocId + '/thu-hoi'), 200, 'give up a code to make room');
+  const lim2 = await mk2('chu2-second');
+  const beforeShared = JSON.stringify(userOf('viet3').grants);
+  assert.equal((await call(lim2, 'thu_quyen', { username: 'viet3', game: '3qdc', phan: 'tin-tuc' })).isError, true, 'a second code of the same owner shares the count');
+  assert.equal(JSON.stringify(userOf('viet3').grants), beforeShared, 'and did nothing');
+  ok('the 21st write in an hour is refused with a clear message (all 3 write tools); a second code of the owner shares the count; reads and other owners are not affected');
 
   // ---------- the record ----------
   const web = await get('chu', '/nhat-ky');

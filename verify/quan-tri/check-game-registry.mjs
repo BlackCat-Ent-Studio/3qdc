@@ -21,6 +21,13 @@ ok('ids: letters first or mixed, never digits only', () => {
 ok('duplicate game id', () => throwsWith(/duplicate game id "game-a"/, [game(), game()]));
 ok('bad game id', () => throwsWith(/invalid game id/, [game({ id: '2026' })]));
 ok('unknown module', () => throwsWith(/unknown module "bay-gio"/, [game({ modules: { 'bay-gio': {} } })]));
+ok('tickets, early sign-ups and music are for 3qdc only: another game cannot switch them on', () => {
+  for (const mid of ['phieu-be-ngoan', 'dang-ky-som', 'nhac']) {
+    throwsWith(new RegExp(`module "${mid}" is only for 3qdc`), [game({ modules: { [mid]: {} } })]);
+    checkGames([game({ id: '3qdc', modules: { [mid]: {} } })], MODULES);
+  }
+  checkGames([game({ modules: { 'tin-tuc': {} } })], MODULES);
+});
 ok('same host in two games', () => throwsWith(/host "a.example.com" is used by both "game-a" and "game-b"/, [
   game({ sites: [{ id: 's', hosts: ['a.example.com'] }] }),
   game({ id: 'game-b', sites: [{ id: 's', hosts: ['a.example.com'] }] }),

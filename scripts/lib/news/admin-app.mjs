@@ -339,8 +339,10 @@ ${rows.map((u) => {
     let acts;
     if (self) acts = '<span class="meta">Tài khoản của bạn</span>';
     else if (u.role === 'pending') {
-      // an account from an invite link comes with the invite's role already chosen
-      acts = `${roleSelect(presetOf(u.wantGrants) === 'custom' ? 'editor' : presetOf(u.wantGrants), u.username, 'role-' + esc(u.username))}<button type="button" class="btn btn-fire btn-sm" data-act="duyet" data-user="${esc(u.username)}">Duyệt</button><button type="button" class="btn btn-danger btn-sm" data-act="tu-choi" data-user="${esc(u.username)}">Từ chối</button>`;
+      // an account from an invite link comes with the invite's rights already chosen. When they match none of the kinds
+      // (a "custom" link), there is nothing to choose: the button sends no rights and the server uses the link's own
+      const fromLink = Object.keys(u.wantGrants || {}).length > 0 && presetOf(u.wantGrants) === 'custom';
+      acts = `${fromLink ? '<span class="meta">Quyền theo link mời</span>' : roleSelect(presetOf(u.wantGrants) === 'custom' ? 'editor' : presetOf(u.wantGrants), u.username, 'role-' + esc(u.username))}<button type="button" class="btn btn-fire btn-sm" data-act="duyet" data-user="${esc(u.username)}">Duyệt</button><button type="button" class="btn btn-danger btn-sm" data-act="tu-choi" data-user="${esc(u.username)}">Từ chối</button>`;
     } else {
       acts = `${u.role === 'owner' ? '' : roleSelect(kindOf(u), u.username, 'role-' + esc(u.username)) + `<button type="button" class="btn btn-ghost btn-sm" data-act="vai-tro" data-user="${esc(u.username)}">Đổi vai trò</button>`}${u.disabled
         ? `<button type="button" class="btn btn-ghost btn-sm" data-act="mo-khoa" data-user="${esc(u.username)}">Mở khoá</button>`
@@ -401,14 +403,16 @@ ${accessHtml}`;
       }
       const sel = document.getElementById('role-' + username);
       const role = sel ? sel.value : undefined;
+      // approving without a choice box = the rights of the invite link, sent as no rights at all
+      const byLink = action === 'duyet' && !sel;
       // "Tuỳ chỉnh" has no preset to send: such an account keeps its rights unless another kind is chosen
-      if ((action === 'duyet' || action === 'vai-tro') && !PRESET_GRANTS[role]) {
+      if ((action === 'duyet' || action === 'vai-tro') && !byLink && !PRESET_GRANTS[role]) {
         const e = $('#u-err'); e.textContent = 'Chọn Biên tập, Duyệt phiếu hoặc Quản lý.'; e.hidden = false;
         return;
       }
       $$('[data-act]').forEach((x) => { x.disabled = true; });
       const mine = screen;
-      const r = await api('POST', '/nguoi-dung/' + encodeURIComponent(username), { action: action === 'vai-tro' ? 'quyen' : action, grants: PRESET_GRANTS[role] });
+      const r = await api('POST', '/nguoi-dung/' + encodeURIComponent(username), { action: action === 'vai-tro' ? 'quyen' : action, grants: byLink ? undefined : PRESET_GRANTS[role] });
       if (mine !== screen) return;
       if (!r.ok) {
         if (r.status === 401) return;

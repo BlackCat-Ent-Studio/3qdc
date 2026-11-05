@@ -4,7 +4,7 @@
 //   changing passwords (no tool does any of that).
 //   Every change is done at its turn in the account queue (changeUsers) after checking again that the owner is still an
 //   active owner, is written to data/he-thong/nhat-ky-quyen.jsonl as "<owner> (Claude)", and counts against 20 writes an
-//   hour per code. The tools read no player content (tickets, sign-ups), so text written by players cannot steer them.
+//   hour per owner (all his codes together). The tools read no player content (tickets, sign-ups), so text written by players cannot steer them.
 import { SITE_ORIGIN } from '../news/news-config.mjs';
 import { changeUsers, readUsers } from '../news/admin-auth.mjs';
 import { listUsers } from '../news/admin-users.mjs';
@@ -15,19 +15,21 @@ import { MODULES } from './modules.mjs';
 import { appendAudit, whoIs } from './audit-log.mjs';
 
 const WRITE_MAX = 20, WRITE_MS = 3600e3;
-const writes = new Map(); // code id → times (ms) of its write calls in the last hour
+// Counted per owner (all of his codes together), in memory: a restart of the server starts the count again. That is
+// accepted: making more writes than the limit needs an owner code in the first place.
+const writes = new Map(); // owner username → times (ms) of the write calls of all his codes in the last hour
 
-// counts one write for the code; → '' when allowed, else the reason
-function overWriteLimit(codeId) {
+// counts one write for the owner; → '' when allowed, else the reason
+function overWriteLimit(owner) {
   const now = Date.now();
-  const recent = (writes.get(codeId) || []).filter((t) => now - t < WRITE_MS);
+  const recent = (writes.get(owner) || []).filter((t) => now - t < WRITE_MS);
   if (recent.length >= WRITE_MAX) {
-    writes.set(codeId, recent);
+    writes.set(owner, recent);
     const wait = Math.ceil((recent[0] + WRITE_MS - now) / 60e3);
-    return `Đã đủ ${WRITE_MAX} lần thay đổi trong 1 giờ cho mã này (giới hạn an toàn). Thử lại sau khoảng ${wait} phút.`;
+    return `Đã đủ ${WRITE_MAX} lần thay đổi trong 1 giờ cho tài khoản này, tính chung mọi mã (giới hạn an toàn). Thử lại sau khoảng ${wait} phút.`;
   }
   recent.push(now);
-  writes.set(codeId, recent);
+  writes.set(owner, recent);
   if (writes.size > 200) for (const [k, v] of writes) if (!v.some((t) => now - t < WRITE_MS)) writes.delete(k);
   return '';
 }
@@ -165,7 +167,7 @@ async function capQuyen(user, args) {
   } else return fail('quyen phải là danh sách quyền (ví dụ ["viet"]) hoặc "quan-ly-game".');
   const c = cleanGrants(add);
   if (c.error) return fail(`Quyền không hợp lệ: ${c.error}. Xem ds_game để lấy đúng tên.`);
-  const limit = overWriteLimit(user.codeId);
+  const limit = overWriteLimit(user.username);
   if (limit) return fail(limit);
   let rec = null;
   const r = await asOwner(user, (users) => {
@@ -188,7 +190,7 @@ async function capQuyen(user, args) {
 async function thuQuyen(user, args) {
   const name = str(args.username), game = str(args.game), phan = str(args.phan);
   if (!name || !game) return fail('Cần username và game.');
-  const limit = overWriteLimit(user.codeId);
+  const limit = overWriteLimit(user.username);
   if (limit) return fail(limit);
   let rec = null;
   const r = await asOwner(user, (users) => {
@@ -219,7 +221,7 @@ async function taoLinkMoi(user, args) {
   const c = cleanGrants(args.grants);
   if (c.error) return fail(`Quyền không hợp lệ: ${c.error}. Xem ds_game để lấy đúng tên.`);
   if (!Object.keys(c.grants).length) return fail('Chọn ít nhất một quyền cho link mời.');
-  const limit = overWriteLimit(user.codeId);
+  const limit = overWriteLimit(user.username);
   if (limit) return fail(limit);
   const me = (await readUsers()).find((x) => x.username === user.username);
   if (!me || me.disabled || !me.hash || !isOwner(me)) return fail('Tài khoản chủ không còn hiệu lực.');
