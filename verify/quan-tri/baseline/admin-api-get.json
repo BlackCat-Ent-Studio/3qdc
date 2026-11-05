@@ -157,9 +157,9 @@
   "ct": "application/json; charset=utf-8",
   "cache": "no-store",
   "robots": "noindex, nofollow",
-  "len": 77,
-  "sha": "741ca9f399f4c9a29bd3247baba1ec53957ee1515f93138cc810d1fb4ee3a71b",
-  "shape": "{user:{name,role,username}}"
+  "len": 371,
+  "sha": "01668af989dcb8dd6be6af45f3e02057f25da09ab57360f4bfd2d1c79ec60c98",
+  "shape": "{games:[1],user:{name,role,username}}"
  },
  "manager GET /bai": {
   "status": 200,
@@ -310,9 +310,9 @@
   "ct": "application/json; charset=utf-8",
   "cache": "no-store",
   "robots": "noindex, nofollow",
-  "len": 78,
-  "sha": "383cd895559d497a8ea60d10390760263c56bee6e86ecc50710551b9733d92b4",
-  "shape": "{user:{name,role,username}}"
+  "len": 205,
+  "sha": "75fae198283b11218958b8f967670de217dc0da25c46c3be7b7af969dc62ead3",
+  "shape": "{games:[1],user:{name,role,username}}"
  },
  "editor GET /bai": {
   "status": 200,
@@ -463,9 +463,9 @@
   "ct": "application/json; charset=utf-8",
   "cache": "no-store",
   "robots": "noindex, nofollow",
-  "len": 84,
-  "sha": "79c761383096b9c9aa2065e23995b5eaca119b28637a099ba45c5f407bfb2f85",
-  "shape": "{user:{name,role,username}}"
+  "len": 231,
+  "sha": "1817f28e4dc2a829c87c52dde762c1019a5c72ffe1b459de8dfb1b8a5d73430c",
+  "shape": "{games:[1],user:{name,role,username}}"
  },
  "phieu GET /bai": {
   "status": 403,

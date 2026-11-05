@@ -1,0 +1,158 @@
+// tin-tuc-api.mjs — articles, pictures and the trash of one game's news. Writers (`viet`) work on articles and pictures;
+// reviewers (`duyet`) also see the trash. The rules of each article change live in news-workflow.mjs.
+import { change, allPosts, listRevisions, readRevision, stampAfter, isVisible, listTrash, TRASH_NAME_RE } from '../../news/news-store.mjs';
+import { saveUpload, recentUploads } from '../../news/news-uploads.mjs';
+import { decide, mayDelete, summaryOf } from '../../news/news-workflow.mjs';
+import { currentUser } from '../../news/admin-auth.mjs';
+import { siteNow, siteNowSeconds } from '../../news/news-files.mjs';
+import { send, oops, sendAndClose } from '../api-http.mjs';
+
+const LOCK_MS = 90e3;
+const locks = new Map(); // "<game>:<article id>" → { username, name, until }
+const lockKey = (ctx, id) => `${ctx.game.id}:${id}`;
+
+async function uploadPicture(req, res) {
+  const user = await currentUser(req);
+  if (!user) return sendAndClose(req, res, 401, { error: 'Phiên đăng nhập đã hết. Hãy đăng nhập lại.' });
+  const r = await saveUpload(req);
+  if (r.error) return sendAndClose(req, res, r.status, { error: r.error });
+  console.log(`[news] ${siteNow()} ${user.username} uploaded ${r.url} (${r.bytes} bytes)`);
+  return send(res, 201, { url: r.url, bytes: r.bytes });
+}
+
+// A POST whose body is the picture itself: handled before any JSON reading (the session is checked before a single
+// byte is read). Returns true when it took the request.
+export async function upload(req, res, path) {
+  if (path !== '/anh') return false;
+  await uploadPicture(req, res);
+  return true;
+}
+
+// Someone else's current hold on an article, or null.
+function otherLock(ctx, id) {
+  const key = lockKey(ctx, id);
+  const l = locks.get(key);
+  if (!l || l.until < Date.now()) { if (l) locks.delete(key); return null; }
+  return l.username === ctx.user.username ? null : { name: l.name };
+}
+
+// Returns true when it answered, false for an address it does not know.
+export async function api(ctx, req, res, path, body) {
+  const { user, method } = ctx;
+  const done = (status, data) => { send(res, status, data); return true; };
+  const fail = (status, error) => { oops(res, status, error); return true; };
+
+  // trash: list deleted articles, bring one back as a draft, delete one or all of them for good
+  if (path === '/thung-rac' || path.startsWith('/thung-rac/')) {
+    if (!ctx.can('duyet')) return fail(403, 'Chỉ Quản lý mới xem được thùng rác.');
+    if (method === 'GET' && path === '/thung-rac') return done(200, { items: await listTrash() });
+    const tm = path.match(/^\/thung-rac\/([^/]+)\/khoi-phuc$/);
+    if (method === 'POST' && tm && TRASH_NAME_RE.test(tm[1])) {
+      const r = await change(({ restore }) => restore(tm[1], user.name, stampAfter(null)));
+      if (r.error) return fail(r.status, r.error);
+      console.log(`[news] ${siteNow()} ${user.username} restored article ${r.post.id} from ${tm[1]} (as draft)`);
+      return done(200, { post: r.post, items: await listTrash() });
+    }
+    const pm2 = path.match(/^\/thung-rac\/([^/]+)\/xoa-han$/);
+    if (method === 'POST' && pm2 && TRASH_NAME_RE.test(pm2[1])) {
+      const r = await change(({ purge }) => purge(pm2[1]));
+      if (r.error) return fail(r.status, r.error);
+      console.log(`[news] ${siteNow()} ${user.username} deleted article ${r.id} for good (${pm2[1]})`);
+      return done(200, { title: r.title, items: await listTrash() });
+    }
+    if (method === 'POST' && path === '/thung-rac/don-sach') {
+      const n = await change(async ({ purge }) => {
+        let count = 0;
+        for (const t of await listTrash()) if (!(await purge(t.file)).error) count++;
+        return count;
+      });
+      console.log(`[news] ${siteNow()} ${user.username} emptied the trash (${n} article(s) deleted for good)`);
+      return done(200, { deleted: n, items: await listTrash() });
+    }
+    return false;
+  }
+
+  // pictures and articles: everyone who writes
+  if (!ctx.can('viet')) return fail(403, 'Tài khoản này không có quyền viết bài.');
+
+  // pictures uploaded recently
+  if (method === 'GET' && path === '/anh') return done(200, { items: await recentUploads(40) });
+
+  if (method === 'GET' && path === '/bai') {
+    const posts = await allPosts();
+    const items = posts.map((p) => ({ ...summaryOf(p), visible: isVisible(p), lockedBy: (otherLock(ctx, p.id) || {}).name || '' }));
+    return done(200, { items });
+  }
+
+  let m;
+  if ((m = path.match(/^\/bai\/(\d{1,9})$/)) && method === 'GET') {
+    const id = +m[1];
+    const post = (await allPosts()).find((p) => p.id === id);
+    if (!post) return fail(404, 'Không tìm thấy bài (có thể đã bị xoá).');
+    return done(200, { post: { ...post, visible: isVisible(post) }, lockedBy: (otherLock(ctx, id) || {}).name || '', history: await listRevisions(id) });
+  }
+
+  if ((m = path.match(/^\/bai\/(\d{1,9})\/lich-su\/(\d{1,17})$/)) && method === 'GET') {
+    const r = await readRevision(+m[1], m[2]);
+    if (!r || !r.post) return fail(404, 'Không tìm thấy bản lưu này.');
+    return done(200, { revision: r });
+  }
+
+  // save: create (POST /bai) or change (POST /bai/<id>), with one action from news-workflow.mjs
+  if (method === 'POST' && (path === '/bai' || (m = path.match(/^\/bai\/(\d{1,9})$/)))) {
+    const id = m ? +m[1] : null;
+    const r = await change(async ({ posts, save, nextId }) => {
+      const cur = id ? posts.find((p) => p.id === id) : null;
+      if (id && !cur) return { status: 404, error: 'Không tìm thấy bài (có thể đã bị xoá).' };
+      if (cur && body.baseUpdatedAt !== cur.updatedAt) {
+        return { status: 409, error: `Bài đã được ${cur.updatedBy || 'người khác'} sửa lúc ${String(cur.updatedAt).slice(11, 16)} ngày ${String(cur.updatedAt).slice(8, 10)}/${String(cur.updatedAt).slice(5, 7)}. Tải lại để xem bản mới rồi sửa tiếp.` };
+      }
+      const now = Date.now();
+      const dctx = { posts, now, nowText: stampAfter(cur && cur.updatedAt), nowPublish: siteNowSeconds(now), newId: cur ? cur.id : await nextId(posts) };
+      const d = decide(user, cur, body, dctx);
+      if (d.error) return d;
+      // unpin the others first: if that fails, nothing of this save is stored and a retry starts clean
+      for (const otherId of d.unpin) {
+        const o = posts.find((p) => p.id === otherId);
+        if (o) await save({ ...o, pinned: false, updatedBy: user.name, updatedAt: stampAfter(o.updatedAt) }, { action: 'bo-ghim', actor: user.name });
+      }
+      await save(d.post, { action: body.action, actor: user.name });
+      return { post: d.post };
+    });
+    if (r.error) return fail(r.status, r.error);
+    locks.set(lockKey(ctx, r.post.id), { username: user.username, name: user.name, until: Date.now() + LOCK_MS });
+    console.log(`[news] ${siteNow()} ${user.username} ${body.action} article ${r.post.id} → ${r.post.status}`);
+    return done(200, { post: { ...r.post, visible: isVisible(r.post) }, history: await listRevisions(r.post.id) });
+  }
+
+  // "I am editing this": refreshed every 30 s by the open editor; answers who else holds it
+  if ((m = path.match(/^\/bai\/(\d{1,9})\/khoa$/)) && method === 'POST') {
+    const id = +m[1];
+    if (!(await allPosts()).some((p) => p.id === id)) return fail(404, 'Không tìm thấy bài (có thể đã bị xoá).');
+    const other = otherLock(ctx, id);
+    if (body.release === true) {
+      if (!other) locks.delete(lockKey(ctx, id));
+    } else if (!other) {
+      locks.set(lockKey(ctx, id), { username: user.username, name: user.name, until: Date.now() + LOCK_MS });
+    }
+    return done(200, { lockedBy: other ? other.name : '' });
+  }
+
+  if ((m = path.match(/^\/bai\/(\d{1,9})\/xoa$/)) && method === 'POST') {
+    if (!mayDelete(user)) return fail(403, 'Chỉ Quản lý mới xoá bài.');
+    const id = +m[1];
+    const r = await change(async ({ posts, remove }) => {
+      const cur = posts.find((p) => p.id === id);
+      if (!cur) return { status: 404, error: 'Không tìm thấy bài (có thể đã bị xoá).' };
+      if (body.baseUpdatedAt !== cur.updatedAt) return { status: 409, error: 'Bài vừa được sửa. Tải lại trước khi xoá.' };
+      await remove(cur, user.name);
+      return { ok: true };
+    });
+    if (r.error) return fail(r.status, r.error);
+    locks.delete(lockKey(ctx, id));
+    console.log(`[news] ${siteNow()} ${user.username} deleted article ${id} (moved to trash)`);
+    return done(200, { ok: true });
+  }
+
+  return false;
+}

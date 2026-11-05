@@ -4,9 +4,10 @@
 // The milestones the page shows live in cai-dat.json next to it (written whole, atomically).
 import { appendFile, mkdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { moduleDir } from '../admin/paths.mjs';
 import { readJson, writeJsonAtomic, writeTextAtomic, siteNowSeconds } from '../news/news-files.mjs';
 
-export const DATA_DIR = process.env.SIGNUP_DATA_DIR || join(process.cwd(), 'data', 'dang-ky-som');
+export const DATA_DIR = moduleDir('3qdc', 'dang-ky-som');
 const listFile = () => join(DATA_DIR, 'dang-ky.jsonl');
 const settingsFile = () => join(DATA_DIR, 'cai-dat.json');
 

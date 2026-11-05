@@ -48,6 +48,7 @@ import { handlePhieu } from './scripts/lib/phieu/phieu-routes.mjs';
 // /mcp: the gift-ticket tools for a "Duyệt phiếu" person's own Claude (bearer code, see scripts/lib/phieu/phieu-mcp.mjs)
 import { handleMcp } from './scripts/lib/phieu/phieu-mcp.mjs';
 import { SITE_ORIGIN } from './scripts/lib/news/news-config.mjs';
+import { checkGames } from './scripts/lib/admin/modules.mjs';
 // Vietnamese title / description / share tags for the mirrored build-B entry page
 import { viHead } from './scripts/lib/site-head.mjs';
 // the route wrapper of the umi bundle, sent without its phone / tablet redirect to unmirrored /m/ pages
@@ -252,6 +253,7 @@ async function findApiSnapshot(pathname, rawPathname, search, body) {
 }
 
 export function startServer(port = 8080) {
+  checkGames(); // a wrong book of games stops the server here, before it listens
   const server = createHttp(async (req, res) => {
     try {
       const u = new URL(req.url, 'http://x');

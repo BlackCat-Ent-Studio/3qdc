@@ -1,0 +1,80 @@
+// check-game-registry.mjs — the book of games: wrong books are refused, addresses reach the right game.
+// Offline part: node verify/quan-tri/check-game-registry.mjs
+// Online part (the draft server with the test accounts of make-test-accounts.mjs): add --port 13399
+import assert from 'node:assert/strict';
+import { checkGames, gamesFor, MODULES } from '../../scripts/lib/admin/modules.mjs';
+import { GAMES, GAME_ID_RE } from '../../scripts/lib/admin/games.mjs';
+import { TEST_PASSWORD } from './make-test-accounts.mjs';
+import { SITES, siteOfHost, IMAGE_LIBRARY } from '../../scripts/lib/news/news-config.mjs';
+
+let n = 0;
+const ok = (name, fn) => { fn(); n++; console.log(`ok   ${name}`); };
+const throwsWith = (re, books) => assert.throws(() => checkGames(books, MODULES), re);
+const game = (over = {}) => ({ id: 'game-a', name: 'A', logo: '', sites: [], modules: {}, ...over });
+
+ok('the real book passes', () => checkGames());
+ok('ids: letters first or mixed, never digits only', () => {
+  for (const id of ['3qdc', 'skystory', 'game-2', 'ab']) assert.ok(GAME_ID_RE.test(id), id);
+  for (const id of ['2026', 'a', 'Abc', '-ab', 'a_b', 'x'.repeat(25), '']) assert.ok(!GAME_ID_RE.test(id), id);
+});
+ok('duplicate game id', () => throwsWith(/duplicate game id "game-a"/, [game(), game()]));
+ok('bad game id', () => throwsWith(/invalid game id/, [game({ id: '2026' })]));
+ok('unknown module', () => throwsWith(/unknown module "bay-gio"/, [game({ modules: { 'bay-gio': {} } })]));
+ok('same host in two games', () => throwsWith(/host "a.example.com" is used by both "game-a" and "game-b"/, [
+  game({ sites: [{ id: 's', hosts: ['a.example.com'] }] }),
+  game({ id: 'game-b', sites: [{ id: 's', hosts: ['a.example.com'] }] }),
+]));
+ok('site of a module the game has not switched on', () => throwsWith(/has not switched on/, [game({ sites: [{ id: 's', module: 'tin-tuc' }] })]));
+ok('duplicate site id', () => throwsWith(/duplicate site id/, [game({ sites: [{ id: 's' }, { id: 's' }] })]));
+ok('bad host', () => throwsWith(/bad host/, [game({ sites: [{ id: 's', hosts: ['Not A Host'] }] })]));
+
+ok('3qdc: news sites and hosts as before', () => {
+  assert.deepEqual(SITES.map((s) => s.id), ['chinh', 'phu']);
+  assert.equal(siteOfHost('3qdaichien.wanmeivn.com'), 'phu');
+  assert.equal(siteOfHost('3qdaichien.wanmeivn.com:443'), 'phu');
+  assert.equal(siteOfHost('3qdc.wanmeivn.com'), 'chinh');
+  assert.equal(siteOfHost('127.0.0.1:13399'), 'chinh');
+  assert.equal(IMAGE_LIBRARY.length, 7);
+});
+ok('3qdc lists the pages without an admin part; skystory has nothing on', () => {
+  const g = GAMES.find((x) => x.id === '3qdc');
+  const plain = g.sites.filter((s) => !s.module).map((s) => s.path);
+  assert.deepEqual(plain, ['/wiki/', '/hoi-dap/', '/duyet/', '/privacy']);
+  const sky = GAMES.find((x) => x.id === 'skystory');
+  assert.equal(sky.name, 'Thiên Không Kỳ Truyện');
+  assert.deepEqual(Object.keys(sky.modules), []);
+});
+ok('menus by account role', () => {
+  const tabs = (role) => gamesFor({ role }).map((g) => [g.id, g.menu.map((m) => m[0]).join(',')]);
+  assert.deepEqual(new Set(tabs('manager')[0][1].split(',')), new Set(['posts', 'trash', 'phieu', 'signup', 'music']));
+  assert.deepEqual(tabs('editor'), [['3qdc', 'posts']]);
+  assert.deepEqual(tabs('phieu'), [['3qdc', 'phieu']]);
+  assert.deepEqual(tabs('pending'), []);
+});
+
+// ---- online part ----
+const portAt = process.argv.indexOf('--port');
+if (portAt > 0) {
+  const port = process.argv[portAt + 1];
+  const base = `http://127.0.0.1:${port}`;
+  const origin = base;
+  const pass = TEST_PASSWORD;
+  const user = process.env.TEST_USER || 'thu-quanly';
+  {
+    const login = await fetch(`${base}/quan-tri/api/dang-nhap`, { method: 'POST', headers: { 'Content-Type': 'application/json', Origin: origin }, body: JSON.stringify({ username: user, password: pass }) });
+    assert.equal(login.status, 200, 'test account sign-in');
+    const cookie = login.headers.getSetCookie().map((c) => c.split(';')[0]).join('; ');
+    const get = async (p) => { const r = await fetch(`${base}/quan-tri/api${p}`, { headers: { Cookie: cookie } }); return { status: r.status, text: await r.text() }; };
+    const old = await get('/bai');
+    const viaGame = await get('/g/3qdc/bai');
+    assert.equal(old.status, 200);
+    assert.deepEqual(viaGame, old); n++; console.log('ok   GET /g/3qdc/bai = GET /bai');
+    for (const [p, want] of [['/g/skystory/bai', 404], ['/g/khong-co/bai', 404], ['/g/2026/bai', 404], ['/g/3qdc/khong-co', 404], ['/g/3qdc/toi', 404]]) {
+      const r = await get(p);
+      assert.equal(r.status, want, p); n++; console.log(`ok   GET ${p} -> ${want}`);
+    }
+    const me = JSON.parse((await get('/toi')).text);
+    assert.deepEqual(me.games.map((g) => g.id), ['3qdc']); n++; console.log('ok   /toi lists game 3qdc only');
+  }
+}
+console.log(`${n} checks passed`);

@@ -1,9 +1,9 @@
 // phieu-config.mjs — settings for "Phiếu Bé Ngoan", the page where players ask for gifts (phieubengoan.3qdc.wanmeivn.com).
 // The page is served by this same server: Caddy passes that host name here and the routes pick it by the Host header.
-import { join } from 'node:path';
+import { moduleDir } from '../admin/paths.mjs';
 
 // Tickets live outside git (data/phieu-be-ngoan/phieu.json); the draft server points this at a test folder.
-export const DATA_DIR = process.env.PHIEU_DATA_DIR || join(process.cwd(), 'data', 'phieu-be-ngoan');
+export const DATA_DIR = moduleDir('3qdc', 'phieu-be-ngoan');
 
 // Host names that show the ticket page. The draft server adds its own address (127.0.0.1:13398) through the env list.
 const extra = String(process.env.PHIEU_EXTRA_HOSTS || '').split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);

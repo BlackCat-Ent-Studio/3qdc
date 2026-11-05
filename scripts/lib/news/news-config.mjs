@@ -1,11 +1,15 @@
 // news-config.mjs — shared settings for the news pages (/tin-tuc) and, later, the editor pages.
-import { join } from 'node:path';
+import { gameById } from '../admin/games.mjs';
+import { moduleDir } from '../admin/paths.mjs';
 
 // Absolute site address used in share tags (og:url, og:image); the draft server on port 3398 overrides it.
 export const SITE_ORIGIN = (process.env.NEWS_SITE_ORIGIN || 'https://3qdc.wanmeivn.com').replace(/\/+$/, '');
 
 // Articles live outside git (data/news/posts/<id>.json); the draft server points this at a test folder.
-export const DATA_DIR = process.env.NEWS_DATA_DIR || join(process.cwd(), 'data', 'news');
+export const DATA_DIR = moduleDir('3qdc', 'tin-tuc');
+
+// The news of this server are the news of the game 3qdc (the book of games: scripts/lib/admin/games.mjs).
+const GAME = gameById('3qdc');
 
 // The three tabs, in display order; the first one is the default.
 export const CATS = [
@@ -30,11 +34,8 @@ export const isCat = (id) => CATS.some((c) => c.id === id);
 // own Host). Every article belongs to exactly one; articles saved before this existed belong to the main site.
 // SPLIT_SITES = false removes the choice from the editor and shows every article on both addresses again.
 export const SPLIT_SITES = true;
-export const SITES = [
-  { id: 'chinh', name: 'Trang chính', hint: '3qdc.wanmeivn.com — trang chủ, /tin-tuc' },
-  { id: 'phu', name: 'Trang phụ', hint: '3qdaichien.wanmeivn.com' },
-];
-const SIDE_HOSTS = ['3qdaichien.wanmeivn.com'];
+export const SITES = GAME.sites.filter((x) => x.module === 'tin-tuc').map(({ id, name, hint }) => ({ id, name, hint }));
+const SIDE_HOSTS = GAME.sites.filter((x) => x.id === 'phu').flatMap((x) => x.hosts);
 export const isSite = (id) => SITES.some((s) => s.id === id);
 export const siteName = (id) => (SITES.find((s) => s.id === id) || SITES[0]).name;
 // the site an article shows on
@@ -54,15 +55,7 @@ export const ALLOWED_ORIGINS = (process.env.NEWS_ALLOWED_ORIGINS || SITE_ORIGIN)
 export const SECURE_COOKIE = process.env.NEWS_INSECURE_COOKIE !== '1';
 
 // Artwork the editor offers for covers and pictures inside an article.
-export const IMAGE_LIBRARY = [
-  '/3qdc-vi/home/anh-nen-slogan-vi.webp',
-  '/3qdc-vi/home/tin-tuc-banner-1-vi.webp',
-  '/3qdc-vi/home/tinh-nang-1-vi.webp',
-  '/3qdc-vi/home/tinh-nang-2-vi.png',
-  '/3qdc-vi/home/tinh-nang-3-vi.webp',
-  '/3qdc-vi/home/tinh-nang-4-vi.png',
-  '/3qdc-vi/home/tinh-nang-5-vi.png',
-];
+export const IMAGE_LIBRARY = GAME.modules['tin-tuc'].imageLibrary;
 // Pictures an article may show: the site's own artwork folders only (uploads arrive under /tin-tuc-anh/ later).
 // Every path part starts with a letter, digit, _ or -, so "..", "." and empty parts ("//") cannot appear.
 export const IMAGE_PATH_RE = /^\/(?:3qdc-vi|tin-tuc-anh)(?:\/[A-Za-z0-9_-][A-Za-z0-9._-]*)+$/;
