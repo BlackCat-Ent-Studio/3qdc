@@ -1,0 +1,15 @@
+{
+ "record": {
+  "liveRealCodes": 1,
+  "liveRealCodeRoles": [
+   "phieu"
+  ],
+  "allHaveSha256": true,
+  "accountsActiveForCodes": true,
+  "userRoles": [
+   "manager",
+   "phieu"
+  ],
+  "openInvites": 0
+ }
+}

@@ -1,0 +1,365 @@
+{
+ "home": {
+  "status": 200,
+  "ct": "text/html; charset=utf-8",
+  "cache": "no-cache",
+  "len": 288563,
+  "sha": "f2e1ac532bfdb5ac1574eb72323278586f06912e7e6e63ab5fa1d18235b63318"
+ },
+ "news-list": {
+  "status": 200,
+  "ct": "text/html; charset=utf-8",
+  "cache": "no-cache",
+  "len": 94755,
+  "sha": "5d1f5f3061a16c6d129b5ce7fa815787388da8f2237982bb1a5e18e7a10f9a44"
+ },
+ "news-list-thong-bao": {
+  "status": 200,
+  "ct": "text/html; charset=utf-8",
+  "cache": "no-cache",
+  "len": 94755,
+  "sha": "5d1f5f3061a16c6d129b5ce7fa815787388da8f2237982bb1a5e18e7a10f9a44"
+ },
+ "news-list-su-kien": {
+  "status": 200,
+  "ct": "text/html; charset=utf-8",
+  "cache": "no-cache",
+  "len": 94753,
+  "sha": "4dfd01bcf09ee9f6c384e8292b4efc5b8caa728d7a07f8c5d1b7f5656f8714c5"
+ },
+ "news-list-cam-nang": {
+  "status": 200,
+  "ct": "text/html; charset=utf-8",
+  "cache": "no-cache",
+  "len": 94754,
+  "sha": "9fe0ca7af467eb26e8a0931359600e408c3aee04454f2e7e66008e07d578a774"
+ },
+ "news-404": {
+  "status": 404,
+  "ct": "text/html; charset=utf-8",
+  "cache": "no-cache",
+  "len": 85804,
+  "sha": "8c6f996587f75f47241ab36edd4db13da2cab25033dfcb7cb54842c2f350fe73"
+ },
+ "news-bad-slug": {
+  "status": 404,
+  "ct": "text/html; charset=utf-8",
+  "cache": "no-cache",
+  "len": 85804,
+  "sha": "8c6f996587f75f47241ab36edd4db13da2cab25033dfcb7cb54842c2f350fe73"
+ },
+ "api-news-all": {
+  "status": 200,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "len": 2769,
+  "sha": "c2ec4220357e4493b1ba1a6801cc1bfd8bd2aacc1787698ef0b61c4eb6184eff",
+  "shape": "[7]{category,cover,pinned,publishAt,slug,summary,title}"
+ },
+ "api-news-thong-bao": {
+  "status": 200,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "len": 202,
+  "sha": "210dc34909cefa2382603e024f19fce23b8bf4557b3cfdde99d009175dae7127",
+  "shape": "[1]{category,cover,pinned,publishAt,slug,summary,title}"
+ },
+ "api-news-su-kien": {
+  "status": 200,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "len": 2,
+  "sha": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "shape": "[0]"
+ },
+ "api-news-cam-nang": {
+  "status": 200,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "len": 2568,
+  "sha": "10466311fa41b5e841ac9581b9e92dfb97f173a194aeffe06a787f8b481ad4c5",
+  "shape": "[6]{category,cover,pinned,publishAt,slug,summary,title}"
+ },
+ "api-news-default": {
+  "status": 200,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "len": 1696,
+  "sha": "275e767bc501ee42e078303844720f58c2f61cfd358cacedae15cdf3181a9237",
+  "shape": "[4]{category,cover,pinned,publishAt,slug,summary,title}"
+ },
+ "article-cac-loai-chieu-mo": {
+  "status": 200,
+  "ct": "text/html; charset=utf-8",
+  "cache": "no-cache",
+  "len": 93437,
+  "sha": "bc5bc5294ab43ead9fa0d5128129b2d0fbc539e70bd7fc65e3fec11abf26971f"
+ },
+ "article-dien-anh-hung-tim-vo-tuong": {
+  "status": 200,
+  "ct": "text/html; charset=utf-8",
+  "cache": "no-cache",
+  "len": 92997,
+  "sha": "217be3bbcae8dd6e243a89a12408b2648cb185653c3b887f55a5c3b59ba6e2b7"
+ },
+ "article-doi-hinh-va-so-vi-tri": {
+  "status": 200,
+  "ct": "text/html; charset=utf-8",
+  "cache": "no-cache",
+  "len": 93063,
+  "sha": "9ad7b3468a4687441c8dfe02a9fcee6db3df43d37173206cc70d17f2874c60b1"
+ },
+ "article-link-tai-game": {
+  "status": 200,
+  "ct": "text/html; charset=utf-8",
+  "cache": "no-cache",
+  "len": 89088,
+  "sha": "1b3df7da9a681cd3e0aece46ec1077caee51483dd3d8654049f20f82cf6b0b2e"
+ },
+ "article-phe-va-nghe-vo-tuong": {
+  "status": 200,
+  "ct": "text/html; charset=utf-8",
+  "cache": "no-cache",
+  "len": 93507,
+  "sha": "6b8426e6f293590ea2b0117b3d046393b7b62be0ccd0d899b3f6910581302b10"
+ },
+ "article-tong-quan-boi-duong-vo-tuong": {
+  "status": 200,
+  "ct": "text/html; charset=utf-8",
+  "cache": "no-cache",
+  "len": 93132,
+  "sha": "b29973564528e73a4aebc4971f826f96ab23ed875407a097ae1df368fce776d0"
+ },
+ "article-tuong-khac-nghe-vo-tuong": {
+  "status": 200,
+  "ct": "text/html; charset=utf-8",
+  "cache": "no-cache",
+  "len": 94938,
+  "sha": "627ceb3d24820383f3cf4867f9006cc18f2f7725e0c4f8348983bcab5b125a1a"
+ },
+ "article-hidden-boi-duong-1-thuoc-tinh-cap-exp": {
+  "status": 404,
+  "ct": "text/html; charset=utf-8",
+  "cache": "no-cache",
+  "len": 85804,
+  "sha": "8c6f996587f75f47241ab36edd4db13da2cab25033dfcb7cb54842c2f350fe73"
+ },
+ "article-hidden-boi-duong-10-tai-sinh-phan-giai": {
+  "status": 404,
+  "ct": "text/html; charset=utf-8",
+  "cache": "no-cache",
+  "len": 85804,
+  "sha": "8c6f996587f75f47241ab36edd4db13da2cab25033dfcb7cb54842c2f350fe73"
+ },
+ "article-hidden-boi-duong-2-ren-luyen": {
+  "status": 404,
+  "ct": "text/html; charset=utf-8",
+  "cache": "no-cache",
+  "len": 85804,
+  "sha": "8c6f996587f75f47241ab36edd4db13da2cab25033dfcb7cb54842c2f350fe73"
+ },
+ "article-hidden-boi-duong-3-dot-pha": {
+  "status": 404,
+  "ct": "text/html; charset=utf-8",
+  "cache": "no-cache",
+  "len": 85804,
+  "sha": "8c6f996587f75f47241ab36edd4db13da2cab25033dfcb7cb54842c2f350fe73"
+ },
+ "article-hidden-boi-duong-4-sao": {
+  "status": 404,
+  "ct": "text/html; charset=utf-8",
+  "cache": "no-cache",
+  "len": 85804,
+  "sha": "8c6f996587f75f47241ab36edd4db13da2cab25033dfcb7cb54842c2f350fe73"
+ },
+ "article-hidden-boi-duong-5-ky-nang": {
+  "status": 404,
+  "ct": "text/html; charset=utf-8",
+  "cache": "no-cache",
+  "len": 85804,
+  "sha": "8c6f996587f75f47241ab36edd4db13da2cab25033dfcb7cb54842c2f350fe73"
+ },
+ "article-hidden-boi-duong-6-trang-bi": {
+  "status": 404,
+  "ct": "text/html; charset=utf-8",
+  "cache": "no-cache",
+  "len": 85804,
+  "sha": "8c6f996587f75f47241ab36edd4db13da2cab25033dfcb7cb54842c2f350fe73"
+ },
+ "article-hidden-boi-duong-7-than-thiet": {
+  "status": 404,
+  "ct": "text/html; charset=utf-8",
+  "cache": "no-cache",
+  "len": 85804,
+  "sha": "8c6f996587f75f47241ab36edd4db13da2cab25033dfcb7cb54842c2f350fe73"
+ },
+ "article-hidden-boi-duong-8-van-huy-huyen-vu": {
+  "status": 404,
+  "ct": "text/html; charset=utf-8",
+  "cache": "no-cache",
+  "len": 85804,
+  "sha": "8c6f996587f75f47241ab36edd4db13da2cab25033dfcb7cb54842c2f350fe73"
+ },
+ "article-hidden-boi-duong-9-menh-cach": {
+  "status": 404,
+  "ct": "text/html; charset=utf-8",
+  "cache": "no-cache",
+  "len": 85804,
+  "sha": "8c6f996587f75f47241ab36edd4db13da2cab25033dfcb7cb54842c2f350fe73"
+ },
+ "image-/3qdc-vi/home/anh-nen-slogan-vi.webp": {
+  "status": 200,
+  "ct": "image/webp",
+  "cache": "no-cache",
+  "len": 302598,
+  "sha": "2e7443a3051391d21d6e4bc78321313c208bbca9c5d90dc91739a81270ad1a8e"
+ },
+ "image-/3qdc-vi/home/favicon-3qdc.png": {
+  "status": 200,
+  "ct": "image/png",
+  "cache": "no-cache",
+  "len": 8031,
+  "sha": "cae18f5b8e0760b2c12b6eee054fb3c2b35d6f735f9827869958a4477fba6849"
+ },
+ "image-/3qdc-vi/home/logo-3qdc.webp": {
+  "status": 200,
+  "ct": "image/webp",
+  "cache": "no-cache",
+  "len": 15186,
+  "sha": "3f3cc2583da2b98c23c351dc67fd6022d73388c55be34a17c74e4a581c7525d5"
+ },
+ "image-/3qdc-vi/home/menu-01-trang-chu-hover.png": {
+  "status": 200,
+  "ct": "image/png",
+  "cache": "no-cache",
+  "len": 12305,
+  "sha": "66c5a8681b176e9e489d9e827debc8beb8c142d3c58e460c9881ef0899c494fb"
+ },
+ "image-/3qdc-vi/home/menu-01-trang-chu.png": {
+  "status": 200,
+  "ct": "image/png",
+  "cache": "no-cache",
+  "len": 7069,
+  "sha": "7085919b915f331cf1ef79dbca73829231b367ed164a40331ddc08d9c45de5df"
+ },
+ "image-/3qdc-vi/home/menu-02-tin-tuc-hover.png": {
+  "status": 200,
+  "ct": "image/png",
+  "cache": "no-cache",
+  "len": 10638,
+  "sha": "578122a2f898e033b4b5d8cc2cb29df81ed6f7aed61aec8ba6fd3a259e55af1e"
+ },
+ "image-/3qdc-vi/home/menu-02-tin-tuc.png": {
+  "status": 200,
+  "ct": "image/png",
+  "cache": "no-cache",
+  "len": 6209,
+  "sha": "99e992c651188f8be2de3d91c828cc9f5a90b30e4eda9155706abd3096a48fd2"
+ },
+ "image-/3qdc-vi/home/tinh-nang-4-vi.png": {
+  "status": 200,
+  "ct": "image/png",
+  "cache": "no-cache",
+  "len": 1447154,
+  "sha": "f68ad19fea99f35db618b9712f680b5f1f3582c890ae195a27c8e219b7944722"
+ },
+ "image-/tin-tuc-anh/2026/09/063378bbb036669b.webp": {
+  "status": 200,
+  "ct": "image/webp",
+  "cache": "public, max-age=31536000, immutable",
+  "csp": "default-src 'none'; sandbox",
+  "len": 128364,
+  "sha": "7da62f9f7aa841f4e75ea36aed034ab770a87afec66ea897066ad492d6066535"
+ },
+ "image-/tin-tuc-anh/2026/09/3d1723c8764be606.webp": {
+  "status": 200,
+  "ct": "image/webp",
+  "cache": "public, max-age=31536000, immutable",
+  "csp": "default-src 'none'; sandbox",
+  "len": 257764,
+  "sha": "fdf98977a844ab6802539b744b42f93e59a017034abec287e653b06611e30e0e"
+ },
+ "image-/tin-tuc-anh/2026/09/b7894bde2c510950.webp": {
+  "status": 200,
+  "ct": "image/webp",
+  "cache": "public, max-age=31536000, immutable",
+  "csp": "default-src 'none'; sandbox",
+  "len": 46994,
+  "sha": "f7977716b0382e1d1b31aa714cd861df52448d2845653004ab650f1c2e51313d"
+ },
+ "image-/tin-tuc-anh/2026/09/c706ce389fa42266.webp": {
+  "status": 200,
+  "ct": "image/webp",
+  "cache": "public, max-age=31536000, immutable",
+  "csp": "default-src 'none'; sandbox",
+  "len": 200828,
+  "sha": "fa41533139f322301a7d73a9b384495c9804350f25434d314665a2bf2b029062"
+ },
+ "image-/tin-tuc-anh/2026/09/cece8d12c2d62596.webp": {
+  "status": 200,
+  "ct": "image/webp",
+  "cache": "public, max-age=31536000, immutable",
+  "csp": "default-src 'none'; sandbox",
+  "len": 64722,
+  "sha": "28c60c16375086dc7991c3a61b1683232f3bdc9f6f9367ec208876e5083258aa"
+ },
+ "image-/tin-tuc-anh/2026/09/f43d446fea000082.webp": {
+  "status": 200,
+  "ct": "image/webp",
+  "cache": "public, max-age=31536000, immutable",
+  "csp": "default-src 'none'; sandbox",
+  "len": 188324,
+  "sha": "6deb7935f3d437dc250fbc2460a6ce71bc734b31373e50e7fe54c640331cfb44"
+ },
+ "signup-page": {
+  "status": 200,
+  "ct": "text/html; charset=utf-8",
+  "cache": "no-cache",
+  "len": 110853,
+  "sha": "742a30165e8bae1d51b18ef79c73c3127c3acb4be8563626985e7bda18163c30"
+ },
+ "signup-api": {
+  "status": 200,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "len": 47,
+  "sha": "25f9ae5dca29716b7f3e144937fb581e17a66de041570ce2aaafdf55579fd7d3",
+  "shape": "{count,milestones:[4]}"
+ },
+ "privacy": {
+  "status": 200,
+  "ct": "text/html; charset=utf-8",
+  "cache": "no-cache",
+  "len": 9802,
+  "sha": "32def7dcd3745304d24ad54f0d03cb9467d68bf1f396374dfbbad3a198577c81"
+ },
+ "music-list": {
+  "status": 200,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "len": 705,
+  "sha": "ca819c6434955824191fad4dfbf803a4c742b8b2d76cc929f84fa93e72da5804",
+  "shape": "[4]{artist,cover,file,title}"
+ },
+ "logo": {
+  "status": 200,
+  "ct": "image/webp",
+  "cache": "no-cache",
+  "len": 15186,
+  "sha": "3f3cc2583da2b98c23c351dc67fd6022d73388c55be34a17c74e4a581c7525d5"
+ },
+ "main-redirect-home": {
+  "status": 302,
+  "cache": "no-store",
+  "location": "/",
+  "len": 0,
+  "sha": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+ },
+ "article-side-on-main": {
+  "status": 404,
+  "ct": "text/html; charset=utf-8",
+  "cache": "no-cache",
+  "len": 85804,
+  "sha": "8c6f996587f75f47241ab36edd4db13da2cab25033dfcb7cb54842c2f350fe73"
+ }
+}

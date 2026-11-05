@@ -1,0 +1,121 @@
+{
+ "no-code": {
+  "status": 401,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "www": "Bearer realm=\"3qdc-phieu\"",
+  "len": 138,
+  "sha": "990934d09d1c2098cf86abef86856183a92d1efeba62b49a09d0baab9025efdf",
+  "shape": "{error:{code,message},id,jsonrpc}"
+ },
+ "wrong-code": {
+  "status": 401,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "www": "Bearer realm=\"3qdc-phieu\"",
+  "len": 138,
+  "sha": "990934d09d1c2098cf86abef86856183a92d1efeba62b49a09d0baab9025efdf",
+  "shape": "{error:{code,message},id,jsonrpc}"
+ },
+ "initialize": {
+  "status": 200,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "len": 749,
+  "sha": "98e1cf5b0003ba0fa0d771b9b9b47dc808d2445891f349ec648c3feb2267724a",
+  "shape": "{id,jsonrpc,result:{capabilities,instructions,protocolVersion,serverInfo}}",
+  "server": "3qdc-phieu-be-ngoan"
+ },
+ "tools-list": {
+  "status": 200,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "len": 2296,
+  "sha": "12c6298fc5cd25cde11073df9dccc814a8f2b494ba58768179a278b14c866439",
+  "shape": "{id,jsonrpc,result:{tools}}",
+  "tools": [
+   "xem_phieu",
+   "tra_qua",
+   "tu_choi"
+  ]
+ },
+ "ping": {
+  "status": 200,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "len": 36,
+  "sha": "7c45e174f6287e97e70fc2a6144376a4f259d4b588b569dd0327fdcf43bad483",
+  "shape": "{id,jsonrpc,result:{}}"
+ },
+ "xem-phieu": {
+  "status": 200,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "len": 75509,
+  "sha": "c18bd6673e1ef5a95df88cbc0da7f5ba9783792cd0c75e080a891c64482f0293",
+  "shape": "{id,jsonrpc,result:{content,structuredContent}}",
+  "hasEmail": false
+ },
+ "xem-phieu-cho": {
+  "status": 200,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "len": 4405,
+  "sha": "a05a31ce4e74ff44d74826bb0d7e7481d5ef442172b2737c91b7b1027aa46fb8",
+  "shape": "{id,jsonrpc,result:{content,structuredContent}}",
+  "hasEmail": false
+ },
+ "tra-qua-bad-id": {
+  "status": 200,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "len": 150,
+  "sha": "2555d24d7cc70aa548537929dc4fd93e52c96083602fdd99d793705504a0bfc4",
+  "shape": "{id,jsonrpc,result:{content,isError}}",
+  "isError": true
+ },
+ "tu-choi-no-reason": {
+  "status": 200,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "len": 147,
+  "sha": "4ce36695ed35e27808a3b2b68560de9bf853ab75dcd8496d6fe03b3cc85b2e00",
+  "shape": "{id,jsonrpc,result:{content,isError}}",
+  "isError": true
+ },
+ "unknown-tool": {
+  "status": 200,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "len": 119,
+  "sha": "ef338966296641e7be02e632d02332eddaa89d65f4f65b282969e956a8e02163",
+  "shape": "{id,jsonrpc,result:{content,isError}}",
+  "isError": true
+ },
+ "unknown-method": {
+  "status": 200,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "len": 97,
+  "sha": "bcff13b49188ab08b710892b560101c792f2a572764b22405c6f716b3cecfcef",
+  "shape": "{error:{code,message},id,jsonrpc}"
+ },
+ "get-not-allowed": {
+  "status": 405,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "allow": "POST",
+  "len": 82,
+  "sha": "5bd12613f6a121143a48ebb6e62cda27e94d8b8b7d77e348a71a860218f9777d",
+  "shape": "{error:{code,message},id,jsonrpc}"
+ },
+ "get-no-code": {
+  "status": 405,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "allow": "POST",
+  "len": 82,
+  "sha": "5bd12613f6a121143a48ebb6e62cda27e94d8b8b7d77e348a71a860218f9777d",
+  "shape": "{error:{code,message},id,jsonrpc}"
+ }
+}

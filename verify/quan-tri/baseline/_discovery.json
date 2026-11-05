@@ -1,0 +1,47 @@
+{
+  "visibleSlugs": [
+    "cac-loai-chieu-mo",
+    "dien-anh-hung-tim-vo-tuong",
+    "doi-hinh-va-so-vi-tri",
+    "link-tai-game",
+    "phe-va-nghe-vo-tuong",
+    "tong-quan-boi-duong-vo-tuong",
+    "tuong-khac-nghe-vo-tuong"
+  ],
+  "hiddenSlugs": [
+    "boi-duong-1-thuoc-tinh-cap-exp",
+    "boi-duong-10-tai-sinh-phan-giai",
+    "boi-duong-2-ren-luyen",
+    "boi-duong-3-dot-pha",
+    "boi-duong-4-sao",
+    "boi-duong-5-ky-nang",
+    "boi-duong-6-trang-bi",
+    "boi-duong-7-than-thiet",
+    "boi-duong-8-van-huy-huyen-vu",
+    "boi-duong-9-menh-cach"
+  ],
+  "images": [
+    "/3qdc-vi/home/anh-nen-slogan-vi.webp",
+    "/3qdc-vi/home/favicon-3qdc.png",
+    "/3qdc-vi/home/logo-3qdc.webp",
+    "/3qdc-vi/home/menu-01-trang-chu-hover.png",
+    "/3qdc-vi/home/menu-01-trang-chu.png",
+    "/3qdc-vi/home/menu-02-tin-tuc-hover.png",
+    "/3qdc-vi/home/menu-02-tin-tuc.png",
+    "/3qdc-vi/home/tinh-nang-4-vi.png",
+    "/tin-tuc-anh/2026/09/063378bbb036669b.webp",
+    "/tin-tuc-anh/2026/09/3d1723c8764be606.webp",
+    "/tin-tuc-anh/2026/09/b7894bde2c510950.webp",
+    "/tin-tuc-anh/2026/09/c706ce389fa42266.webp",
+    "/tin-tuc-anh/2026/09/cece8d12c2d62596.webp",
+    "/tin-tuc-anh/2026/09/f43d446fea000082.webp"
+  ],
+  "postId": 4,
+  "rev": "20260916210208013",
+  "counts": {
+    "articles": 18,
+    "visible": 7,
+    "hidden": 10,
+    "images": 14
+  }
+}

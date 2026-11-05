@@ -1,0 +1,39 @@
+{
+ "api-news": {
+  "status": 200,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "len": 387,
+  "sha": "b6ef455e55e7f7b75d1dc93878af413d862e8c8333c5e153ab27c53c62bb841e",
+  "shape": "[1]{category,cover,pinned,publishAt,slug,summary,title}"
+ },
+ "api-news-all": {
+  "status": 200,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "len": 387,
+  "sha": "b6ef455e55e7f7b75d1dc93878af413d862e8c8333c5e153ab27c53c62bb841e",
+  "shape": "[1]{category,cover,pinned,publishAt,slug,summary,title}"
+ },
+ "news-list": {
+  "status": 200,
+  "ct": "text/html; charset=utf-8",
+  "cache": "no-cache",
+  "len": 91707,
+  "sha": "aa784bb3554c580c5b8a88fc8eaa42642ee09446794b7b5f9b77055e51eaf969"
+ },
+ "article-side": {
+  "status": 200,
+  "ct": "text/html; charset=utf-8",
+  "cache": "no-cache",
+  "len": 93090,
+  "sha": "1ed9e764de2151a8d0cc2d4fbee7993d2e047f6e088bf253bfcd7f1aa18c808e"
+ },
+ "article-main-on-side": {
+  "status": 404,
+  "ct": "text/html; charset=utf-8",
+  "cache": "no-cache",
+  "len": 85804,
+  "sha": "8c6f996587f75f47241ab36edd4db13da2cab25033dfcb7cb54842c2f350fe73"
+ }
+}

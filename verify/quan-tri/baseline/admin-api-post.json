@@ -1,0 +1,741 @@
+{
+ "anon POST /bai/999999 {}": {
+  "status": 401,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 70,
+  "sha": "8eea01a744f21aa73259ca114f5645eb685ba7e80afc7df074c6bbc4d42e3e1f",
+  "shape": "{error}"
+ },
+ "anon POST /bai/999999/xoa {\"baseUpdatedAt\":\"x\"}": {
+  "status": 401,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 70,
+  "sha": "8eea01a744f21aa73259ca114f5645eb685ba7e80afc7df074c6bbc4d42e3e1f",
+  "shape": "{error}"
+ },
+ "anon POST /bai/999999/khoa {}": {
+  "status": 401,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 70,
+  "sha": "8eea01a744f21aa73259ca114f5645eb685ba7e80afc7df074c6bbc4d42e3e1f",
+  "shape": "{error}"
+ },
+ "anon POST /nhac/x/xoa {}": {
+  "status": 401,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 70,
+  "sha": "8eea01a744f21aa73259ca114f5645eb685ba7e80afc7df074c6bbc4d42e3e1f",
+  "shape": "{error}"
+ },
+ "anon POST /dang-ky-som/xoa {\"sdt\":\"\"}": {
+  "status": 401,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 70,
+  "sha": "8eea01a744f21aa73259ca114f5645eb685ba7e80afc7df074c6bbc4d42e3e1f",
+  "shape": "{error}"
+ },
+ "anon POST /dang-ky-som/moc {}": {
+  "status": 401,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 70,
+  "sha": "8eea01a744f21aa73259ca114f5645eb685ba7e80afc7df074c6bbc4d42e3e1f",
+  "shape": "{error}"
+ },
+ "anon POST /phieu-be-ngoan/zzzzzz9 {\"st\":\"tra\"}": {
+  "status": 401,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 70,
+  "sha": "8eea01a744f21aa73259ca114f5645eb685ba7e80afc7df074c6bbc4d42e3e1f",
+  "shape": "{error}"
+ },
+ "anon POST /phieu-be-ngoan/zzzzzz9 {\"st\":\"sai\"}": {
+  "status": 401,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 70,
+  "sha": "8eea01a744f21aa73259ca114f5645eb685ba7e80afc7df074c6bbc4d42e3e1f",
+  "shape": "{error}"
+ },
+ "anon POST /phieu-be-ngoan/zzzzzz9/xoa {}": {
+  "status": 401,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 70,
+  "sha": "8eea01a744f21aa73259ca114f5645eb685ba7e80afc7df074c6bbc4d42e3e1f",
+  "shape": "{error}"
+ },
+ "anon POST /loi-moi {}": {
+  "status": 401,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 70,
+  "sha": "8eea01a744f21aa73259ca114f5645eb685ba7e80afc7df074c6bbc4d42e3e1f",
+  "shape": "{error}"
+ },
+ "anon POST /loi-moi/ffffffffffff/huy {}": {
+  "status": 401,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 70,
+  "sha": "8eea01a744f21aa73259ca114f5645eb685ba7e80afc7df074c6bbc4d42e3e1f",
+  "shape": "{error}"
+ },
+ "anon POST /ma-claude {}": {
+  "status": 401,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 70,
+  "sha": "8eea01a744f21aa73259ca114f5645eb685ba7e80afc7df074c6bbc4d42e3e1f",
+  "shape": "{error}"
+ },
+ "anon POST /ma-claude/ffffffffffff/thu-hoi {}": {
+  "status": 401,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 70,
+  "sha": "8eea01a744f21aa73259ca114f5645eb685ba7e80afc7df074c6bbc4d42e3e1f",
+  "shape": "{error}"
+ },
+ "anon POST /nguoi-dung/khong-co {}": {
+  "status": 401,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 70,
+  "sha": "8eea01a744f21aa73259ca114f5645eb685ba7e80afc7df074c6bbc4d42e3e1f",
+  "shape": "{error}"
+ },
+ "anon POST /nguoi-dung/khong-co {\"action\":\"khoa\"}": {
+  "status": 401,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 70,
+  "sha": "8eea01a744f21aa73259ca114f5645eb685ba7e80afc7df074c6bbc4d42e3e1f",
+  "shape": "{error}"
+ },
+ "anon POST /thung-rac/khong-co.json/khoi-phuc {}": {
+  "status": 401,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 70,
+  "sha": "8eea01a744f21aa73259ca114f5645eb685ba7e80afc7df074c6bbc4d42e3e1f",
+  "shape": "{error}"
+ },
+ "anon POST /khong-co {}": {
+  "status": 401,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 70,
+  "sha": "8eea01a744f21aa73259ca114f5645eb685ba7e80afc7df074c6bbc4d42e3e1f",
+  "shape": "{error}"
+ },
+ "manager POST /bai/999999 {}": {
+  "status": 404,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 63,
+  "sha": "652798ec35d6a46a6437161257d841261f5231de2a957111cdebb4de9c2233a8",
+  "shape": "{error}"
+ },
+ "manager POST /bai/999999/xoa {\"baseUpdatedAt\":\"x\"}": {
+  "status": 404,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 63,
+  "sha": "652798ec35d6a46a6437161257d841261f5231de2a957111cdebb4de9c2233a8",
+  "shape": "{error}"
+ },
+ "manager POST /bai/999999/khoa {}": {
+  "status": 404,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 63,
+  "sha": "652798ec35d6a46a6437161257d841261f5231de2a957111cdebb4de9c2233a8",
+  "shape": "{error}"
+ },
+ "manager POST /nhac/x/xoa {}": {
+  "status": 400,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 40,
+  "sha": "eb4c9829f43b86027e538eefdb0fb7f89a4d89474eb147a107e0781149a0478d",
+  "shape": "{error}"
+ },
+ "manager POST /dang-ky-som/xoa {\"sdt\":\"\"}": {
+  "status": 400,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 51,
+  "sha": "f8b2a243df6e497da411ba3f195b1a386ae75c206fc95d8890d6fd3e01250b95",
+  "shape": "{error}"
+ },
+ "manager POST /dang-ky-som/moc {}": {
+  "status": 400,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 102,
+  "sha": "7d99a0dc14898c87b23a1169e4b949adcb47c2bb126beaf37ed578d4ae276b6d",
+  "shape": "{error}"
+ },
+ "manager POST /phieu-be-ngoan/zzzzzz9 {\"st\":\"tra\"}": {
+  "status": 404,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 44,
+  "sha": "722fc3d62ac386c05dd3f1a1d2b1768da1d22e91a8ff58558d3aff786bd459db",
+  "shape": "{error}"
+ },
+ "manager POST /phieu-be-ngoan/zzzzzz9 {\"st\":\"sai\"}": {
+  "status": 400,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 44,
+  "sha": "a1f11ecd9933a70750e162f49b5bfda1511863d202834a07bd2097e66a8875ac",
+  "shape": "{error}"
+ },
+ "manager POST /phieu-be-ngoan/zzzzzz9/xoa {}": {
+  "status": 404,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 72,
+  "sha": "ca4d9790e5e6095ef1c4931436d121f6d9b7d4538220805d597779790e4dbc71",
+  "shape": "{error}"
+ },
+ "manager POST /loi-moi {}": {
+  "status": 400,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 54,
+  "sha": "987d4a810e3e79a002b1250f9a42d693d8089dfa6fa35567485687b8cc9f2df5",
+  "shape": "{error}"
+ },
+ "manager POST /loi-moi/ffffffffffff/huy {}": {
+  "status": 404,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 93,
+  "sha": "7d17274829bb898f1aef93d05e8da82915e2a3e307a6a47c5aa949d7241376f4",
+  "shape": "{error}"
+ },
+ "manager POST /ma-claude {}": {
+  "status": 404,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 44,
+  "sha": "12e9e3d691a2917509ae4967fe4743da9b79686ac8afdf32e8e6bb6d838160f4",
+  "shape": "{error}"
+ },
+ "manager POST /ma-claude/ffffffffffff/thu-hoi {}": {
+  "status": 404,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 67,
+  "sha": "c7801cdce49bc98aaa94ab8fd8ce823bfec54200c7385a0de5162129aa735a64",
+  "shape": "{error}"
+ },
+ "manager POST /nguoi-dung/khong-co {}": {
+  "status": 404,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 44,
+  "sha": "12e9e3d691a2917509ae4967fe4743da9b79686ac8afdf32e8e6bb6d838160f4",
+  "shape": "{error}"
+ },
+ "manager POST /nguoi-dung/khong-co {\"action\":\"khoa\"}": {
+  "status": 404,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 44,
+  "sha": "12e9e3d691a2917509ae4967fe4743da9b79686ac8afdf32e8e6bb6d838160f4",
+  "shape": "{error}"
+ },
+ "manager POST /thung-rac/khong-co.json/khoi-phuc {}": {
+  "status": 404,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 41,
+  "sha": "154e19f6772ecce49d5e97e9edcc7057dcbcea7a45879fcf922689683897b4fb",
+  "shape": "{error}"
+ },
+ "manager POST /khong-co {}": {
+  "status": 404,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 41,
+  "sha": "154e19f6772ecce49d5e97e9edcc7057dcbcea7a45879fcf922689683897b4fb",
+  "shape": "{error}"
+ },
+ "editor POST /bai/999999 {}": {
+  "status": 404,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 63,
+  "sha": "652798ec35d6a46a6437161257d841261f5231de2a957111cdebb4de9c2233a8",
+  "shape": "{error}"
+ },
+ "editor POST /bai/999999/xoa {\"baseUpdatedAt\":\"x\"}": {
+  "status": 403,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 45,
+  "sha": "abab781819b3e7f958c4eabd0b1c93e95e071231cd274a37a8fad47407d1520a",
+  "shape": "{error}"
+ },
+ "editor POST /bai/999999/khoa {}": {
+  "status": 404,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 63,
+  "sha": "652798ec35d6a46a6437161257d841261f5231de2a957111cdebb4de9c2233a8",
+  "shape": "{error}"
+ },
+ "editor POST /nhac/x/xoa {}": {
+  "status": 403,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 59,
+  "sha": "a2df9e520755f878ad290e87114af9c49fdbb9423158960c6439fdb2b06f918b",
+  "shape": "{error}"
+ },
+ "editor POST /dang-ky-som/xoa {\"sdt\":\"\"}": {
+  "status": 403,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 76,
+  "sha": "112db0dd2c4e1167160f82ee4c4befc04f3a631091e9b33ddc5353b00d00fb45",
+  "shape": "{error}"
+ },
+ "editor POST /dang-ky-som/moc {}": {
+  "status": 403,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 76,
+  "sha": "112db0dd2c4e1167160f82ee4c4befc04f3a631091e9b33ddc5353b00d00fb45",
+  "shape": "{error}"
+ },
+ "editor POST /phieu-be-ngoan/zzzzzz9 {\"st\":\"tra\"}": {
+  "status": 403,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 98,
+  "sha": "791693fb91525a6d6d3ddbb386b9ae945acc233b03815b72f9dd50b27736d977",
+  "shape": "{error}"
+ },
+ "editor POST /phieu-be-ngoan/zzzzzz9 {\"st\":\"sai\"}": {
+  "status": 403,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 98,
+  "sha": "791693fb91525a6d6d3ddbb386b9ae945acc233b03815b72f9dd50b27736d977",
+  "shape": "{error}"
+ },
+ "editor POST /phieu-be-ngoan/zzzzzz9/xoa {}": {
+  "status": 403,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 98,
+  "sha": "791693fb91525a6d6d3ddbb386b9ae945acc233b03815b72f9dd50b27736d977",
+  "shape": "{error}"
+ },
+ "editor POST /loi-moi {}": {
+  "status": 403,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 72,
+  "sha": "74ba8d18bb6fbcf7d7d4ceb40ce1cfb31adb36ca00dcdb5af2fb7addbaf8c3bc",
+  "shape": "{error}"
+ },
+ "editor POST /loi-moi/ffffffffffff/huy {}": {
+  "status": 403,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 72,
+  "sha": "74ba8d18bb6fbcf7d7d4ceb40ce1cfb31adb36ca00dcdb5af2fb7addbaf8c3bc",
+  "shape": "{error}"
+ },
+ "editor POST /ma-claude {}": {
+  "status": 403,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 72,
+  "sha": "74ba8d18bb6fbcf7d7d4ceb40ce1cfb31adb36ca00dcdb5af2fb7addbaf8c3bc",
+  "shape": "{error}"
+ },
+ "editor POST /ma-claude/ffffffffffff/thu-hoi {}": {
+  "status": 403,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 72,
+  "sha": "74ba8d18bb6fbcf7d7d4ceb40ce1cfb31adb36ca00dcdb5af2fb7addbaf8c3bc",
+  "shape": "{error}"
+ },
+ "editor POST /nguoi-dung/khong-co {}": {
+  "status": 403,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 61,
+  "sha": "de716619560040fd17d3550e971720477156dfebdc11bcca3bc84513fb062bb0",
+  "shape": "{error}"
+ },
+ "editor POST /nguoi-dung/khong-co {\"action\":\"khoa\"}": {
+  "status": 403,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 61,
+  "sha": "de716619560040fd17d3550e971720477156dfebdc11bcca3bc84513fb062bb0",
+  "shape": "{error}"
+ },
+ "editor POST /thung-rac/khong-co.json/khoi-phuc {}": {
+  "status": 403,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 60,
+  "sha": "b0f023eaf9b3fc128e1dfb36042b6f8dd1768e440d3058eb8c3b197c35480f39",
+  "shape": "{error}"
+ },
+ "editor POST /khong-co {}": {
+  "status": 404,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 41,
+  "sha": "154e19f6772ecce49d5e97e9edcc7057dcbcea7a45879fcf922689683897b4fb",
+  "shape": "{error}"
+ },
+ "phieu POST /bai/999999 {}": {
+  "status": 403,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 86,
+  "sha": "68f272831be8701d420f7509cf87989a9e940399adf6e26ec6f9f08864fe10e1",
+  "shape": "{error}"
+ },
+ "phieu POST /bai/999999/xoa {\"baseUpdatedAt\":\"x\"}": {
+  "status": 403,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 86,
+  "sha": "68f272831be8701d420f7509cf87989a9e940399adf6e26ec6f9f08864fe10e1",
+  "shape": "{error}"
+ },
+ "phieu POST /bai/999999/khoa {}": {
+  "status": 403,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 86,
+  "sha": "68f272831be8701d420f7509cf87989a9e940399adf6e26ec6f9f08864fe10e1",
+  "shape": "{error}"
+ },
+ "phieu POST /nhac/x/xoa {}": {
+  "status": 403,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 86,
+  "sha": "68f272831be8701d420f7509cf87989a9e940399adf6e26ec6f9f08864fe10e1",
+  "shape": "{error}"
+ },
+ "phieu POST /dang-ky-som/xoa {\"sdt\":\"\"}": {
+  "status": 403,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 86,
+  "sha": "68f272831be8701d420f7509cf87989a9e940399adf6e26ec6f9f08864fe10e1",
+  "shape": "{error}"
+ },
+ "phieu POST /dang-ky-som/moc {}": {
+  "status": 403,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 86,
+  "sha": "68f272831be8701d420f7509cf87989a9e940399adf6e26ec6f9f08864fe10e1",
+  "shape": "{error}"
+ },
+ "phieu POST /phieu-be-ngoan/zzzzzz9 {\"st\":\"tra\"}": {
+  "status": 404,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 44,
+  "sha": "722fc3d62ac386c05dd3f1a1d2b1768da1d22e91a8ff58558d3aff786bd459db",
+  "shape": "{error}"
+ },
+ "phieu POST /phieu-be-ngoan/zzzzzz9 {\"st\":\"sai\"}": {
+  "status": 400,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 44,
+  "sha": "a1f11ecd9933a70750e162f49b5bfda1511863d202834a07bd2097e66a8875ac",
+  "shape": "{error}"
+ },
+ "phieu POST /phieu-be-ngoan/zzzzzz9/xoa {}": {
+  "status": 403,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 86,
+  "sha": "68f272831be8701d420f7509cf87989a9e940399adf6e26ec6f9f08864fe10e1",
+  "shape": "{error}"
+ },
+ "phieu POST /loi-moi {}": {
+  "status": 403,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 86,
+  "sha": "68f272831be8701d420f7509cf87989a9e940399adf6e26ec6f9f08864fe10e1",
+  "shape": "{error}"
+ },
+ "phieu POST /loi-moi/ffffffffffff/huy {}": {
+  "status": 403,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 86,
+  "sha": "68f272831be8701d420f7509cf87989a9e940399adf6e26ec6f9f08864fe10e1",
+  "shape": "{error}"
+ },
+ "phieu POST /ma-claude {}": {
+  "status": 403,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 86,
+  "sha": "68f272831be8701d420f7509cf87989a9e940399adf6e26ec6f9f08864fe10e1",
+  "shape": "{error}"
+ },
+ "phieu POST /ma-claude/ffffffffffff/thu-hoi {}": {
+  "status": 403,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 86,
+  "sha": "68f272831be8701d420f7509cf87989a9e940399adf6e26ec6f9f08864fe10e1",
+  "shape": "{error}"
+ },
+ "phieu POST /nguoi-dung/khong-co {}": {
+  "status": 403,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 86,
+  "sha": "68f272831be8701d420f7509cf87989a9e940399adf6e26ec6f9f08864fe10e1",
+  "shape": "{error}"
+ },
+ "phieu POST /nguoi-dung/khong-co {\"action\":\"khoa\"}": {
+  "status": 403,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 86,
+  "sha": "68f272831be8701d420f7509cf87989a9e940399adf6e26ec6f9f08864fe10e1",
+  "shape": "{error}"
+ },
+ "phieu POST /thung-rac/khong-co.json/khoi-phuc {}": {
+  "status": 403,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 86,
+  "sha": "68f272831be8701d420f7509cf87989a9e940399adf6e26ec6f9f08864fe10e1",
+  "shape": "{error}"
+ },
+ "phieu POST /khong-co {}": {
+  "status": 403,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 86,
+  "sha": "68f272831be8701d420f7509cf87989a9e940399adf6e26ec6f9f08864fe10e1",
+  "shape": "{error}"
+ },
+ "anon POST /thung-rac/don-sach": {
+  "status": 401,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 70,
+  "sha": "8eea01a744f21aa73259ca114f5645eb685ba7e80afc7df074c6bbc4d42e3e1f",
+  "shape": "{error}"
+ },
+ "editor POST /thung-rac/don-sach": {
+  "status": 403,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 60,
+  "sha": "b0f023eaf9b3fc128e1dfb36042b6f8dd1768e440d3058eb8c3b197c35480f39",
+  "shape": "{error}"
+ },
+ "phieu POST /thung-rac/don-sach": {
+  "status": 403,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 86,
+  "sha": "68f272831be8701d420f7509cf87989a9e940399adf6e26ec6f9f08864fe10e1",
+  "shape": "{error}"
+ },
+ "anon POST no-origin /bai/999999": {
+  "status": 403,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 61,
+  "sha": "3f38018d2b4f18e6832681e1fcbd89809388c92007d1364a5ecddc56c35a1ed5",
+  "shape": "{error}"
+ },
+ "anon POST foreign-origin /bai/999999": {
+  "status": 403,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 61,
+  "sha": "3f38018d2b4f18e6832681e1fcbd89809388c92007d1364a5ecddc56c35a1ed5",
+  "shape": "{error}"
+ },
+ "anon POST not-json /bai/999999": {
+  "status": 415,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 42,
+  "sha": "1583d3579da715d28d89fdbe2b7df80f9bdcdd5ad650c5bdc3ac753da2f6b303",
+  "shape": "{error}"
+ },
+ "manager POST no-origin /bai/999999": {
+  "status": 403,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 61,
+  "sha": "3f38018d2b4f18e6832681e1fcbd89809388c92007d1364a5ecddc56c35a1ed5",
+  "shape": "{error}"
+ },
+ "manager POST foreign-origin /bai/999999": {
+  "status": 403,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 61,
+  "sha": "3f38018d2b4f18e6832681e1fcbd89809388c92007d1364a5ecddc56c35a1ed5",
+  "shape": "{error}"
+ },
+ "manager POST not-json /bai/999999": {
+  "status": 415,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 42,
+  "sha": "1583d3579da715d28d89fdbe2b7df80f9bdcdd5ad650c5bdc3ac753da2f6b303",
+  "shape": "{error}"
+ },
+ "phieu POST no-origin /bai/999999": {
+  "status": 403,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 61,
+  "sha": "3f38018d2b4f18e6832681e1fcbd89809388c92007d1364a5ecddc56c35a1ed5",
+  "shape": "{error}"
+ },
+ "phieu POST foreign-origin /bai/999999": {
+  "status": 403,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 61,
+  "sha": "3f38018d2b4f18e6832681e1fcbd89809388c92007d1364a5ecddc56c35a1ed5",
+  "shape": "{error}"
+ },
+ "phieu POST not-json /bai/999999": {
+  "status": 415,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 42,
+  "sha": "1583d3579da715d28d89fdbe2b7df80f9bdcdd5ad650c5bdc3ac753da2f6b303",
+  "shape": "{error}"
+ },
+ "anon POST sign-in wrong password": {
+  "status": 401,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "robots": "noindex, nofollow",
+  "len": 55,
+  "sha": "6c50765e4051ad37385fc6b800c8c273990ff93a6a45dfb543aa55e737c7b483",
+  "shape": "{error}"
+ },
+ "anon PUT /toi": {
+  "status": 405,
+  "ct": "application/json; charset=utf-8",
+  "cache": "no-store",
+  "allow": "GET, POST",
+  "robots": "noindex, nofollow",
+  "len": 46,
+  "sha": "3eaf9bbaac18da1a84caf224448807f26f6f066ce15ee984d15a93e9f0f68ddb",
+  "shape": "{error}"
+ }
+}
