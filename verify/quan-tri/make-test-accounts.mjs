@@ -2,8 +2,8 @@
 //   3 sign-in accounts (one per role), 1 Claude code for the ticket role, and 2 articles of the side site
 //   (one published, one in the trash) so the site split and the trash list have something to show.
 // Refuses to run unless the draft switches are on (NEWS_INSECURE_COOKIE=1, the plain-http draft server's switch, which the
-// live service never has) and NEWS_DATA_DIR points at a folder that is not the live data.
-//   NEWS_INSECURE_COOKIE=1 NEWS_DATA_DIR=/srv/_nhap-x-data/news node verify/quan-tri/make-test-accounts.mjs
+// live service never has) and DATA_ROOT points at a folder that is not the live data.
+//   NEWS_INSECURE_COOKIE=1 DATA_ROOT=/srv/_nhap-x-data node verify/quan-tri/make-test-accounts.mjs
 // Run it from the project folder. Safe to run again (it replaces its own entries). Restart the draft server afterwards:
 // the article list is cached in memory.
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
@@ -26,17 +26,17 @@ export const TRASH_FILE = '9002-20261106000000.json';
 const sha256 = (s) => createHash('sha256').update(s).digest('hex');
 
 async function main() {
-  const dir = process.env.NEWS_DATA_DIR;
+  const dir = process.env.DATA_ROOT;
   if (process.env.NEWS_INSECURE_COOKIE !== '1') throw new Error('NEWS_INSECURE_COOKIE=1 is required (draft server only)');
-  if (!dir) throw new Error('NEWS_DATA_DIR must point at the draft copy of data/news');
+  if (!dir) throw new Error('DATA_ROOT must point at the draft copy of the data folder');
   const abs = resolve(dir);
-  if (abs === resolve('data', 'news') || abs.startsWith('/srv/3qdc-unified/')) throw new Error('refusing to write into the live data folder');
+  if (abs === resolve('data') || abs.startsWith('/srv/3qdc-unified/')) throw new Error('refusing to write into the live data folder');
 
   // load the project's own password hashing so the accounts are exactly what the server makes
   const { hashPassword } = await import(pathToFileURL(resolve('scripts/lib/news/admin-auth.mjs')).href);
   const now = new Date().toISOString();
 
-  const usersFile = join(abs, 'users.json');
+  const usersFile = join(abs, 'he-thong', 'users.json');
   const users = JSON.parse(await readFile(usersFile, 'utf8'));
   for (const a of TEST_ACCOUNTS) {
     const i = users.findIndex((u) => u.username === a.username);
@@ -45,7 +45,7 @@ async function main() {
   }
   await writeFile(usersFile, JSON.stringify(users, null, 2));
 
-  const tokensFile = join(abs, 'mcp-tokens.json');
+  const tokensFile = join(abs, 'he-thong', 'mcp-tokens.json');
   let tokens = [];
   try { tokens = JSON.parse(await readFile(tokensFile, 'utf8')); } catch { /* none yet */ }
   tokens = tokens.filter((t) => t.label !== TEST_MCP_LABEL);
@@ -56,13 +56,14 @@ async function main() {
   await writeFile(tokensFile, JSON.stringify(tokens, null, 2));
 
   // side-site article (published) and a trashed one, both cloned from the first published article
-  const posts = join(abs, 'posts');
+  const news = join(abs, 'games', '3qdc', 'tin-tuc');
+  const posts = join(news, 'posts');
   const src = JSON.parse(await readFile(join(posts, '4.json'), 'utf8'));
   const side = { ...src, id: SIDE_POST.id, slug: SIDE_POST.slug, title: 'Bài thử của trang phụ', site: 'phu', pinned: false, status: 'published', publishAt: '2026-01-01T08:00:00+07:00' };
   await writeFile(join(posts, `${SIDE_POST.id}.json`), JSON.stringify(side, null, 2));
-  await mkdir(join(abs, 'trash'), { recursive: true });
+  await mkdir(join(news, 'trash'), { recursive: true });
   const trashed = { ...src, id: 9002, slug: 'bai-thu-thung-rac', title: 'Bài thử trong thùng rác', status: 'draft', pinned: false, deletedBy: 'thu-quanly', deletedAt: '2026-11-06T00:00:00.000+07:00' };
-  await writeFile(join(abs, 'trash', TRASH_FILE), JSON.stringify(trashed, null, 2));
+  await writeFile(join(news, 'trash', TRASH_FILE), JSON.stringify(trashed, null, 2));
 
   console.log(`test fixtures written: ${TEST_ACCOUNTS.length} accounts, 1 Claude code, 2 articles (data folder: ${abs})`);
 }

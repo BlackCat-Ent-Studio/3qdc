@@ -6,7 +6,8 @@ import { CATS, IMAGE_LIBRARY, LOGO, SITE_ORIGIN, SPLIT_SITES, SITES, onSite, sit
 import { NEWS_CSS, THEME_BUTTON, THEME_HEAD_JS, THEME_JS, esc } from './news-theme.mjs';
 import { handleAdminApi } from './admin-api.mjs';
 import { currentUser } from './admin-auth.mjs';
-import { allPosts, visiblePosts } from './news-store.mjs';
+import { newsStore } from './news-store.mjs';
+import { gameById } from '../admin/games.mjs';
 import { renderDetailPage } from './news-pages.mjs';
 import { ROLES } from './news-workflow.mjs';
 import { adminApp } from './admin-app.mjs';
@@ -300,11 +301,14 @@ function appPage(nonce) {
 
 // The real article page for any saved article, with a banner saying it is a preview. The article body was cleaned when
 // it was saved, so every <script> in the page is the page's own; they all get the nonce.
-async function previewPage(id, nonce) {
-  const post = (await allPosts()).find((p) => p.id === id);
+async function previewPage(id, nonce, gameId) {
+  const game = gameById(gameId);
+  if (!game || !Object.hasOwn(game.modules, 'tin-tuc')) return null;
+  const store = newsStore(game.id);
+  const post = (await store.allPosts()).find((p) => p.id === id);
   if (!post) return null;
   // "more articles" in the preview come from the article's own site
-  const visible = onSite(await visiblePosts(), siteOf(post));
+  const visible = onSite(await store.visiblePosts(), siteOf(post));
   const others = visible.filter((p) => p.id !== post.id);
   const html = renderDetailPage(post, [post, ...others]);
   const state = post.status === 'published' && Date.parse(post.publishAt) > Date.now() ? 'Hẹn giờ' : STATE_WORDS[post.status];
@@ -340,7 +344,8 @@ export async function handleAdmin(req, res, cleanPath) {
       res.end();
       return true;
     }
-    const html = await previewPage(+m[1], nonce);
+    // ?game=<id> picks the game; without it the preview is of 3qdc, so the old links keep working
+    const html = await previewPage(+m[1], nonce, new URL(req.url, 'http://x').searchParams.get('game') || '3qdc');
     if (html) sendHtml(req, res, 200, html, nonce);
     else sendHtml(req, res, 404, `<!doctype html><meta charset="utf-8"><title>Không tìm thấy</title><p>Không tìm thấy bài. <a href="/quan-tri">Về trang quản trị</a></p>`, nonce);
     return true;

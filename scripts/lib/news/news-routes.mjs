@@ -1,7 +1,8 @@
 // news-routes.mjs — answers /tin-tuc, /tin-tuc/<slug>, /api/tin-tuc and the editor pages under /quan-tri;
 // returns false for every other request.
 import { CATS, SLUG_RE, SLUG_MAX, isCat, siteOfHost, onSite } from './news-config.mjs';
-import { visiblePosts } from './news-store.mjs';
+import { newsStore } from './news-store.mjs';
+import { gameOfHost } from '../admin/games.mjs';
 import { renderListPage, renderDetailPage, renderNotFound } from './news-pages.mjs';
 import { handleAdmin } from './admin-page.mjs';
 import { serveUpload } from './news-uploads.mjs';
@@ -20,11 +21,12 @@ function sendJson(req, res, status, data) {
 export async function handleNews(req, res, cleanPath, u) {
   // editor pages and their API (sign-in, articles) — every method, checked there
   if (await handleAdmin(req, res, cleanPath)) return true;
-  // pictures uploaded for articles (/tin-tuc-anh/YYYY/MM/<name>)
+  // pictures uploaded for articles (/tin-tuc-anh/YYYY/MM/<name>, other games /tin-tuc-anh/<game>/YYYY/MM/<name>)
   if (await serveUpload(req, res, cleanPath)) return true;
   if (req.method !== 'GET' && req.method !== 'HEAD') return false;
-  // only the articles of the site this address belongs to (main site or 3qdaichien, see SITES)
-  const sitePosts = async () => onSite(await visiblePosts(), siteOfHost(req.headers.host));
+  // only the articles of the game and site this address belongs to (the host decides; main site or 3qdaichien, see SITES)
+  const game = gameOfHost(req.headers.host);
+  const sitePosts = async () => (Object.hasOwn(game.modules, 'tin-tuc') ? onSite(await newsStore(game.id).visiblePosts(), siteOfHost(req.headers.host)) : []);
 
   if (cleanPath === '/tin-tuc') {
     const want = u.searchParams.get('muc');

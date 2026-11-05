@@ -79,7 +79,7 @@ async function route(req, res, path) {
     }
     // a picture or song upload: raw body, so the session is checked before a single byte is read
     const target = resolveTarget(path);
-    if (target && target.mod.upload && await target.mod.upload(req, res, target.sub)) return;
+    if (target && target.mod.upload && await target.mod.upload(req, res, target.sub, target.game)) return;
     if (!/^application\/json(\s*;|$)/i.test(String(req.headers['content-type'] || ''))) return oops(res, 415, 'Chỉ nhận dữ liệu JSON.');
     const got = await readBody(req);
     if (got.tooBig) return refuseTooBig(req, res);

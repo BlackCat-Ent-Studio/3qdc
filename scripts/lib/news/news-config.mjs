@@ -1,12 +1,8 @@
 // news-config.mjs — shared settings for the news pages (/tin-tuc) and, later, the editor pages.
 import { gameById } from '../admin/games.mjs';
-import { moduleDir } from '../admin/paths.mjs';
 
 // Absolute site address used in share tags (og:url, og:image); the draft server on port 3398 overrides it.
 export const SITE_ORIGIN = (process.env.NEWS_SITE_ORIGIN || 'https://3qdc.wanmeivn.com').replace(/\/+$/, '');
-
-// Articles live outside git (data/news/posts/<id>.json); the draft server points this at a test folder.
-export const DATA_DIR = moduleDir('3qdc', 'tin-tuc');
 
 // The news of this server are the news of the game 3qdc (the book of games: scripts/lib/admin/games.mjs).
 const GAME = gameById('3qdc');

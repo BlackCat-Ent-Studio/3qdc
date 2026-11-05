@@ -1,4 +1,6 @@
-// news-store.mjs — the articles in data/news/posts/*.json, kept in memory, and every change written back to disk.
+// news-store.mjs — the articles of one game in data/games/<game>/tin-tuc/posts/*.json, kept in memory, and every change
+// written back to disk. Each game has its own store (newsStore(gameId)): its own articles, its own memory copy and its
+// own queue of changes, so two games never see or block each other.
 // A visitor sees an article only when it is published and its publish time has passed, so a scheduled article
 // appears by itself at its time without any timer.
 // Changes go through change(): one at a time, so checking an article and writing it can never interleave with another
@@ -6,17 +8,15 @@
 // restored from there as a draft, or deleted from there for good by a manager.
 import { readdir, readFile, mkdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
-import { DATA_DIR, SLUG_RE, SLUG_MAX, isCat, isSite } from './news-config.mjs';
+import { gameById } from '../admin/games.mjs';
+import { moduleDir } from '../admin/paths.mjs';
+import { SLUG_RE, SLUG_MAX, isCat, isSite } from './news-config.mjs';
 import { writeJsonAtomic, siteNow } from './news-files.mjs';
 
 const STATUSES = new Set(['draft', 'pending', 'published']);
 // publish times are stored in the site's zone only, e.g. 2026-09-20T20:00:00+07:00 (or null while unpublished)
 export const PUBLISH_AT_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2})?\+07:00$/;
 const REVISIONS_KEPT = 20;
-
-const postsDir = () => join(DATA_DIR, 'posts');
-const revisionsDir = (id) => join(DATA_DIR, 'revisions', String(id));
-const trashDir = () => join(DATA_DIR, 'trash');
 
 export function isValid(p) {
   return p && Number.isInteger(p.id) && p.id > 0
@@ -31,52 +31,6 @@ export function isValid(p) {
 // which of two articles sharing one address keeps it: a published one first, then the older (smaller id)
 const keepsAddress = (a, b) => ((a.status === 'published') !== (b.status === 'published') ? a.status === 'published' : a.id < b.id);
 
-async function readAll() {
-  const dir = postsDir();
-  let names;
-  try {
-    names = await readdir(dir);
-  } catch (e) {
-    if (e.code === 'ENOENT') return [];
-    throw e;
-  }
-  const posts = [];
-  const bySlug = new Map();
-  for (const name of names.filter((n) => n.endsWith('.json')).sort()) {
-    let p;
-    try {
-      p = JSON.parse(await readFile(join(dir, name), 'utf8'));
-    } catch (e) {
-      console.warn('[news] skipped unreadable article file', name, e.message);
-      continue;
-    }
-    if (!isValid(p) || name !== `${p.id}.json`) { console.warn('[news] skipped invalid article file', name); continue; }
-    // two files with one address: the published one keeps it, else the older article (smaller id)
-    const other = bySlug.get(p.slug);
-    if (other) {
-      console.warn('[news] duplicate address', p.slug, 'ids', other.id, p.id);
-      if (keepsAddress(other, p)) continue;
-      posts.splice(posts.indexOf(other), 1);
-    }
-    bySlug.set(p.slug, p);
-    posts.push(p);
-  }
-  return posts;
-}
-
-let loading = null;
-// All articles, read on first use and kept in memory; a failed read is not remembered, the next request tries again.
-export function allPosts() {
-  if (!loading) {
-    loading = readAll().catch((e) => {
-      console.warn('[news] cannot read', postsDir(), e.message);
-      loading = null;
-      return [];
-    });
-  }
-  return loading;
-}
-
 export function isVisible(p, now = Date.now()) {
   if (p.status !== 'published' || !p.publishAt) return false;
   const t = Date.parse(p.publishAt);
@@ -85,20 +39,6 @@ export function isVisible(p, now = Date.now()) {
 
 const newestFirst = (a, b) => (Date.parse(b.publishAt) - Date.parse(a.publishAt)) || (b.id - a.id);
 
-// Articles a visitor may see right now, newest first.
-export async function visiblePosts(now = Date.now()) {
-  return (await allPosts()).filter((p) => isVisible(p, now)).sort(newestFirst);
-}
-
-// ---------- changes ----------
-let queue = Promise.resolve();
-// Runs fn(tools) after every earlier change has finished; its result (or error) is returned to the caller.
-export function change(fn) {
-  const run = queue.then(async () => fn({ posts: await allPosts(), save, remove, restore, purge, nextId }));
-  queue = run.catch(() => {});
-  return run;
-}
-
 // A new edit stamp for an article: the site's time with milliseconds, always later than the previous one.
 export function stampAfter(previous) {
   let s = siteNow();
@@ -106,124 +46,207 @@ export function stampAfter(previous) {
   return s;
 }
 
-async function nextId(posts) {
-  let max = posts.reduce((m, p) => Math.max(m, p.id), 0);
-  for (const dir of [postsDir(), trashDir(), join(DATA_DIR, 'revisions')]) {
-    const names = await readdir(dir).catch(() => []);
-    for (const n of names) max = Math.max(max, parseInt(n, 10) || 0);
-  }
-  return max + 1;
-}
-
-// Writes an article (only inside change()), keeps a copy of this version, and updates the in-memory list.
-async function save(post, meta) {
-  if (!isValid(post)) throw new Error('refusing to store an invalid article ' + post.id);
-  await mkdir(postsDir(), { recursive: true });
-  await writeJsonAtomic(join(postsDir(), `${post.id}.json`), post);
-  const posts = await allPosts();
-  const i = posts.findIndex((p) => p.id === post.id);
-  if (i >= 0) posts[i] = post; else posts.push(post);
-  await keepRevision(post, meta).catch((e) => console.warn('[news] revision not kept for', post.id, e.message));
-}
-
-async function keepRevision(post, { action, actor }) {
-  const dir = revisionsDir(post.id);
-  await mkdir(dir, { recursive: true });
-  const name = post.updatedAt.replace(/[^0-9]/g, '').slice(0, 17) + '.json';
-  await writeJsonAtomic(join(dir, name), { savedAt: post.updatedAt, action, actor, post });
-  const names = (await readdir(dir)).filter((n) => n.endsWith('.json')).sort();
-  for (const old of names.slice(0, Math.max(0, names.length - REVISIONS_KEPT))) await rm(join(dir, old), { force: true });
-}
-
-// Moves an article file to trash/ (only inside change()) and drops it from the list. Its revisions stay.
-// The trash copy also records who deleted it and when (trash/<id>-<yyyyMMddHHmmss>.json).
-async function remove(post, actor = '') {
-  await mkdir(trashDir(), { recursive: true });
-  const now = siteNow();
-  await writeJsonAtomic(join(trashDir(), `${post.id}-${now.replace(/[^0-9]/g, '').slice(0, 14)}.json`), { ...post, deletedBy: actor, deletedAt: now });
-  await rm(join(postsDir(), `${post.id}.json`));
-  const posts = await allPosts();
-  const i = posts.findIndex((p) => p.id === post.id);
-  if (i >= 0) posts.splice(i, 1);
-}
-
 export const TRASH_NAME_RE = /^([1-9]\d{0,8})-(\d{14})\.json$/;
 
-// Deleted articles, newest deletion first: [{ file, id, title, category, status, author, deletedBy, deletedAt }]
-export async function listTrash() {
-  const names = (await readdir(trashDir()).catch(() => [])).filter((n) => TRASH_NAME_RE.test(n));
-  const out = [];
-  for (const n of names) {
+const stores = new Map();
+
+// The store of one game (made once, then reused). Throws for a game that does not exist or has no news part.
+export function newsStore(gameId) {
+  let s = stores.get(gameId);
+  if (!s) {
+    const game = gameById(gameId);
+    if (!game || !Object.hasOwn(game.modules, 'tin-tuc')) throw new Error(`news: game "${gameId}" has no news part`);
+    s = makeStore(gameId);
+    stores.set(gameId, s);
+  }
+  return s;
+}
+
+function makeStore(gameId) {
+  const DATA_DIR = moduleDir(gameId, 'tin-tuc');
+  const postsDir = () => join(DATA_DIR, 'posts');
+  const revisionsDir = (id) => join(DATA_DIR, 'revisions', String(id));
+  const trashDir = () => join(DATA_DIR, 'trash');
+
+  async function readAll() {
+    const dir = postsDir();
+    let names;
     try {
-      const p = JSON.parse(await readFile(join(trashDir(), n), 'utf8'));
-      out.push({ file: n, id: p.id, title: p.title, category: p.category, status: p.status, author: p.author || '', slug: p.slug, cover: p.cover || '', deletedBy: p.deletedBy || '', deletedAt: p.deletedAt || '' });
-    } catch { /* an unreadable copy is left alone */ }
+      names = await readdir(dir);
+    } catch (e) {
+      if (e.code === 'ENOENT') return [];
+      throw e;
+    }
+    const posts = [];
+    const bySlug = new Map();
+    for (const name of names.filter((n) => n.endsWith('.json')).sort()) {
+      let p;
+      try {
+        p = JSON.parse(await readFile(join(dir, name), 'utf8'));
+      } catch (e) {
+        console.warn('[news] skipped unreadable article file', name, e.message);
+        continue;
+      }
+      if (!isValid(p) || name !== `${p.id}.json`) { console.warn('[news] skipped invalid article file', name); continue; }
+      // two files with one address: the published one keeps it, else the older article (smaller id)
+      const other = bySlug.get(p.slug);
+      if (other) {
+        console.warn('[news] duplicate address', p.slug, 'ids', other.id, p.id);
+        if (keepsAddress(other, p)) continue;
+        posts.splice(posts.indexOf(other), 1);
+      }
+      bySlug.set(p.slug, p);
+      posts.push(p);
+    }
+    return posts;
   }
-  return out.sort((a, b) => b.file.slice(-19).localeCompare(a.file.slice(-19)));
-}
 
-// Brings a deleted article back as a draft (only inside change()). Returns { post } or { status, error }.
-async function restore(file, actor, nowText) {
-  if (!TRASH_NAME_RE.test(file)) return { status: 404, error: 'Không tìm thấy bài trong thùng rác.' };
-  let p;
-  try {
-    p = JSON.parse(await readFile(join(trashDir(), file), 'utf8'));
-  } catch {
-    return { status: 404, error: 'Không tìm thấy bài trong thùng rác.' };
+  let loading = null;
+  // All articles, read on first use and kept in memory; a failed read is not remembered, the next request tries again.
+  function allPosts() {
+    if (!loading) {
+      loading = readAll().catch((e) => {
+        console.warn('[news] cannot read', postsDir(), e.message);
+        loading = null;
+        return [];
+      });
+    }
+    return loading;
   }
-  const posts = await allPosts();
-  if (posts.some((x) => x.id === p.id)) return { status: 409, error: 'Đã có bài mang cùng mã này (có thể đã được khôi phục).' };
-  const clash = posts.find((x) => x.slug === p.slug);
-  if (clash) return { status: 409, error: `Đường dẫn “${p.slug}” đang được bài “${clash.title}” dùng. Hãy đổi đường dẫn bài kia trước.` };
-  const { deletedBy, deletedAt, ...rest } = p;
-  const post = { ...rest, status: 'draft', publishAt: null, pinned: false, reviewNote: '', updatedBy: actor, updatedAt: nowText };
-  if (!isValid(post)) return { status: 400, error: 'Bản trong thùng rác bị hỏng, không khôi phục được.' };
-  await save(post, { action: 'khoi-phuc', actor });
-  await rm(join(trashDir(), file));
-  return { post };
-}
 
-// Deletes a trashed article for good (only inside change()): its trash copy, and its saved versions unless the same
-// article still exists elsewhere (on the list, or as another trash copy after a restore and a second delete). Uploaded
-// pictures stay: another article may show the same picture. Returns { id, title } or { status, error }.
-async function purge(file) {
-  if (!TRASH_NAME_RE.test(file)) return { status: 404, error: 'Không tìm thấy bài trong thùng rác.' };
-  let p;
-  try {
-    p = JSON.parse(await readFile(join(trashDir(), file), 'utf8'));
-  } catch {
-    p = {};
+  // Articles a visitor may see right now, newest first.
+  async function visiblePosts(now = Date.now()) {
+    return (await allPosts()).filter((p) => isVisible(p, now)).sort(newestFirst);
   }
-  try {
+
+  // ---------- changes ----------
+  let queue = Promise.resolve();
+  // Runs fn(tools) after every earlier change has finished; its result (or error) is returned to the caller.
+  function change(fn) {
+    const run = queue.then(async () => fn({ posts: await allPosts(), save, remove, restore, purge, nextId }));
+    queue = run.catch(() => {});
+    return run;
+  }
+
+  async function nextId(posts) {
+    let max = posts.reduce((m, p) => Math.max(m, p.id), 0);
+    for (const dir of [postsDir(), trashDir(), join(DATA_DIR, 'revisions')]) {
+      const names = await readdir(dir).catch(() => []);
+      for (const n of names) max = Math.max(max, parseInt(n, 10) || 0);
+    }
+    return max + 1;
+  }
+
+  // Writes an article (only inside change()), keeps a copy of this version, and updates the in-memory list.
+  async function save(post, meta) {
+    if (!isValid(post)) throw new Error('refusing to store an invalid article ' + post.id);
+    await mkdir(postsDir(), { recursive: true });
+    await writeJsonAtomic(join(postsDir(), `${post.id}.json`), post);
+    const posts = await allPosts();
+    const i = posts.findIndex((p) => p.id === post.id);
+    if (i >= 0) posts[i] = post; else posts.push(post);
+    await keepRevision(post, meta).catch((e) => console.warn('[news] revision not kept for', post.id, e.message));
+  }
+
+  async function keepRevision(post, { action, actor }) {
+    const dir = revisionsDir(post.id);
+    await mkdir(dir, { recursive: true });
+    const name = post.updatedAt.replace(/[^0-9]/g, '').slice(0, 17) + '.json';
+    await writeJsonAtomic(join(dir, name), { savedAt: post.updatedAt, action, actor, post });
+    const names = (await readdir(dir)).filter((n) => n.endsWith('.json')).sort();
+    for (const old of names.slice(0, Math.max(0, names.length - REVISIONS_KEPT))) await rm(join(dir, old), { force: true });
+  }
+
+  // Moves an article file to trash/ (only inside change()) and drops it from the list. Its revisions stay.
+  // The trash copy also records who deleted it and when (trash/<id>-<yyyyMMddHHmmss>.json).
+  async function remove(post, actor = '') {
+    await mkdir(trashDir(), { recursive: true });
+    const now = siteNow();
+    await writeJsonAtomic(join(trashDir(), `${post.id}-${now.replace(/[^0-9]/g, '').slice(0, 14)}.json`), { ...post, deletedBy: actor, deletedAt: now });
+    await rm(join(postsDir(), `${post.id}.json`));
+    const posts = await allPosts();
+    const i = posts.findIndex((p) => p.id === post.id);
+    if (i >= 0) posts.splice(i, 1);
+  }
+
+  // Deleted articles, newest deletion first: [{ file, id, title, category, status, author, deletedBy, deletedAt }]
+  async function listTrash() {
+    const names = (await readdir(trashDir()).catch(() => [])).filter((n) => TRASH_NAME_RE.test(n));
+    const out = [];
+    for (const n of names) {
+      try {
+        const p = JSON.parse(await readFile(join(trashDir(), n), 'utf8'));
+        out.push({ file: n, id: p.id, title: p.title, category: p.category, status: p.status, author: p.author || '', slug: p.slug, cover: p.cover || '', deletedBy: p.deletedBy || '', deletedAt: p.deletedAt || '' });
+      } catch { /* an unreadable copy is left alone */ }
+    }
+    return out.sort((a, b) => b.file.slice(-19).localeCompare(a.file.slice(-19)));
+  }
+
+  // Brings a deleted article back as a draft (only inside change()). Returns { post } or { status, error }.
+  async function restore(file, actor, nowText) {
+    if (!TRASH_NAME_RE.test(file)) return { status: 404, error: 'Không tìm thấy bài trong thùng rác.' };
+    let p;
+    try {
+      p = JSON.parse(await readFile(join(trashDir(), file), 'utf8'));
+    } catch {
+      return { status: 404, error: 'Không tìm thấy bài trong thùng rác.' };
+    }
+    const posts = await allPosts();
+    if (posts.some((x) => x.id === p.id)) return { status: 409, error: 'Đã có bài mang cùng mã này (có thể đã được khôi phục).' };
+    const clash = posts.find((x) => x.slug === p.slug);
+    if (clash) return { status: 409, error: `Đường dẫn “${p.slug}” đang được bài “${clash.title}” dùng. Hãy đổi đường dẫn bài kia trước.` };
+    const { deletedBy, deletedAt, ...rest } = p;
+    const post = { ...rest, status: 'draft', publishAt: null, pinned: false, reviewNote: '', updatedBy: actor, updatedAt: nowText };
+    if (!isValid(post)) return { status: 400, error: 'Bản trong thùng rác bị hỏng, không khôi phục được.' };
+    await save(post, { action: 'khoi-phuc', actor });
     await rm(join(trashDir(), file));
-  } catch {
-    return { status: 404, error: 'Không tìm thấy bài trong thùng rác (có thể vừa bị xoá).' };
+    return { post };
   }
-  const id = parseInt(file, 10);
-  const stillTrashed = (await readdir(trashDir()).catch(() => [])).some((n) => TRASH_NAME_RE.test(n) && parseInt(n, 10) === id);
-  if (!stillTrashed && !(await allPosts()).some((x) => x.id === id)) await rm(revisionsDir(id), { recursive: true, force: true });
-  return { id, title: String(p.title || '') };
-}
 
-// Saved versions of an article, newest first: [{ rev, savedAt, action, actor }]
-export async function listRevisions(id) {
-  const dir = revisionsDir(id);
-  const names = (await readdir(dir).catch(() => [])).filter((n) => /^\d+\.json$/.test(n)).sort().reverse();
-  const out = [];
-  for (const n of names) {
+  // Deletes a trashed article for good (only inside change()): its trash copy, and its saved versions unless the same
+  // article still exists elsewhere (on the list, or as another trash copy after a restore and a second delete). Uploaded
+  // pictures stay: another article may show the same picture. Returns { id, title } or { status, error }.
+  async function purge(file) {
+    if (!TRASH_NAME_RE.test(file)) return { status: 404, error: 'Không tìm thấy bài trong thùng rác.' };
+    let p;
     try {
-      const r = JSON.parse(await readFile(join(dir, n), 'utf8'));
-      out.push({ rev: n.slice(0, -5), savedAt: r.savedAt, action: r.action, actor: r.actor });
-    } catch { /* a broken copy is skipped */ }
+      p = JSON.parse(await readFile(join(trashDir(), file), 'utf8'));
+    } catch {
+      p = {};
+    }
+    try {
+      await rm(join(trashDir(), file));
+    } catch {
+      return { status: 404, error: 'Không tìm thấy bài trong thùng rác (có thể vừa bị xoá).' };
+    }
+    const id = parseInt(file, 10);
+    const stillTrashed = (await readdir(trashDir()).catch(() => [])).some((n) => TRASH_NAME_RE.test(n) && parseInt(n, 10) === id);
+    if (!stillTrashed && !(await allPosts()).some((x) => x.id === id)) await rm(revisionsDir(id), { recursive: true, force: true });
+    return { id, title: String(p.title || '') };
   }
-  return out;
-}
 
-export async function readRevision(id, rev) {
-  if (!/^\d{1,17}$/.test(rev)) return null;
-  try {
-    return JSON.parse(await readFile(join(revisionsDir(id), rev + '.json'), 'utf8'));
-  } catch {
-    return null;
+  // Saved versions of an article, newest first: [{ rev, savedAt, action, actor }]
+  async function listRevisions(id) {
+    const dir = revisionsDir(id);
+    const names = (await readdir(dir).catch(() => [])).filter((n) => /^\d+\.json$/.test(n)).sort().reverse();
+    const out = [];
+    for (const n of names) {
+      try {
+        const r = JSON.parse(await readFile(join(dir, n), 'utf8'));
+        out.push({ rev: n.slice(0, -5), savedAt: r.savedAt, action: r.action, actor: r.actor });
+      } catch { /* a broken copy is skipped */ }
+    }
+    return out;
   }
+
+  async function readRevision(id, rev) {
+    if (!/^\d{1,17}$/.test(rev)) return null;
+    try {
+      return JSON.parse(await readFile(join(revisionsDir(id), rev + '.json'), 'utf8'));
+    } catch {
+      return null;
+    }
+  }
+
+  return { gameId, allPosts, visiblePosts, change, listTrash, listRevisions, readRevision };
 }

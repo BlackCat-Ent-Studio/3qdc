@@ -4,8 +4,8 @@
 //   node verify/quan-tri/check-behavior-baseline.mjs --compare              request the same things again and diff
 //   options  --port 13399          the draft server (default 13399)
 //            --host-ip 127.0.0.1   where to connect (the Host header is set per request)
-//            --data-dir <dir>      data/news folder of this server, for the Claude-code record check
-//                                  (default: NEWS_DATA_DIR, else ./data/news)
+//            --data-dir <dir>      data/he-thong folder of this server (accounts, Claude codes), for the Claude-code record check
+//                                  (default: $DATA_ROOT/he-thong, else ./data/he-thong)
 //            --live                public GET pages only, nothing written, nothing signed in; for the live server
 //                                  (--port 3399). Skips entries that need the draft's test fixtures.
 //            --skip-ui             do not compare the bodies of the editor pages (/quan-tri HTML), only their status
@@ -37,7 +37,7 @@ const SKIP_UI = flag('--skip-ui');
 const PORT = Number(opt('--port', '13399'));
 const HOST_IP = opt('--host-ip', '127.0.0.1');
 const DIR = opt('--dir', join(HERE, 'baseline'));
-const DATA_DIR = opt('--data-dir', process.env.NEWS_DATA_DIR || join(process.cwd(), 'data', 'news'));
+const DATA_DIR = opt('--data-dir', join(process.env.DATA_ROOT || join(process.cwd(), 'data'), 'he-thong'));
 
 if (SAVE === COMPARE) { console.error('use exactly one of --save / --compare'); process.exit(2); }
 if (LIVE && SAVE) { console.error('--live only compares'); process.exit(2); }

@@ -10,7 +10,7 @@
 import { randomBytes, createHash, timingSafeEqual } from 'node:crypto';
 import { join } from 'node:path';
 import { mkdir } from 'node:fs/promises';
-import { DATA_DIR } from './news-config.mjs';
+import { systemDir } from '../admin/paths.mjs';
 import { readJson, writeJsonAtomic, siteNow } from './news-files.mjs';
 import { changeUsers, readUsers, hashPassword, USERNAME_RE, PASSWORD_MIN } from './admin-auth.mjs';
 
@@ -28,14 +28,14 @@ const plain = (v) => Array.from(String(v ?? '').slice(0, 200).replace(/\p{Cf}/gu
 
 // One queue per file, like the account list: each change reads the file at its turn and writes it when asked.
 function store(name) {
-  const file = () => join(DATA_DIR, name);
+  const file = () => join(systemDir(), name);
   let queue = Promise.resolve();
   const read = async () => { const l = await readJson(file(), []); return Array.isArray(l) ? l : []; };
   const change = (fn) => {
     const run = queue.then(async () => {
       const list = await read();
       const r = await fn(list);
-      if (r && r.save) { await mkdir(DATA_DIR, { recursive: true }); await writeJsonAtomic(file(), list); }
+      if (r && r.save) { await mkdir(systemDir(), { recursive: true }); await writeJsonAtomic(file(), list); }
       return r;
     });
     queue = run.catch(() => {});

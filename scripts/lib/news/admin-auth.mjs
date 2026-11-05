@@ -15,7 +15,8 @@ import { scrypt as scryptCb, randomBytes, timingSafeEqual, createHash } from 'no
 import { promisify } from 'node:util';
 import { join } from 'node:path';
 import { mkdir } from 'node:fs/promises';
-import { DATA_DIR, ALLOWED_ORIGINS, SECURE_COOKIE } from './news-config.mjs';
+import { ALLOWED_ORIGINS, SECURE_COOKIE } from './news-config.mjs';
+import { systemDir } from '../admin/paths.mjs';
 import { readJson, writeJsonAtomic, siteNow } from './news-files.mjs';
 
 const scrypt = promisify(scryptCb);
@@ -27,7 +28,7 @@ const RESET_MS = 30 * 60e3;
 export const PASSWORD_MIN = 10;
 export const USERNAME_RE = /^[a-z0-9][a-z0-9._-]{2,31}$/;
 
-export const usersFile = () => join(DATA_DIR, 'users.json');
+export const usersFile = () => join(systemDir(), 'users.json');
 
 // ---------- accounts ----------
 export async function readUsers() {
@@ -35,7 +36,7 @@ export async function readUsers() {
   return Array.isArray(list) ? list : [];
 }
 export async function writeUsers(list) {
-  await mkdir(DATA_DIR, { recursive: true });
+  await mkdir(systemDir(), { recursive: true });
   await writeJsonAtomic(usersFile(), list);
 }
 

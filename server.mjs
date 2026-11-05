@@ -8,8 +8,8 @@
 //
 //   /              → home, the main site (build B, index.html, ROUTE_FORCE #/index, layout-v2), every device
 //   /home, /kho-bau → 302 /  (old home address; treasure is switched off)
-//   /tin-tuc, /tin-tuc/<slug>, /api/tin-tuc → the site's own news pages (scripts/lib/news, articles in data/news)
-//   /dang-ky-som, /api/dang-ky-som → early sign-up by phone number (scripts/lib/signup, list in data/dang-ky-som)
+//   /tin-tuc, /tin-tuc/<slug>, /api/tin-tuc → the site's own news pages (scripts/lib/news, articles in data/games/<game>/tin-tuc)
+//   /dang-ky-som, /api/dang-ky-som → early sign-up by phone number (scripts/lib/signup, list in data/games/3qdc/dang-ky-som)
 //   /__internal/tin-tuc → old news section (build B #/main/news; kept for reference)
 //   /__internal/pc → old fab PC entry (build A; no longer linked, kept for reference)
 //   /__internal/m  → old fab mobile entry (+ UA-spoof shim)
@@ -49,6 +49,7 @@ import { handlePhieu } from './scripts/lib/phieu/phieu-routes.mjs';
 import { handleMcp } from './scripts/lib/phieu/phieu-mcp.mjs';
 import { SITE_ORIGIN } from './scripts/lib/news/news-config.mjs';
 import { checkGames } from './scripts/lib/admin/modules.mjs';
+import { checkDataLayout } from './scripts/lib/admin/data-layout.mjs';
 // Vietnamese title / description / share tags for the mirrored build-B entry page
 import { viHead } from './scripts/lib/site-head.mjs';
 // the route wrapper of the umi bundle, sent without its phone / tablet redirect to unmirrored /m/ pages
@@ -254,6 +255,7 @@ async function findApiSnapshot(pathname, rawPathname, search, body) {
 
 export function startServer(port = 8080) {
   checkGames(); // a wrong book of games stops the server here, before it listens
+  checkDataLayout(); // so does data left in the old folders, or an old data variable that is still set
   const server = createHttp(async (req, res) => {
     try {
       const u = new URL(req.url, 'http://x');

@@ -5,7 +5,7 @@
 //   paths        API address prefixes owned by the part (below /quan-tri/api/g/<game>/)
 //   dataDir      where the part keeps its data for a game
 //   api          (ctx, req, res, path, body) → true when it answered; ctx = { game, user, method, can(perm) }
-//   upload       optional (req, res, path) → true when it took a raw-body POST (pictures, songs)
+//   upload       optional (req, res, path, game) → true when it took a raw-body POST (pictures, songs)
 import { GAMES, GAME_ID_RE } from './games.mjs';
 import { moduleDir } from './paths.mjs';
 import * as tinTuc from './modules/tin-tuc-api.mjs';

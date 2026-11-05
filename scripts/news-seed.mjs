@@ -1,11 +1,11 @@
-// news-seed.mjs — writes the three sample articles as drafts when data/news/posts has no article yet.
+// news-seed.mjs — writes the three sample articles as drafts when data/games/3qdc/tin-tuc/posts has no article yet.
 // Run on the server from the project folder: node scripts/news-seed.mjs   (safe to run again: it never overwrites)
 import { mkdir, readdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { DATA_DIR } from './lib/news/news-config.mjs';
+import { moduleDir } from './lib/admin/paths.mjs';
 import { SAMPLE_POSTS } from './lib/news/news-samples.mjs';
 
-const dir = join(DATA_DIR, 'posts');
+const dir = join(moduleDir('3qdc', 'tin-tuc'), 'posts');
 await mkdir(dir, { recursive: true });
 const existing = (await readdir(dir)).filter((n) => n.endsWith('.json'));
 if (existing.length) {

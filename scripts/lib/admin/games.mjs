@@ -46,3 +46,8 @@ export const GAMES = [
 ];
 
 export const gameById = (id) => GAMES.find((g) => g.id === id) || null;
+// the game a request belongs to, from its Host header; an unknown host is the main site of 3qdc (as it always was)
+export function gameOfHost(host) {
+  const h = String(host || '').toLowerCase().replace(/:\d+$/, '');
+  return GAMES.find((g) => g.sites.some((s) => (s.hosts || []).includes(h))) || gameById('3qdc');
+}

@@ -3,8 +3,9 @@ node_modules/
 verify-out/
 *.log
 image-backup/
+# data: everything is kept out of git except the news articles (and their versions and pictures) of each game.
+# Accounts, invites, Claude codes, tickets and early sign-ups live in data/he-thong and in the other part folders: ignored.
 /data/*
-!/data/news/
-/data/news/users.json
-/data/news/invites.json
-/data/news/mcp-tokens.json
+!/data/games/
+/data/games/*/*
+!/data/games/*/tin-tuc/

@@ -1,7 +1,7 @@
 // tin-tuc-api.mjs — articles, pictures and the trash of one game's news. Writers (`viet`) work on articles and pictures;
 // reviewers (`duyet`) also see the trash. The rules of each article change live in news-workflow.mjs.
-import { change, allPosts, listRevisions, readRevision, stampAfter, isVisible, listTrash, TRASH_NAME_RE } from '../../news/news-store.mjs';
-import { saveUpload, recentUploads } from '../../news/news-uploads.mjs';
+import { newsStore, stampAfter, isVisible, TRASH_NAME_RE } from '../../news/news-store.mjs';
+import { uploadsOf } from '../../news/news-uploads.mjs';
 import { decide, mayDelete, summaryOf } from '../../news/news-workflow.mjs';
 import { currentUser } from '../../news/admin-auth.mjs';
 import { siteNow, siteNowSeconds } from '../../news/news-files.mjs';
@@ -11,10 +11,10 @@ const LOCK_MS = 90e3;
 const locks = new Map(); // "<game>:<article id>" → { username, name, until }
 const lockKey = (ctx, id) => `${ctx.game.id}:${id}`;
 
-async function uploadPicture(req, res) {
+async function uploadPicture(req, res, game) {
   const user = await currentUser(req);
   if (!user) return sendAndClose(req, res, 401, { error: 'Phiên đăng nhập đã hết. Hãy đăng nhập lại.' });
-  const r = await saveUpload(req);
+  const r = await uploadsOf(game.id).saveUpload(req);
   if (r.error) return sendAndClose(req, res, r.status, { error: r.error });
   console.log(`[news] ${siteNow()} ${user.username} uploaded ${r.url} (${r.bytes} bytes)`);
   return send(res, 201, { url: r.url, bytes: r.bytes });
@@ -22,9 +22,9 @@ async function uploadPicture(req, res) {
 
 // A POST whose body is the picture itself: handled before any JSON reading (the session is checked before a single
 // byte is read). Returns true when it took the request.
-export async function upload(req, res, path) {
+export async function upload(req, res, path, game) {
   if (path !== '/anh') return false;
-  await uploadPicture(req, res);
+  await uploadPicture(req, res, game);
   return true;
 }
 
@@ -39,6 +39,7 @@ function otherLock(ctx, id) {
 // Returns true when it answered, false for an address it does not know.
 export async function api(ctx, req, res, path, body) {
   const { user, method } = ctx;
+  const { change, allPosts, listRevisions, readRevision, listTrash } = newsStore(ctx.game.id);
   const done = (status, data) => { send(res, status, data); return true; };
   const fail = (status, error) => { oops(res, status, error); return true; };
 
@@ -76,7 +77,7 @@ export async function api(ctx, req, res, path, body) {
   if (!ctx.can('viet')) return fail(403, 'Tài khoản này không có quyền viết bài.');
 
   // pictures uploaded recently
-  if (method === 'GET' && path === '/anh') return done(200, { items: await recentUploads(40) });
+  if (method === 'GET' && path === '/anh') return done(200, { items: await uploadsOf(ctx.game.id).recentUploads(40) });
 
   if (method === 'GET' && path === '/bai') {
     const posts = await allPosts();
