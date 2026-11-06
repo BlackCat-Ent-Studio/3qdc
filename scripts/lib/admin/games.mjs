@@ -17,6 +17,7 @@ export const GAMES = [
     sites: [
       { id: 'chinh', name: 'Trang chính', hint: '3qdc.wanmeivn.com — trang chủ, /tin-tuc', hosts: ['3qdc.wanmeivn.com'], module: 'tin-tuc' },
       { id: 'phu', name: 'Trang phụ', hint: '3qdaichien.wanmeivn.com', hosts: ['3qdaichien.wanmeivn.com'], module: 'tin-tuc' },
+      { id: 'phieu', name: 'Trang phiếu', hint: 'phieubengoan.3qdc.wanmeivn.com — người chơi gửi phiếu', hosts: ['phieubengoan.3qdc.wanmeivn.com'], module: null },
       { id: 'wiki', name: 'Wiki hướng dẫn', hint: '/wiki/', path: '/wiki/', module: null },
       { id: 'hoi-dap', name: 'Hỏi đáp', hint: '/hoi-dap/', path: '/hoi-dap/', module: null },
       { id: 'duyet', name: 'Duyệt thẻ (nội bộ)', hint: '/duyet/', path: '/duyet/', module: null },

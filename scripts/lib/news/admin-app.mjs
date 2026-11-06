@@ -1,9 +1,11 @@
-// admin-app.mjs — the browser side of /quan-tri: sign-in, set password, article list and article editor.
-// adminApp is serialised into the page (never run on the server). It talks only to /quan-tri/api/*; the server re-checks
-// every permission and cleans every article, so nothing here is a security boundary — it only keeps the screens honest.
+// admin-app.mjs — the browser side of /quan-tri: the frame (side bar, top bar, game switcher, overview, dialogs), sign-in,
+// set password, accounts, and the older screens that are not redrawn yet. The news screens live in admin-news-app.mjs and are
+// handed in as adminNews (both are serialised into the page; neither runs on the server).
+// It talks only to /quan-tri/api/*; the server re-checks every permission and cleans every article, so nothing here is a
+// security boundary — it only keeps the screens honest.
 // No inline event attributes anywhere: the page's Content-Security-Policy would block them.
 
-export function adminApp() {
+export function adminApp(adminNews) {
   const DATA = JSON.parse(document.getElementById('adm-data').textContent);
   const CATS = DATA.cats, LIB = DATA.library, HOST = DATA.host, LOGO = DATA.logo, MARKS = DATA.marks || {}, THEME_KEY = DATA.themeKey;
   const app = document.getElementById('app');
@@ -11,13 +13,20 @@ export function adminApp() {
   const $$ = (s, r) => Array.prototype.slice.call((r || document).querySelectorAll(s));
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const catName = (id) => (CATS.find((c) => c.id === id) || {}).name || '';
-  // a button that deletes for good asks first by changing its label: the first click arms it, a second click within
-  // 4 s goes ahead (same as deleting an article from the list; no pop-up dialog)
-  const armDelete = (b, idle) => {
+  // a button that deletes for good asks first by changing its label and colour: the first click arms it, a second click
+  // within 4 s goes ahead (no pop-up dialog). disarm puts the button back as it was.
+  const disarm = (b) => {
+    if (b.dataset.idle != null) { b.innerHTML = b.dataset.idle; delete b.dataset.idle; }
+    b.classList.remove('armed');
+    b.dataset.armed = 0;
+  };
+  const armDelete = (b, idle, ask) => {
     if (b.dataset.armed > Date.now() - 4000) return true;
     b.dataset.armed = Date.now();
-    b.textContent = 'Bấm lần nữa để xoá';
-    setTimeout(() => { if (b.isConnected && !b.disabled) b.textContent = idle; }, 4000);
+    b.dataset.idle = b.innerHTML;
+    b.textContent = ask || 'Bấm lần nữa để xoá';
+    b.classList.add('armed');
+    setTimeout(() => { if (b.isConnected && !b.disabled) disarm(b); }, 4000);
     return false;
   };
   // sites an article can go to (empty when the split is switched off: then there is nothing to choose)
@@ -40,11 +49,21 @@ export function adminApp() {
   // bumped whenever a new screen is drawn; an answer that arrives after the user moved on is ignored
   let screen = 0;
 
-  let toastTimer;
+  // pop-up message at the bottom right: stays 3.6 s (longer while the pointer is on it), has a close button, at most three at once
   function toast(msg) {
-    const t = $('#toast');
-    t.textContent = msg; t.classList.add('show');
-    clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+    const box = $('#toasts');
+    const t = document.createElement('div');
+    t.className = 'sh-toast';
+    t.innerHTML = `${I.check}<span></span><button type="button" aria-label="Đóng thông báo">${I.x}</button>`;
+    t.querySelector('span').textContent = msg;
+    let timer;
+    const drop = () => { clearTimeout(timer); t.remove(); };
+    t.querySelector('button').addEventListener('click', drop);
+    t.addEventListener('mouseenter', () => clearTimeout(timer));
+    t.addEventListener('mouseleave', () => { timer = setTimeout(drop, 1600); });
+    box.appendChild(t);
+    while (box.children.length > 3) box.firstChild.remove();
+    timer = setTimeout(drop, 3600);
   }
 
   // Calls the API; a lost session sends the user to the sign-in form. Resolves { ok, status, data }.
@@ -89,6 +108,8 @@ export function adminApp() {
   // what the frame shows as the place: 'overview' | 'game' (part: false = the game's own page, no part) | 'system' | 'none'
   let nav = { kind: 'overview', part: false };
   let curSection = ''; // hash of the open section, for the sideways swipe
+  let crumbTail = ''; // the last step of the path on a screen inside a part ("Sửa bài"); cleared with every screen
+  let preSetter = null; // the news list takes its first filter from a link on the overview (data-pre)
   let work = null; // jobs waiting per game { at, byGame: { game: [{ n, txt, tab, pre, info }] }, accounts }
   let siteState = null; // which web addresses answer { "game/site": { ok, code } }
   const isOwner = () => !!me && me.role === 'owner';
@@ -139,7 +160,13 @@ export function adminApp() {
     ticket: svgIcon('<path d="M4 8a2 2 0 002-2h12a2 2 0 002 2v2a2 2 0 000 4v2a2 2 0 00-2 2H6a2 2 0 00-2-2v-2a2 2 0 000-4z"/><path d="M14 6v12"/>'),
     userplus: svgIcon('<circle cx="10" cy="8" r="3.5"/><path d="M3.5 19a6.5 6.5 0 0113 0M19 8v6M16 11h6"/>'),
     music: svgIcon('<path d="M9 18V6l11-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/>'),
+    x: svgIcon('<path d="M6 6l12 12M18 6L6 18"/>'),
   };
+  // the part each tab belongs to (the trash is a step inside the news part)
+  const PART_OF = { posts: 'tin-tuc', trash: 'tin-tuc', phieu: 'phieu-be-ngoan', signup: 'dang-ky-som', music: 'nhac' };
+  const partName = (g, tab) => ((g.parts.find((p) => p.id === PART_OF[tab]) || {}).name) || tab;
+  // menu entries read as the part (news = "Tin tức"); the trash is shown one step in, only while the news part is open
+  const menuLabel = (g, m) => (m[0] === 'posts' ? partName(g, 'posts') : m[2]);
   const TAB_ICON = { posts: I.news, trash: I.trash, phieu: I.ticket, signup: I.userplus, music: I.music };
 
   // A game's mark: a picture, or a few letters on the game's colour (sizes in px)
@@ -169,15 +196,23 @@ export function adminApp() {
     return `<a class="sh-nv" href="${esc(href)}"${on ? ' aria-current="page"' : ''}>${icon || ''}<span>${esc(label)}</span>${n ? `<span class="sh-cnt" aria-label="${n} việc chờ">${n}</span>` : ''}</a>`;
   }
 
+  function menuLinks(g, tab, icons) {
+    const inNews = PART_OF[tab] === 'tin-tuc';
+    return g.menu.filter((m) => m[0] !== 'trash' || inNews).map((m) => {
+      const on = nav.kind === 'game' && nav.part && m[0] === tab;
+      const trash = m[0] === 'trash';
+      const link = navLink(menuLabel(g, m), menuHref(g, m), on, trash || icons ? (trash ? I.trash : TAB_ICON[m[0]]) : '', tabCount(g.id, m[0]));
+      return trash ? `<div class="sh-sub2">${link}</div>` : link;
+    }).join('');
+  }
+
   function navHtml(active) {
     const tab = active || 'posts';
     let h = '';
     if (isSingle()) {
       const g = GAMES[0];
       h += `<div class="sh-label">${tile(g, 16)}${esc(g.name)}</div>`;
-      h += g.menu.length
-        ? g.menu.map((m) => navLink(m[2], menuHref(g, m), nav.kind === 'game' && nav.part && m[0] === tab, TAB_ICON[m[0]], tabCount(g.id, m[0]))).join('')
-        : navLink('Trang game', '#/g/' + g.id + '/', nav.kind === 'game', I.layers);
+      h += g.menu.length ? menuLinks(g, tab, true) : navLink('Trang game', '#/g/' + g.id + '/', nav.kind === 'game', I.layers);
     } else {
       h += navLink('Tổng quan', '#/tong-quan', nav.kind === 'overview', I.home);
       if (GAMES.length) h += '<div class="sh-label">Game</div>';
@@ -185,9 +220,7 @@ export function adminApp() {
         const here = nav.kind === 'game' && curGame === g.id;
         h += navLink(g.name, '#/g/' + g.id + '/', here && !nav.part, tile(g, 20), urgentOf(g.id));
         if (here) {
-          h += `<div class="sh-sub">${g.menu.length
-            ? g.menu.map((m) => navLink(m[2], menuHref(g, m), nav.part && m[0] === tab, '', tabCount(g.id, m[0]))).join('')
-            : '<span class="sh-nv sh-dim">Chưa bật phần nào</span>'}</div>`;
+          h += `<div class="sh-sub">${g.menu.length ? menuLinks(g, tab, false) : '<span class="sh-nv sh-dim">Chưa bật phần nào</span>'}</div>`;
         }
       }
     }
@@ -241,7 +274,12 @@ ${newsSite ? `<div class="sh-foot"><a href="https://${esc(newsSite.host)}/tin-tu
       if (!isSingle()) c.push(crumb('Tổng quan', '#/tong-quan'));
       c.push(`<li>${isSingle() ? `<span class="sh-plain-game">${tile(g, 18)}${esc(g.name)}</span>` : switcherHtml(g)}</li>`);
       const m = nav.part ? g.menu.find((x) => x[0] === tab) : null;
-      if (m) c.push(here(m[2]));
+      if (m) {
+        const first = g.menu.find((x) => PART_OF[x[0]] === PART_OF[tab]) || m;
+        if (crumbTail) c.push(crumb(partName(g, tab), menuHref(g, first)), here(crumbTail));
+        else if (tab === 'trash') c.push(crumb(partName(g, 'posts'), menuHref(g, first)), here(menuLabel(g, m)));
+        else c.push(here(menuLabel(g, m)));
+      }
     } else if (nav.kind === 'system') {
       if (!isSingle()) c.push(crumb('Tổng quan', '#/tong-quan'));
       c.push('<li><span class="sh-plain">Hệ thống</span></li>', here('Phân quyền'));
@@ -261,8 +299,8 @@ ${newsSite ? `<div class="sh-foot"><a href="https://${esc(newsSite.host)}/tin-tu
   // every signed-in screen starts with this and then writes its own <main class="wrap">
   function header(active) { return sideHtml(active) + topHtml(active); }
 
-  async function doLogout() {
-    if (dirty() && !window.confirm('Bài đang có thay đổi chưa lưu. Vẫn đăng xuất?')) return;
+  async function doLogout(confirmed) {
+    if (!confirmed && dirty()) return leaveDlg(() => doLogout(true));
     cleanupEditor();
     await api('POST', '/dang-xuat', {});
     me = null; GAMES = []; work = null; siteState = null;
@@ -318,13 +356,79 @@ ${newsSite ? `<div class="sh-foot"><a href="https://${esc(newsSite.host)}/tin-tu
     location.hash = '#/g/' + id + '/';
   }
 
+  // ---------- dialogs ----------
+  // A dialog sits over the page (#overlay, outside #app): the page behind it is inert, Tab stays inside, Esc closes it.
+  const OV = { el: null, last: null, onOk: null };
+  const dialogOpen = () => !!OV.el;
+  function openOverlay(html, onOk) {
+    OV.last = document.activeElement; OV.onOk = onOk || null;
+    $('#overlay').innerHTML = '<div class="sh-dscrim" data-act="ovClose"></div>' + html;
+    OV.el = $('#overlay').querySelector('[role="alertdialog"],[role="dialog"]');
+    app.inert = true;
+    const f = OV.el.querySelector('[data-autofocus]') || OV.el.querySelector('input,select,textarea,button');
+    if (f) f.focus();
+  }
+  function closeOverlay() {
+    if (!OV.el) return;
+    $('#overlay').innerHTML = ''; OV.el = null; app.inert = false;
+    if (OV.last && document.contains(OV.last)) OV.last.focus();
+    OV.last = null;
+  }
+  function confirmDlg({ title, body, ok, cancel, danger }, onOk) {
+    openOverlay(`<div class="sh-dlg" role="alertdialog" aria-modal="true" aria-labelledby="dlg-t" aria-describedby="dlg-b"><div class="sh-dlg-b"><h2 id="dlg-t">${esc(title)}</h2><p id="dlg-b">${esc(body)}</p></div>
+<div class="sh-dlg-f"><button type="button" class="sh-btn" data-act="ovClose" data-autofocus>${esc(cancel || 'Thôi')}</button><button type="button" class="sh-btn ${danger === false ? 'sh-btn-primary' : 'sh-btn-danger'}" data-act="ovOk">${esc(ok)}</button></div></div>`, onOk);
+  }
+  // leaving a screen with unsaved changes (a link, the browser's back button, signing out)
+  const leaveDlg = (go) => confirmDlg({ title: 'Bài có thay đổi chưa lưu', body: 'Rời trang này thì mất các thay đổi chưa lưu.', ok: 'Rời trang', cancel: 'Ở lại' }, go);
+
+  // ---------- header of a game: mark, name, web addresses, and its parts as tabs ----------
+  let headTab = 'posts';
+  function gameHeadHtml(g, tab) {
+    headTab = tab;
+    const hosts = g.sites.filter((s) => s.host && s.host.indexOf('/') !== 0 && !s.path);
+    let right;
+    if (isOwner()) {
+      const ppl = work && work.accounts ? work.accounts.filter((u) => u.role === 'member' && !u.disabled && u.grants && Object.hasOwn(u.grants, g.id)).length : null;
+      right = `${ppl != null ? `<span>${ppl} người có quyền</span>` : ''}<a class="sh-btn" href="#/nguoi-dung">${I.users} Phân quyền game này</a>`;
+    } else {
+      right = (me.grants || {})[g.id] === '*' ? '<span>Bạn quản lý cả game này</span>' : `<span>Bạn được làm: ${esc(g.parts.filter((p) => (g.perms[p.id] || []).length).map((p) => p.name).join(', '))}</span>`;
+    }
+    const tabs = g.menu.filter((m) => m[0] !== 'trash').map((m) => {
+      const n = tabCount(g.id, m[0]);
+      return `<a class="sh-tab" href="${esc(menuHref(g, m))}"${nav.part && PART_OF[m[0]] === PART_OF[tab] ? ' aria-current="page"' : ''}>${esc(menuLabel(g, m))}${n ? `<span class="sh-cnt" aria-label="${n} việc chờ">${n}</span>` : ''}</a>`;
+    }).join('');
+    return `<div class="sh-ghead" id="sh-ghead">${tile(g, 44)}<div><h1>${esc(g.name)}</h1><div class="sh-hosts">${hosts.map((s) => `<span><span class="ov-sdot off" role="img" aria-label="Đang kiểm tra" title="Đang kiểm tra" data-site="${esc(g.id + '/' + s.id)}"></span>${esc(s.name)}: <span class="sh-mono">${esc(s.host)}</span></span>`).join('')}</div></div><div class="sh-r">${right}</div></div>
+<nav class="sh-tabs" id="sh-tabs" aria-label="Phần của ${esc(g.name)}">${tabs}</nav>`;
+  }
+  // the numbers on the tabs and the people count arrive after the screen is drawn
+  function repaintHead() {
+    const a = $('#sh-ghead'), b = $('#sh-tabs'), g = gameOf(curGame);
+    if (!a || !b || !g) return;
+    const t = document.createElement('div');
+    t.innerHTML = gameHeadHtml(g, headTab);
+    a.replaceWith(t.children[0]); b.replaceWith(t.children[0]);
+    paintSites();
+  }
+  // colours the dots of the addresses; asks the server first when it has not been asked yet
+  async function paintHead() {
+    if (siteState) return paintSites();
+    const r = await api('GET', '/trang-thai-trang');
+    if (r.ok) { siteState = r.data.sites; paintSites(); }
+  }
+
   // events of the frame are caught once on the document, so they survive every redraw of a screen
   function bindFrame() {
     document.addEventListener('click', (e) => {
       const t = e.target;
       if (!t || !t.closest) return;
+      const dact = t.closest('[data-act]');
+      if (dact) {
+        const a = dact.getAttribute('data-act');
+        if (a === 'ovClose') { closeOverlay(); return; }
+        if (a === 'ovOk') { const f = OV.onOk; closeOverlay(); if (f) f(); return; }
+      }
       if (t.closest('[data-adm-theme]')) { toggleTheme(); return; }
-      if (t.closest('#logout')) { doLogout(); return; }
+      if (t.closest('#logout')) { doLogout(false); return; }
       if (t.closest('#sh-menu')) {
         const open = app.classList.toggle('sh-open');
         $('#sh-menu').setAttribute('aria-expanded', String(open));
@@ -343,10 +447,20 @@ ${newsSite ? `<div class="sh-foot"><a href="https://${esc(newsSite.host)}/tin-tu
         else toast('Trình duyệt không cho sao chép tự động.');
       }
       const pre = t.closest('[data-pre]');
-      if (pre) listView.state = pre.getAttribute('data-pre');
+      if (pre && preSetter) preSetter(pre.getAttribute('data-pre'));
     });
     document.addEventListener('input', (e) => { if (e.target && e.target.id === 'sw-input') swFill(e.target.value); });
     document.addEventListener('keydown', (e) => {
+      if (OV.el) {
+        if (e.key === 'Escape') { e.preventDefault(); closeOverlay(); return; }
+        if (e.key === 'Tab') {
+          const f = $$('a[href],button,input,select,textarea', OV.el).filter((x) => !x.disabled && x.offsetParent !== null);
+          if (!f.length) return;
+          const first = f[0], last = f[f.length - 1];
+          if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); } else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+        }
+        return;
+      }
       if (e.target && e.target.id === 'sw-input') {
         if (e.key === 'ArrowDown') { e.preventDefault(); SW.active = Math.min(SW.items.length - 1, SW.active + 1); swMark(); }
         else if (e.key === 'ArrowUp') { e.preventDefault(); SW.active = Math.max(0, SW.active - 1); swMark(); }
@@ -645,137 +759,6 @@ ${accessHtml}`;
     }));
   }
 
-  // ---------- article list ----------
-  const listView = { state: 'all', cat: 'all', site: 'all' };
-
-  async function renderList() {
-    cleanupEditor();
-    const mine = screen;
-    app.innerHTML = `${header()}<main class="wrap"><p class="meta" style="padding:40px 0">Đang tải danh sách bài…</p></main>`;
-    const r = await api('GET', '/bai');
-    if (mine !== screen || !me) return;
-    if (!r.ok) { if (r.status !== 401) $('main').innerHTML = `<div class="err" style="margin:40px 0">${esc(r.data.error)}</div>`; return; }
-    const posts = r.data.items;
-    let pendingBar = '';
-    const draw = () => {
-      const rows = posts.filter((p) => (listView.state === 'all' || stateOf(p) === listView.state) && (listView.cat === 'all' || p.category === listView.cat)
-          && (listView.site === 'all' || siteOfPost(p) === listView.site))
-        .sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)));
-      const n = (s) => posts.filter((p) => s === 'all' || stateOf(p) === s).length;
-      const hint = can('tin-tuc', 'duyet')
-        ? 'Bài Biên tập gửi lên nằm ở mục <b>Chờ duyệt</b>: mở bài, đăng hoặc trả lại kèm ghi chú.'
-        : 'Viết xong bấm <b>Gửi duyệt</b> — Quản lý sẽ xem và đăng. Bài đã gửi thì rút về nháp mới sửa được.';
-      $('main').innerHTML = `${pendingBar}<div class="adm-top"><div><h1>Bài viết</h1><p>${hint}</p></div><a class="btn btn-fire" href="${gh('/viet-bai')}">+ Viết bài mới</a></div>
-<div class="filters">${['all', 'published', 'scheduled', 'pending', 'draft'].map((s) => `<button type="button" class="tab${listView.state === s ? ' on' : ''}" data-st="${s}">${s === 'all' ? 'Tất cả' : STATE[s]}<small>${n(s)}</small></button>`).join('')}
-<select id="fcat" aria-label="Lọc theo mục"><option value="all">Mọi mục</option>${CATS.map((c) => `<option value="${c.id}"${listView.cat === c.id ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select>
-${SITES.length ? `<select id="fsite" aria-label="Lọc theo trang"><option value="all">Mọi trang</option>${SITES.map((s) => `<option value="${s.id}"${listView.site === s.id ? ' selected' : ''}>${esc(s.name)}</option>`).join('')}</select>` : ''}</div>
-<div class="tbl-wrap"><table class="posts posts-bai"><thead><tr><th>Bài viết</th><th>Mục</th><th>Trạng thái</th><th>Người viết</th><th>Sửa lần cuối</th><th></th></tr></thead><tbody>
-${rows.map((p) => {
-    const st = stateOf(p);
-    const canEdit = can('tin-tuc', 'duyet') || p.status === 'draft';
-    return `<tr data-id="${p.id}">
-<td><div class="p-title">${p.cover ? `<img class="cover" src="${esc(p.cover)}" alt="" loading="lazy">` : '<div class="cover"></div>'}<div><b>${esc(p.title)}</b><small>${SITES.length && siteOfPost(p) === 'phu' ? '3qdaichien/#tin/' : '/tin-tuc/'}${esc(p.slug)}</small>${p.pinned ? ' <span class="pin">Ghim</span>' : ''}${p.lockedBy ? `<div class="lock">● ${esc(p.lockedBy)} đang sửa bài này</div>` : ''}${p.status === 'draft' && p.reviewNote ? `<div class="lock">↩ Trả lại: ${esc(p.reviewNote)}</div>` : ''}</div></div></td>
-<td><span class="chip c-${esc(p.category)}">${esc(catName(p.category))}</span>${SITES.length ? `<div style="margin-top:6px"><span class="chip c-${siteOfPost(p)}">${esc(siteName(siteOfPost(p)))}</span></div>` : ''}</td>
-<td><span class="pill s-${st}">${STATE[st]}</span>${st === 'scheduled' || st === 'published' ? `<div class="meta" style="margin-top:4px">${fmtTime(p.publishAt)}</div>` : ''}</td>
-<td><div class="person">${avatar(p.author)}${esc(p.author)}</div></td>
-<td class="meta">${fmtTime(p.updatedAt)}<br>bởi ${esc(p.updatedBy)}</td>
-<td><div class="acts"><a class="btn btn-ghost btn-sm" href="${gh('/sua/' + p.id)}">${canEdit ? 'Sửa' : 'Mở'}</a><a class="btn btn-ghost btn-sm" href="/quan-tri/xem-truoc/${p.id}?game=${curGame}">Xem</a>${can('tin-tuc', 'duyet') ? `<button type="button" class="btn btn-danger btn-sm" data-del="${p.id}">Xoá</button>` : ''}</div></td></tr>`;
-  }).join('')}
-${rows.length ? '' : `<tr><td colspan="6" class="meta" style="text-align:center;padding:30px">${posts.length ? 'Không có bài nào khớp bộ lọc.' : 'Chưa có bài nào. Bấm “Viết bài mới” để bắt đầu.'}</td></tr>`}
-</tbody></table></div>`;
-      $$('[data-st]').forEach((b) => b.addEventListener('click', () => { listView.state = b.getAttribute('data-st'); draw(); }));
-      $('#fcat').addEventListener('change', (e) => { listView.cat = e.target.value; draw(); });
-      if ($('#fsite')) $('#fsite').addEventListener('change', (e) => { listView.site = e.target.value; draw(); });
-      // managers delete straight from the list: first click asks, second click (within 4 s) moves it to the trash
-      $$('[data-del]').forEach((b) => b.addEventListener('click', async () => {
-        const id = +b.getAttribute('data-del');
-        if (!(b.dataset.armed > Date.now() - 4000)) {
-          b.dataset.armed = Date.now();
-          b.textContent = 'Bấm lần nữa';
-          setTimeout(() => { if (b.isConnected) b.textContent = 'Xoá'; }, 4000);
-          return;
-        }
-        const post = posts.find((x) => x.id === id);
-        b.disabled = true;
-        const r = await api('POST', `/bai/${id}/xoa`, { baseUpdatedAt: post.updatedAt });
-        if (mine !== screen) return;
-        if (!r.ok) {
-          if (r.status === 401) return;
-          b.disabled = false; b.textContent = 'Xoá';
-          $('main').insertAdjacentHTML('afterbegin', `<div class="err" style="margin-top:16px">${esc(r.data.error || 'Không xoá được.')}${r.status === 409 ? ' <a href="${gh()}" class="btn btn-ghost btn-xs" id="list-reload">Tải lại danh sách</a>' : ''}</div>`);
-          const rl = $('#list-reload'); if (rl) rl.addEventListener('click', (e) => { e.preventDefault(); renderList(); });
-          return;
-        }
-        posts.splice(posts.indexOf(post), 1);
-        toast(`Đã chuyển “${post.title}” vào thùng rác`);
-        draw();
-      }));
-    };
-    draw();
-    // owners: point at registrations waiting for approval
-    if (isOwner()) {
-      const u = await api('GET', '/nguoi-dung');
-      if (mine !== screen || !u.ok) return;
-      const waiting = u.data.users.filter((x) => x.role === 'pending').length;
-      if (waiting) { pendingBar = `<div class="warnbar" id="pending-users"><b>${waiting}</b> tài khoản đăng ký đang chờ duyệt. <a href="#/nguoi-dung">Xem và duyệt →</a></div>`; draw(); }
-    }
-  }
-
-  // ---------- trash (managers) ----------
-  async function renderTrash() {
-    cleanupEditor();
-    const mine = screen;
-    app.innerHTML = `${header('trash')}<main class="wrap"><p class="meta" style="padding:40px 0">Đang tải thùng rác…</p></main>`;
-    const r = await api('GET', '/thung-rac');
-    if (mine !== screen || !me) return;
-    if (!r.ok) { if (r.status !== 401) $('main').innerHTML = `<div class="err" style="margin:40px 0">${esc(r.data.error)}</div>`; return; }
-    const draw = (items, notice) => {
-      $('main').innerHTML = `<div class="adm-top"><div><h1>Thùng rác</h1><p>Bài đã xoá nằm ở đây. <b>Khôi phục</b> đưa bài về <b>Nháp</b> — người chơi chưa thấy cho tới khi đăng lại. <b>Xoá vĩnh viễn</b> thì bài mất hẳn, không lấy lại được.</p></div>${items.length ? `<button type="button" class="btn btn-danger" id="t-empty">Dọn sạch thùng rác (${items.length})</button>` : ''}</div>
-<div class="err" id="t-err" role="alert"${notice ? '' : ' hidden'}>${esc(notice || '')}</div>
-<div class="tbl-wrap"><table class="posts posts-rac"><thead><tr><th>Bài viết</th><th>Mục</th><th>Lúc xoá</th><th>Người viết</th><th>Xoá bởi</th><th></th></tr></thead><tbody>
-${items.map((t) => `<tr data-file="${esc(t.file)}">
-<td><div class="p-title">${t.cover ? `<img class="cover" src="${esc(t.cover)}" alt="" loading="lazy">` : '<div class="cover"></div>'}<div><b>${esc(t.title)}</b><small>/tin-tuc/${esc(t.slug)} · trước khi xoá: ${esc(STATE[t.status] || t.status)}</small></div></div></td>
-<td><span class="chip c-${esc(t.category)}">${esc(catName(t.category))}</span></td>
-<td class="meta">${fmtTime(t.deletedAt)}</td>
-<td><div class="person">${avatar(t.author)}${esc(t.author)}</div></td>
-<td class="meta">${esc(t.deletedBy || '—')}</td>
-<td><div class="acts"><button type="button" class="btn btn-ghost btn-sm" data-restore="${esc(t.file)}">Khôi phục</button><button type="button" class="btn btn-danger btn-sm" data-purge="${esc(t.file)}">Xoá vĩnh viễn</button></div></td></tr>`).join('')}
-${items.length ? '' : '<tr><td colspan="6" class="meta" style="text-align:center;padding:30px">Thùng rác trống.</td></tr>'}
-</tbody></table></div>`;
-      $$('[data-restore]').forEach((b) => b.addEventListener('click', async () => {
-        $$('[data-restore]').forEach((x) => { x.disabled = true; });
-        const mine2 = screen;
-        const res = await api('POST', `/thung-rac/${encodeURIComponent(b.getAttribute('data-restore'))}/khoi-phuc`, {});
-        if (mine2 !== screen) return;
-        if (!res.ok) { if (res.status !== 401) draw(items, res.data.error || 'Không khôi phục được.'); return; }
-        toast(`Đã khôi phục “${res.data.post.title}” về Nháp`);
-        draw(res.data.items, '');
-      }));
-      $$('[data-purge]').forEach((b) => b.addEventListener('click', async () => {
-        if (!armDelete(b, 'Xoá vĩnh viễn')) return;
-        $$('[data-purge],[data-restore],#t-empty').forEach((x) => { x.disabled = true; });
-        const mine2 = screen;
-        const res = await api('POST', `/thung-rac/${encodeURIComponent(b.getAttribute('data-purge'))}/xoa-han`, {});
-        if (mine2 !== screen) return;
-        if (!res.ok) { if (res.status !== 401) draw(items, res.data.error || 'Không xoá được.'); return; }
-        toast(`Đã xoá vĩnh viễn “${res.data.title}”`);
-        draw(res.data.items, '');
-      }));
-      const empty = $('#t-empty');
-      if (empty) empty.addEventListener('click', async () => {
-        if (!armDelete(empty, `Dọn sạch thùng rác (${items.length})`)) return;
-        $$('[data-purge],[data-restore],#t-empty').forEach((x) => { x.disabled = true; });
-        const mine2 = screen;
-        const res = await api('POST', '/thung-rac/don-sach', {});
-        if (mine2 !== screen) return;
-        if (!res.ok) { if (res.status !== 401) draw(items, res.data.error || 'Không dọn được thùng rác.'); return; }
-        toast(`Đã xoá vĩnh viễn ${res.data.deleted} bài`);
-        draw(res.data.items, '');
-      });
-    };
-    draw(r.data.items, '');
-  }
-
   // ---------- background music of the home page (managers) ----------
   // The songs are plain files in one folder on the server, so this page is that folder: upload adds a file, delete
   // removes it, and the player on the home page follows at once (it reads the same folder on every visit).
@@ -997,402 +980,13 @@ ${d.items.length ? '' : `<tr><td colspan="6" class="meta" style="text-align:cent
     if (d) draw(d);
   }
 
-  // ---------- picture upload (cover, pictures in the text) ----------
-  const UPLOAD_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-  // Sends one picture file; resolves its /tin-tuc-anh/… address, or null after showing why it failed.
-  async function uploadPicture(file, say) {
-    if (!file) return null;
-    if (!UPLOAD_TYPES.includes(file.type)) { say('Chỉ nhận ảnh JPG, PNG hoặc WEBP.'); return null; }
-    if (file.size > 5 * 1024 * 1024) { say(`Ảnh nặng ${(file.size / 1048576).toFixed(1)} MB, quá giới hạn 5 MB. Hãy giảm kích thước (khuyên dùng 1200×675) rồi tải lại.`); return null; }
-    if (file.size > 2 * 1024 * 1024) toast(`Ảnh nặng ${(file.size / 1048576).toFixed(1)} MB — trang sẽ tải chậm hơn. Nên nén xuống dưới 1 MB nếu được.`);
-    let res;
-    try {
-      res = await fetch('/quan-tri/api' + gp('/anh'), { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': file.type }, body: file });
-    } catch (e) {
-      say('Không tải được ảnh lên (mất kết nối). Thử lại.');
-      return null;
-    }
-    let data = {};
-    try { data = await res.json(); } catch (e) { data = { error: 'Máy chủ trả lời lạ (' + res.status + ').' }; }
-    if (res.status === 401) { me = null; renderLogin(data.error); return null; }
-    if (!res.ok) { say(data.error || 'Không tải được ảnh lên.'); return null; }
-    return data.url;
-  }
-
   // ---------- editor ----------
   function cleanupEditor() {
     screen++;
+    crumbTail = '';
     if (leaving) { const f = leaving; leaving = null; f(); }
     dirty = () => false;
   }
-
-  async function renderEditor(id) {
-    cleanupEditor();
-    if (!id) return drawEditor(null, '', []);
-    const mine = screen;
-    app.innerHTML = `${header()}<main class="wrap"><p class="meta" style="padding:40px 0">Đang mở bài…</p></main>`;
-    const r = await api('GET', '/bai/' + id);
-    if (mine !== screen || !me) return;
-    if (!r.ok) {
-      if (r.status !== 401) $('main').innerHTML = `<div class="err" style="margin:40px 0">${esc(r.data.error)} <a href="${gh()}">← Về danh sách</a></div>`;
-      return;
-    }
-    drawEditor(r.data.post, r.data.lockedBy, r.data.history);
-  }
-
-  function drawEditor(post, lockedBy, versions) {
-    cleanupEditor();
-    const manager = can('tin-tuc', 'duyet');
-    const p = post ? Object.assign({}, post) : { id: 0, slug: '', title: '', category: CATS[0].id, cover: '', pinned: false, status: 'draft', publishAt: null, summary: '', content: '', reviewNote: '' };
-    const st = post ? stateOf(post) : 'draft';
-    const live = !!post && st === 'published';
-    const editable = manager || !post || post.status === 'draft';
-    // a new article has no site until the writer picks one; an existing one shows where it is now
-    const site0 = post ? siteOfPost(post) : '';
-    let slugTouched = !!post;
-    const mode0 = st === 'scheduled' ? 'scheduled' : st === 'published' ? 'now' : 'draft';
-    const defaultWhen = post && st === 'scheduled' ? post.publishAt.slice(0, 16) : siteNowLocal(Date.now() + 86400e3).slice(0, 11) + '20:00';
-    const firstRadio = !post || post.status === 'draft' ? 'Lưu nháp — chỉ nhóm thấy' : post.status === 'pending' ? 'Giữ ở chờ duyệt' : 'Gỡ khỏi trang tin (về nháp)';
-
-    let publishBox;
-    if (manager) {
-      publishBox = `<div class="radios" role="radiogroup" aria-label="Trạng thái">
-<label><input type="radio" name="e-mode" value="draft"${mode0 === 'draft' ? ' checked' : ''}> ${firstRadio}</label>
-<label><input type="radio" name="e-mode" value="now"${mode0 === 'now' ? ' checked' : ''}> ${live ? 'Đang hiện trên trang tin' : 'Đăng ngay'}</label>
-<label><input type="radio" name="e-mode" value="scheduled"${mode0 === 'scheduled' ? ' checked' : ''}> Hẹn giờ đăng</label></div>
-<input type="datetime-local" id="e-when" class="inp" style="margin-top:10px" value="${esc(defaultWhen)}"${mode0 === 'scheduled' ? '' : ' hidden'} aria-label="Thời điểm đăng (giờ Việt Nam)">
-<label class="chk"><input type="checkbox" id="e-pin"${p.pinned ? ' checked' : ''}> Ghim lên đầu mục (bỏ ghim bài đang ghim cùng mục)</label>
-<div class="btns"><button type="button" class="btn btn-ghost btn-sm" id="e-prev">Xem trước</button><button type="button" class="btn btn-fire" id="e-save">Lưu</button></div>`;
-    } else if (editable) {
-      publishBox = `<p class="meta small" style="margin:0">Bài của Biên tập cần Quản lý duyệt trước khi hiện trên trang tin.</p>
-<div class="btns"><button type="button" class="btn btn-ghost btn-sm" id="e-prev">Xem trước</button><button type="button" class="btn btn-ghost" id="e-draft">Lưu nháp</button><button type="button" class="btn btn-fire" id="e-send">Gửi duyệt</button></div>`;
-    } else if (post.status === 'pending') {
-      publishBox = `<p style="margin:0">Bài đang <b>chờ Quản lý duyệt</b>. Muốn sửa thì rút về nháp (bài sẽ không còn trong hàng chờ).</p>
-<div class="btns"><button type="button" class="btn btn-ghost btn-sm" id="e-prev">Xem trước</button><button type="button" class="btn btn-fire" id="e-back">Rút về nháp để sửa</button></div>`;
-    } else {
-      publishBox = `<p style="margin:0">Bài ${st === 'scheduled' ? 'đã hẹn giờ đăng' : 'đã đăng'} — chỉ Quản lý sửa được.</p>
-<div class="btns"><button type="button" class="btn btn-ghost btn-sm" id="e-prev">Xem trước</button></div>`;
-    }
-
-    const reviewBox = manager && post && post.status === 'pending'
-      ? `<div class="box"><h3>Trả lại cho người viết</h3><textarea id="e-note" class="inp" rows="3" maxlength="300" placeholder="Cần sửa gì? Ví dụ: thiếu ảnh bìa, sai ngày sự kiện…"></textarea>
-<div class="btns"><button type="button" class="btn btn-ghost" id="e-return">Trả lại</button></div></div>` : '';
-    const dangerBox = manager && post
-      ? `<div class="box"><h3>Xoá bài</h3><p class="meta small" style="margin:0 0 10px">Bài chuyển vào thùng rác trên máy chủ (khôi phục được khi cần).</p><button type="button" class="btn btn-danger btn-sm" id="e-del">Xoá bài</button></div>` : '';
-    const historyBox = post && versions.length
-      ? `<div class="box"><h3>Lịch sử (${versions.length} bản gần nhất)</h3><ul class="hist">${versions.map((h, i) => `<li>${avatar(h.actor)}<span>${esc(h.actor)} ${esc(ACTION_WORDS[h.action] || h.action)}<small>${fmtTime(h.savedAt)}${i === 0 ? ' · bản hiện tại' : ''}</small></span>${i === 0 || !editable ? '' : `<button type="button" class="btn btn-ghost btn-xs" data-rev="${esc(h.rev)}">Nạp</button>`}</li>`).join('')}</ul></div>` : '';
-
-    app.innerHTML = `${header()}<main class="wrap">
-<div id="e-lockbar"></div>
-${p.status === 'draft' && p.reviewNote ? `<div class="warnbar">Quản lý trả lại bài: ${esc(p.reviewNote)}</div>` : ''}
-<div class="adm-top" style="padding-bottom:0"><div><a class="meta" href="${gh()}" style="text-decoration:none">← Tất cả bài viết</a><h1 style="margin-top:8px">${post ? (editable ? 'Sửa bài' : 'Xem bài') : 'Viết bài mới'}</h1>
-${post ? `<p><span class="pill s-${st}">${STATE[st]}</span>${post.publishAt ? ` <span class="meta">${st === 'scheduled' ? 'đăng lúc' : 'đăng'} ${fmtTime(post.publishAt)}</span>` : ''}</p>` : ''}</div></div>
-<div class="ed">
-<div>
-<div class="field"><label for="e-title">Tiêu đề</label><textarea id="e-title" class="inp t-inp" rows="2" maxlength="150" placeholder="Ví dụ: Khai mở máy chủ S2 Trường Bản">${esc(p.title)}</textarea></div>
-<div class="field" style="margin-top:-8px"><div class="slug"><span id="e-addr">${esc(addrPrefix(site0 || 'chinh'))}</span><input id="e-slug" value="${esc(p.slug)}" aria-label="Đường dẫn bài" placeholder="tu-dong-tao-tu-tieu-de" maxlength="80" spellcheck="false"></div></div>
-<div class="field"><label for="e-sum">Tóm tắt <span class="lbl-note">— hiện trên thẻ bài và khi chia sẻ</span></label>
-<textarea id="e-sum" class="inp" rows="2" maxlength="220" placeholder="Một hai câu nói bài này có gì cho người chơi">${esc(p.summary)}</textarea><span class="count" id="e-count"></span></div>
-<div class="field"><span class="lbl">Nội dung</span>
-<div class="editor">
-<div class="tb" role="toolbar" aria-label="Định dạng"${editable ? '' : ' hidden'}>
-<button type="button" data-cmd="formatBlock" data-val="P">Đoạn văn</button><button type="button" data-cmd="formatBlock" data-val="H2">Tiêu đề lớn</button><button type="button" data-cmd="formatBlock" data-val="H3">Tiêu đề nhỏ</button><span class="sep"></span>
-<button type="button" data-cmd="bold" aria-label="In đậm"><b>B</b></button><button type="button" data-cmd="italic" aria-label="In nghiêng"><i>I</i></button><button type="button" data-cmd="insertUnorderedList">• Danh sách</button><button type="button" data-cmd="insertOrderedList">1. Danh sách</button><span class="sep"></span>
-<button type="button" data-pop="link">Liên kết</button><button type="button" data-pop="image">Ảnh</button><button type="button" data-ins="table">Bảng</button><button type="button" data-ins="gift">Ô giftcode</button><button type="button" data-ins="note">Lưu ý</button>
-</div>
-<div id="e-pop"></div>
-<div class="ce prose" id="e-body" contenteditable="${editable ? 'true' : 'false'}" data-ph="Bắt đầu viết… Dùng “Tiêu đề lớn” để chia mục — mục lục bên cạnh bài sẽ tự tạo từ các tiêu đề này."></div>
-</div></div>
-</div>
-<div class="side">
-<div class="box"><h3>Đăng bài</h3>${publishBox}<div class="err" id="e-err" role="alert" hidden></div></div>
-${reviewBox}
-${SITES.length ? `<div class="box"><h3>Đăng lên</h3><div class="cats sites" role="radiogroup" aria-label="Đăng lên trang">${SITES.map((s) => `<label class="c-${s.id}" title="${esc(s.hint)}"><input type="radio" name="e-site" value="${s.id}"${site0 === s.id ? ' checked' : ''}${editable ? '' : ' disabled'}><span>${esc(s.name)}</span></label>`).join('')}</div>
-<p class="meta small" style="margin:8px 0 0">${site0 ? esc((SITES.find((s) => s.id === site0) || {}).hint || '') : 'Chọn một trang — bài chỉ hiện ở trang đó.'}</p></div>` : ''}
-<div class="box"><h3>Mục</h3><div class="cats">${CATS.map((c) => `<label class="c-${c.id}"><input type="radio" name="e-cat" value="${c.id}"${p.category === c.id ? ' checked' : ''}${editable ? '' : ' disabled'}><span>${esc(c.name)}</span></label>`).join('')}</div></div>
-<div class="box"><h3>Ảnh bìa</h3>
-<img class="cover" id="e-cover" src="${esc(p.cover)}" alt=""${p.cover ? '' : ' hidden'}>
-${editable ? `<div class="lib">${LIB.map((src) => `<img src="${esc(src)}" data-cover="${esc(src)}" class="${p.cover === src ? 'on' : ''}" alt="Ảnh thư viện" tabindex="0" loading="lazy">`).join('')}</div>
-<div class="upl"><label class="btn btn-ghost btn-sm upl-btn">Tải ảnh bìa từ máy<input type="file" id="e-file" accept="image/jpeg,image/png,image/webp"></label>
-<span class="hint">JPG, PNG, WEBP · tối đa 5 MB · khuyên dùng 1200×675</span></div>` : ''}
-</div>
-<div class="box"><h3>Khi chia sẻ lên Facebook</h3><div class="fb" id="e-fb"></div></div>
-${historyBox}
-${dangerBox}
-</div>
-</div></main>`;
-
-    const title = $('#e-title'), slug = $('#e-slug'), sum = $('#e-sum'), body = $('#e-body'), err = $('#e-err');
-    body.innerHTML = p.content;
-    [title, slug, sum].forEach((el) => { el.disabled = !editable; });
-    const mode = () => { const r = $('input[name="e-mode"]:checked'); return r ? r.value : 'draft'; };
-    const cat = () => $('input[name="e-cat"]:checked').value;
-    const siteVal = () => { const r = $('input[name="e-site"]:checked'); return r ? r.value : null; };
-    const collect = () => ({
-      title: title.value.trim(), slug: slug.value || slugify(title.value), summary: sum.value.trim(), content: body.innerHTML,
-      category: cat(), site: siteVal(), cover: p.cover || '', pinned: !!($('#e-pin') && $('#e-pin').checked),
-    });
-    // the hint under "Đăng lên" follows the choice
-    $$('input[name="e-site"]').forEach((r) => r.addEventListener('change', () => {
-      const s = SITES.find((x) => x.id === siteVal()); const hint = $('.sites') && $('.sites').nextElementSibling;
-      if (hint && s) hint.textContent = s.hint;
-      if ($('#e-addr')) $('#e-addr').textContent = addrPrefix(siteVal());
-    }));
-    let saved = JSON.stringify(collect());
-    dirty = () => editable && JSON.stringify(collect()) !== saved;
-
-    const showErr = (msg, reload) => {
-      err.innerHTML = esc(msg) + (reload ? ' <button type="button" class="btn btn-ghost btn-xs" id="e-reload">Tải lại bản mới</button>' : '');
-      err.hidden = false;
-      const b = $('#e-reload');
-      if (b) b.addEventListener('click', () => { dirty = () => false; renderEditor(post.id); });
-    };
-
-    const saveBtn = $('#e-save');
-    const syncMode = () => {
-      if (!manager) return;
-      $('#e-when').hidden = mode() !== 'scheduled';
-      saveBtn.textContent = {
-        draft: !post || post.status === 'draft' ? 'Lưu nháp' : post.status === 'pending' ? 'Lưu' : 'Gỡ bài',
-        now: live ? 'Cập nhật bài' : 'Đăng bài',
-        scheduled: st === 'scheduled' ? 'Cập nhật giờ hẹn' : 'Hẹn giờ đăng',
-      }[mode()];
-    };
-    const syncFb = () => {
-      $('#e-count').textContent = `${sum.value.length}/160`;
-      $('#e-count').classList.toggle('over', sum.value.length > 160);
-      $('#e-fb').innerHTML = `${p.cover ? `<img class="cover" src="${esc(p.cover)}" alt="">` : '<div class="cover fb-empty"></div>'}<div><small>${esc(HOST)}</small><b>${esc(title.value || 'Tiêu đề bài viết')}</b><p>${esc(sum.value || 'Tóm tắt sẽ hiện ở đây')}</p></div>`;
-    };
-    $$('input[name="e-mode"]').forEach((r) => r.addEventListener('change', syncMode));
-    title.addEventListener('input', () => { if (!slugTouched) slug.value = slugify(title.value); syncFb(); });
-    slug.addEventListener('input', () => { slugTouched = true; });
-    slug.addEventListener('change', () => { slug.value = slugify(slug.value); });
-    sum.addEventListener('input', syncFb);
-    const setCover = (src) => {
-      p.cover = src;
-      const c = $('#e-cover'); c.src = src; c.hidden = false;
-      $$('[data-cover]').forEach((x) => x.classList.toggle('on', x.getAttribute('data-cover') === src));
-      syncFb();
-    };
-    $$('[data-cover]').forEach((x) => {
-      x.addEventListener('click', () => setCover(x.getAttribute('data-cover')));
-      x.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setCover(x.getAttribute('data-cover')); } });
-    });
-    if ($('#e-file')) {
-      $('#e-file').addEventListener('change', async (e) => {
-        const input = e.target;
-        err.hidden = true;
-        input.disabled = true;
-        const mine = screen;
-        const url = await uploadPicture(input.files[0], showErr);
-        if (mine !== screen) return;
-        input.disabled = false; input.value = '';
-        if (url) { setCover(url); toast('Đã tải ảnh bìa lên'); }
-      });
-    }
-
-    // formatting: execCommand on the remembered selection
-    try { document.execCommand('defaultParagraphSeparator', false, 'p'); } catch (e) { /* older browsers */ }
-    let range = null;
-    const keep = () => { const s = getSelection(); if (s.rangeCount && body.contains(s.anchorNode)) range = s.getRangeAt(0).cloneRange(); };
-    ['keyup', 'mouseup', 'blur'].forEach((ev) => body.addEventListener(ev, keep));
-    const restore = () => { body.focus(); if (range) { const s = getSelection(); s.removeAllRanges(); s.addRange(range); } };
-    const run = (cmd, val) => { restore(); document.execCommand(cmd, false, val); keep(); };
-    const noSteal = (b) => b.addEventListener('mousedown', (e) => e.preventDefault());
-    $$('[data-cmd]').forEach((b) => { noSteal(b); b.addEventListener('click', () => run(b.getAttribute('data-cmd'), b.getAttribute('data-val') ? `<${b.getAttribute('data-val')}>` : null)); });
-    const SNIP = {
-      table: '<div class="tbl"><table><thead><tr><th>Mốc</th><th>Phần thưởng</th><th>Số lượng</th></tr></thead><tbody><tr><td>…</td><td>…</td><td>…</td></tr><tr><td>…</td><td>…</td><td>…</td></tr></tbody></table></div>',
-      gift: '<div class="gift"><div><small>Giftcode</small><code>NHAPMA</code></div></div>',
-      note: '<div class="note"><strong>Lưu ý:</strong> …</div>',
-    };
-    // blocks (table, gift code, note, picture) go right after the paragraph holding the caret — replacing it when it is
-    // empty — followed by an empty paragraph that takes the caret, so several blocks in a row keep their order
-    // (execCommand('insertHTML') leaves the caret in unpredictable places around block content)
-    const insertBlock = (html) => {
-      restore();
-      const sel = getSelection();
-      let anchor = sel.rangeCount ? sel.getRangeAt(0).startContainer : null;
-      if (anchor && !body.contains(anchor)) anchor = null;
-      while (anchor && anchor.parentNode !== body) anchor = anchor.parentNode;
-      const tpl = document.createElement('template');
-      tpl.innerHTML = html + '<p><br></p>';
-      const para = tpl.content.lastChild;
-      const emptyPara = anchor && anchor.nodeName === 'P' && !anchor.textContent.trim() && !anchor.querySelector('img');
-      if (anchor) anchor.after(tpl.content); else body.append(tpl.content);
-      if (emptyPara) anchor.remove();
-      const r = document.createRange();
-      r.setStart(para, 0); r.collapse(true);
-      sel.removeAllRanges(); sel.addRange(r);
-      keep();
-    };
-    $$('[data-ins]').forEach((b) => { noSteal(b); b.addEventListener('click', () => insertBlock(SNIP[b.getAttribute('data-ins')])); });
-    const pop = $('#e-pop');
-    const closePop = () => { pop.innerHTML = ''; pop.removeAttribute('data-kind'); };
-    // The table cell holding the caret, if any: a picture put there stays inline (item icons in a rewards table).
-    const caretCell = () => {
-      let n = range ? range.startContainer : null;
-      while (n && n !== body) { if (n.nodeName === 'TD' || n.nodeName === 'TH') return n; n = n.parentNode; }
-      return null;
-    };
-    const putPicture = (src) => {
-      const cell = caretCell();
-      if (cell) {
-        restore();
-        const img = document.createElement('img');
-        img.src = src; img.alt = '';
-        const sel = getSelection();
-        const r = sel.rangeCount && cell.contains(sel.getRangeAt(0).startContainer) ? sel.getRangeAt(0) : null;
-        if (r) { r.deleteContents(); r.insertNode(img); r.setStartAfter(img); r.collapse(true); sel.removeAllRanges(); sel.addRange(r); } else cell.prepend(img);
-        keep();
-      } else {
-        insertBlock(`<figure><img src="${esc(src)}" alt=""><figcaption>Chú thích ảnh…</figcaption></figure>`);
-      }
-      closePop();
-    };
-    async function openPicturePop() {
-      const inCell = !!caretCell();
-      const draw = (uploads, note) => {
-        const thumbs = (list) => list.map((src) => `<img src="${esc(src)}" data-put="${esc(src)}" alt="" loading="lazy">`).join('');
-        pop.innerHTML = `<div class="pop pop-pics">
-<div class="pop-row"><span class="meta">${inCell ? 'Con trỏ đang ở <b>ô bảng</b>: ảnh chèn gọn trong ô (hợp cho icon vật phẩm).' : 'Bấm ảnh để chèn vào vị trí con trỏ.'}</span>
-<label class="btn btn-ghost btn-sm upl-btn">Tải ảnh từ máy<input type="file" id="e-pic-file" accept="image/jpeg,image/png,image/webp"></label></div>
-${note ? `<div class="meta">${esc(note)}</div>` : ''}
-${uploads.length ? `<div class="pop-row"><span class="lbl">Ảnh đã tải lên</span></div><div class="pop-row">${thumbs(uploads)}</div>` : ''}
-<div class="pop-row"><span class="lbl">Ảnh trang chủ</span></div><div class="pop-row">${thumbs(LIB)}</div></div>`;
-        $$('[data-put]', pop).forEach((x) => { noSteal(x); x.addEventListener('click', () => putPicture(x.getAttribute('data-put'))); });
-        $('#e-pic-file').addEventListener('change', async (e) => {
-          const mine = screen;
-          e.target.disabled = true;
-          const url = await uploadPicture(e.target.files[0], (msg) => toast(msg));
-          if (mine !== screen || pop.getAttribute('data-kind') !== 'image') return;
-          if (url) putPicture(url); else { e.target.disabled = false; e.target.value = ''; }
-        });
-      };
-      draw([], 'Đang tải danh sách ảnh đã tải lên…');
-      const mine = screen;
-      const r = await api('GET', '/anh');
-      if (mine !== screen || pop.getAttribute('data-kind') !== 'image') return;
-      draw(r.ok ? r.data.items.map((x) => x.url) : [], r.ok ? '' : (r.data.error || ''));
-    }
-    $$('[data-pop]').forEach((b) => {
-      noSteal(b);
-      b.addEventListener('click', () => {
-        const kind = b.getAttribute('data-pop');
-        if (pop.getAttribute('data-kind') === kind) return closePop();
-        pop.setAttribute('data-kind', kind);
-        if (kind === 'link') {
-          pop.innerHTML = '<div class="pop"><input class="inp" id="e-url" placeholder="https://… (bôi đen chữ trước khi chèn)"><button type="button" class="btn btn-fire btn-sm" id="e-url-ok">Chèn liên kết</button></div>';
-          noSteal($('#e-url-ok'));
-          $('#e-url-ok').addEventListener('click', () => {
-            const u = $('#e-url').value.trim();
-            if (/^https:\/\/\S+$/.test(u)) { run('createLink', u); closePop(); } else toast('Liên kết cần bắt đầu bằng https://');
-          });
-        } else {
-          openPicturePop();
-        }
-      });
-    });
-
-    // saving
-    const busy = (on) => $$('.side button').forEach((b) => { b.disabled = on; });
-    async function act(action, extra) {
-      err.hidden = true;
-      const bodyData = Object.assign(collect(), { action, baseUpdatedAt: post ? post.updatedAt : undefined }, extra || {});
-      busy(true);
-      const mine = screen;
-      const r = await api('POST', post ? '/bai/' + post.id : '/bai', bodyData);
-      if (mine !== screen) { if (r.ok) toast('Đã lưu bài “' + r.data.post.title + '”'); return r.ok ? r.data.post : null; }
-      busy(false);
-      if (!r.ok) { if (r.status !== 401) showErr(r.data.error || 'Không lưu được.', r.status === 409); return null; }
-      const newPost = r.data.post;
-      if (!post) { try { history.replaceState(null, '', gh('/sua/' + newPost.id)); lastHash = location.hash; } catch (e) { /* ignore */ } }
-      const s2 = stateOf(newPost);
-      toast({ luu: 'Đã lưu', 'gui-duyet': 'Đã gửi duyệt — Quản lý sẽ xem bài', 'rut-ve': 'Đã rút bài về nháp', 'dang-ngay': live ? 'Đã cập nhật bài trên trang tin' : 'Đã đăng — bài hiện trên trang Tin tức', 'hen-gio': `Đã hẹn đăng lúc ${fmtTime(newPost.publishAt)}`, 'tra-lai': 'Đã trả lại bài cho người viết', 'go-bai': 'Đã gỡ bài khỏi trang tin' }[action] || STATE[s2]);
-      drawEditor(newPost, '', r.data.history || []);
-      return newPost;
-    }
-    if (saveBtn) {
-      saveBtn.addEventListener('click', () => {
-        const m = mode();
-        if (m === 'now') return act('dang-ngay');
-        if (m === 'scheduled') {
-          const when = $('#e-when').value;
-          if (!when) return showErr('Chọn ngày giờ đăng.');
-          return act('hen-gio', { publishAt: when });
-        }
-        return act(live || st === 'scheduled' ? 'go-bai' : 'luu');
-      });
-    }
-    if ($('#e-draft')) $('#e-draft').addEventListener('click', () => act('luu'));
-    if ($('#e-send')) $('#e-send').addEventListener('click', () => act('gui-duyet'));
-    if ($('#e-back')) $('#e-back').addEventListener('click', () => act('rut-ve'));
-    if ($('#e-return')) {
-      $('#e-return').addEventListener('click', () => {
-        const note = $('#e-note').value.trim();
-        if (!note) return showErr('Ghi chú cho người viết biết cần sửa gì.');
-        return act('tra-lai', { note });
-      });
-    }
-    if ($('#e-del')) {
-      let armed = 0;
-      $('#e-del').addEventListener('click', async (e) => {
-        const b = e.currentTarget;
-        if (Date.now() - armed > 4000) { armed = Date.now(); b.textContent = 'Bấm lần nữa để xoá'; setTimeout(() => { if (b.isConnected) b.textContent = 'Xoá bài'; }, 4000); return; }
-        busy(true);
-        const r = await api('POST', `/bai/${post.id}/xoa`, { baseUpdatedAt: post.updatedAt });
-        busy(false);
-        if (!r.ok) { if (r.status !== 401) showErr(r.data.error || 'Không xoá được.', r.status === 409); return; }
-        dirty = () => false;
-        toast('Đã xoá bài');
-        location.hash = gh();
-      });
-    }
-    // preview: the saved article on its real page, opened in this tab (its "Về trang sửa bài" link comes back here).
-    // Unsaved changes are saved first — except on a published or scheduled article, where saving would change the live
-    // site and leaving would lose them: the editor stays and asks for a save first.
-    $('#e-prev').addEventListener('click', async () => {
-      err.hidden = true;
-      if (!title.value.trim()) return showErr('Nhập tiêu đề để xem trước.');
-      let target = post;
-      if (!post || dirty()) {
-        if (live || st === 'scheduled') return showErr('Bài có thay đổi chưa lưu. Lưu thay đổi trước rồi mới bấm Xem trước (bài đã đăng / hẹn giờ nên không tự lưu).');
-        target = await act('luu');
-      }
-      if (!target) return;
-      location.href = '/quan-tri/xem-truoc/' + target.id + '?game=' + encodeURIComponent(curGame);
-    });
-    // bring back an older version into the form (saved only when the user saves)
-    $$('[data-rev]').forEach((b) => b.addEventListener('click', async () => {
-      const mine = screen;
-      const r = await api('GET', `/bai/${post.id}/lich-su/${b.getAttribute('data-rev')}`);
-      if (mine !== screen) return;
-      if (!r.ok) { if (r.status !== 401) showErr(r.data.error); return; }
-      const old = r.data.revision.post;
-      title.value = old.title; slug.value = old.slug; sum.value = old.summary || ''; body.innerHTML = old.content;
-      const c = $(`input[name="e-cat"][value="${old.category}"]`); if (c) c.checked = true;
-      const s = $(`input[name="e-site"][value="${siteOfPost(old)}"]`); if (s) s.checked = true;
-      if (old.cover) setCover(old.cover);
-      syncFb();
-      toast(`Đã nạp bản lúc ${fmtTime(r.data.revision.savedAt)} — bấm Lưu để giữ bản này`);
-    }));
-
-    // "someone else is editing" — heartbeat while the editor is open
-    if (post && editable) {
-      const lockbar = $('#e-lockbar');
-      const showLock = (name) => { lockbar.innerHTML = name ? `<div class="warnbar">${esc(name)} đang mở bài này. Nếu cả hai cùng sửa, người lưu sau sẽ được báo để tải lại — hãy báo ${esc(name)} trước khi sửa.</div>` : ''; };
-      showLock(lockedBy);
-      const beat = async () => { const r = await api('POST', `/bai/${post.id}/khoa`, {}); if (r.ok) showLock(r.data.lockedBy); };
-      beat();
-      const timer = setInterval(beat, 30000);
-      leaving = () => {
-        clearInterval(timer);
-        try { fetch('/quan-tri/api' + gp(`/bai/${post.id}/khoa`), { method: 'POST', keepalive: true, credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: '{"release":true}' }); } catch (e) { /* page closing */ }
-      };
-    }
-    syncMode(); syncFb();
-    if (!post) title.focus();
-  }
-
   // ---------- overview of the games, and the pages that stand in for a missing part ----------
   const WEEKDAY = ['Chủ nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
   function todayWords() {
@@ -1446,6 +1040,7 @@ ${uploads.length ? `<div class="pop-row"><span class="lbl">Ảnh đã tải lên
     work = { at: Date.now(), byGame, accounts, log };
     const nav2 = $('#sh-nav');
     if (nav2) nav2.innerHTML = navHtml();
+    repaintHead();
   }
 
   const siteHost = (g, s) => {
@@ -1585,6 +1180,16 @@ ${g.sites.length ? `<div>${I.layers} <span class="ov-mono">${esc(siteHost(g, g.s
 <div class="sh-acts"><a class="sh-btn sh-btn-primary" href="${isSingle() || !GAMES.length ? '#/' : '#/tong-quan'}">${isSingle() ? 'Về trang việc của bạn' : GAMES.length ? 'Về tổng quan' : 'Tải lại'}</a></div></div>`);
   }
 
+  // ---------- news screens (admin-news-app.mjs) ----------
+  const NEWS = adminNews({
+    $, $$, esc, api, toast, can, gh, header, app, I, svgIcon, initials, fmtTime, slugify, siteNowLocal, armDelete, disarm, gp,
+    CATS, LIB, HOST, SITES, STATE, ACTION_WORDS, stateOf, siteOfPost, addrPrefix,
+    screen: () => screen, me: () => me, isOwner, game: () => gameOf(curGame), gameId: () => curGame,
+    cleanupEditor, setDirty: (f) => { dirty = f; }, setLeaving: (f) => { leaving = f; }, markHash: () => { lastHash = location.hash; },
+    loginAgain: (msg) => { me = null; renderLogin(msg); }, setPreState: (f) => { preSetter = f; },
+    gameHead: gameHeadHtml, paintHead, setCrumb: (t) => { crumbTail = t; }, dialogOpen,
+  });
+
   // ---------- routing ----------
   // Addresses: #/tong-quan · #/g/<game>/<section> · #/nguoi-dung. The older ones that name no game (#/sua/12, #/phieu-be-ngoan, …)
   // are game 3qdc's, so bookmarks keep working. A bare #/ is the account's home: the overview, or the one game it has.
@@ -1594,13 +1199,13 @@ ${g.sites.length ? `<div>${I.layers} <span class="ov-mono">${esc(siteHost(g, g.s
 
   // the sections of a game: the address they answer to, the part and permission they need, the tab they light up
   const SECTION_TABLE = [
-    { test: (r) => r === '/viet-bai', mod: 'tin-tuc', perm: 'viet', tab: 'posts', draw: (r) => renderEditor(null) },
-    { test: (r) => /^\/sua\/\d+$/.test(r), mod: 'tin-tuc', perm: 'viet', tab: 'posts', draw: (r) => renderEditor(+r.slice(5)) },
+    { test: (r) => r === '/viet-bai', mod: 'tin-tuc', perm: 'viet', tab: 'posts', draw: (r) => NEWS.renderEditor(null) },
+    { test: (r) => /^\/sua\/\d+$/.test(r), mod: 'tin-tuc', perm: 'viet', tab: 'posts', draw: (r) => NEWS.renderEditor(+r.slice(5)) },
     { test: (r) => r === '/nhac', mod: 'nhac', perm: 'quan-ly', tab: 'music', draw: () => renderMusic() },
     { test: (r) => r === '/dang-ky-som', mod: 'dang-ky-som', perm: 'quan-ly', tab: 'signup', draw: () => renderSignups() },
     { test: (r) => r === '/phieu-be-ngoan', mod: 'phieu-be-ngoan', perm: 'duyet', tab: 'phieu', draw: () => renderPhieu() },
-    { test: (r) => r === '/thung-rac', mod: 'tin-tuc', perm: 'duyet', tab: 'trash', draw: () => renderTrash() },
-    { test: (r) => r === '/', mod: 'tin-tuc', perm: 'viet', tab: 'posts', draw: () => renderList() },
+    { test: (r) => r === '/thung-rac', mod: 'tin-tuc', perm: 'duyet', tab: 'trash', draw: () => NEWS.renderTrash() },
+    { test: (r) => r === '/', mod: 'tin-tuc', perm: 'viet', tab: 'posts', draw: () => NEWS.renderList() },
   ];
 
   function route() {
@@ -1699,8 +1304,11 @@ ${g.sites.length ? `<div>${I.layers} <span class="ov-mono">${esc(siteHost(g, g.s
     // a new set-password link pasted into the same tab: show the form for that token
     if (location.pathname.indexOf('/quan-tri/dat-mat-khau') === 0) { if (location.hash.length > 1) renderSetPassword(); return; }
     if (location.pathname.indexOf('/quan-tri/moi') === 0) { if (location.hash.length > 1) renderAcceptInvite(); return; }
-    if (dirty() && !window.confirm('Bài đang có thay đổi chưa lưu. Rời trang này?')) {
+    if (dirty()) {
+      // put the old address back and ask; "Rời trang" goes on to where the person was heading
+      const target = location.hash;
       try { history.replaceState(null, '', lastHash || '#/'); } catch (e) { /* ignore */ }
+      if (!dialogOpen()) leaveDlg(() => { dirty = () => false; location.hash = target; });
       return;
     }
     route();

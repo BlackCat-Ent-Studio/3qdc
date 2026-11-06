@@ -5,6 +5,8 @@ import { randomBytes } from 'node:crypto';
 import { CATS, IMAGE_LIBRARY, LOGO, SITE_ORIGIN, SPLIT_SITES, SITES, onSite, siteOf } from './news-config.mjs';
 import { NEWS_CSS, esc } from './news-theme.mjs';
 import { SHELL_CSS } from './admin-shell-css.mjs';
+import { UI_CSS } from './admin-ui-css.mjs';
+import { NEWS_ADMIN_CSS } from './admin-news-css.mjs';
 import { handleAdminApi } from './admin-api.mjs';
 import { currentUser } from './admin-auth.mjs';
 import { newsStore } from './news-store.mjs';
@@ -12,6 +14,7 @@ import { gameById } from '../admin/games.mjs';
 import { can } from '../admin/grants.mjs';
 import { renderDetailPage } from './news-pages.mjs';
 import { adminApp } from './admin-app.mjs';
+import { adminNews } from './admin-news-app.mjs';
 
 const FONTS = 'https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Cormorant+Garamond:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap';
 
@@ -39,7 +42,6 @@ table.posts{border-collapse:collapse;width:100%;min-width:860px}
 .p-title .cover{border-radius:5px}
 .p-title b{font-weight:600;display:block;line-height:1.35}
 .p-title small{color:var(--faint);font-size:12px}
-.lock{display:flex;gap:5px;align-items:center;color:var(--warn);font-size:12px;margin-top:3px;white-space:normal}
 .pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 10px;font-size:12.5px;font-weight:600;white-space:nowrap;border:1px solid currentColor}
 .pill::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
 .s-published{color:var(--ok)}.s-scheduled{color:var(--warn)}.s-draft{color:var(--draft)}.s-pending{color:var(--review)}
@@ -48,34 +50,12 @@ table.posts{border-collapse:collapse;width:100%;min-width:860px}
 .btn-xs{padding:3px 9px;font-size:12.5px}
 .btn-danger{background:transparent;border:1px solid rgba(227,107,91,.6);color:var(--danger)}
 .btn-danger:hover{background:rgba(227,107,91,.12)}
-.ed{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:26px;padding-block:24px 40px;align-items:start}
-@media (max-width:980px){.ed{grid-template-columns:minmax(0,1fr)}}
 .field{display:flex;flex-direction:column;gap:6px;margin-bottom:18px}
 .field label,.lbl{font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
 .lbl-note{text-transform:none;letter-spacing:0;font-weight:400}
 .inp{background:var(--ink-2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;width:100%}
 .inp:focus{border-color:var(--gold);outline:none}
 .inp:disabled{opacity:.75}
-.t-inp{font-family:var(--display);font-size:34px;font-weight:700;color:var(--gold-hi);padding:10px 14px;line-height:1.15;resize:none;font-variant-numeric:lining-nums}
-.slug{font-size:13px;color:var(--muted);display:flex;gap:4px;align-items:center;flex-wrap:wrap}
-.slug input{background:transparent;border:0;border-bottom:1px dashed var(--line);color:var(--gold-hi);padding:2px;min-width:0;flex:1 1 220px}
-.count{align-self:flex-end;font-size:12px;color:var(--faint);font-variant-numeric:tabular-nums}
-.count.over{color:var(--danger)}
-.editor{border:1px solid var(--line);border-radius:var(--r);background:var(--ink-2)}
-.tb{display:flex;flex-wrap:wrap;gap:2px;padding:6px;border-bottom:1px solid var(--line);position:sticky;top:var(--adm-h,56px);background:var(--ink-2);z-index:5;border-radius:var(--r) var(--r) 0 0}
-.tb[hidden]{display:none}
-.tb button{background:transparent;border:1px solid transparent;border-radius:6px;padding:5px 9px;cursor:pointer;color:var(--nav);font-size:13.5px}
-.tb button:hover{border-color:var(--line);background:var(--tint)}
-.tb .sep{width:1px;background:var(--line);margin:4px}
-.pop{padding:10px;border-bottom:1px solid var(--line);display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:var(--panel)}
-.pop img{width:92px;aspect-ratio:16/9;object-fit:cover;border-radius:5px;cursor:pointer;border:2px solid transparent}
-.pop img:hover{border-color:var(--gold)}
-.pop input{flex:1 1 220px}
-.ce{min-height:420px;padding:20px 24px;outline:none;max-width:none}
-.ce:empty::before{content:attr(data-ph);color:var(--faint)}
-.ce .gift code{outline:1px dashed var(--line)}
-.side{display:flex;flex-direction:column;gap:14px;position:sticky;top:calc(var(--adm-h,56px) + 16px)}
-@media (max-width:980px){.side{position:static}}
 .box{border:1px solid var(--line);border-radius:var(--r);background:var(--panel);padding:16px}
 .box h3{margin:0 0 12px;font-size:14px;font-weight:600;color:var(--gold-hi)}
 /* early sign-ups: search row, pager, milestones box */
@@ -92,37 +72,7 @@ table.posts{border-collapse:collapse;width:100%;min-width:860px}
 /* who handled a ticket and the reply can be long: these two columns wrap, so the table stays inside its frame */
 .posts-phieu td:nth-child(5){white-space:normal;min-width:130px}.posts-phieu td:nth-child(6){white-space:normal;min-width:220px;max-width:280px}
 .phieu-qua{margin:0;padding-left:18px}.phieu-act{display:grid;gap:8px;min-width:220px}.phieu-act .inp{width:100%}
-.radios{display:flex;flex-direction:column;gap:8px}
-.radios label{display:flex;gap:8px;align-items:center;cursor:pointer;font-size:14px}
-.radios input,.chk input{accent-color:var(--ember)}
-.cats{display:flex;gap:6px;flex-wrap:wrap}
-.cats label{cursor:pointer;position:relative}
-.cats input{position:absolute;opacity:0;pointer-events:none}
-.cats span{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:13.5px}
-.cats input:checked+span{border-color:var(--c);color:var(--c);background:rgba(255,255,255,.04)}
-html[data-theme="light"] .cats input:checked+span{background:rgba(0,0,0,.04)}
-.cats input:focus-visible+span{outline:2px solid var(--gold-hi);outline-offset:2px}
-.c-chinh{--c:var(--gold-hi)}.c-phu{--c:#4fb6e8}
-.sites{margin-bottom:4px}
-.sites.need span{border-color:var(--ember)}
-.chk{display:flex;gap:8px;align-items:center;font-size:14px;margin-top:12px;cursor:pointer}
-.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
-.btns .btn-fire{flex:1}
 .err{color:var(--danger);font-size:13.5px;margin-top:10px}
-.lib{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}
-.lib img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:4px;cursor:pointer;border:2px solid transparent}
-.lib img.on{border-color:var(--ember)}
-#e-cover{margin-bottom:4px}
-.fb{border:1px solid #3a3f52;border-radius:8px;overflow:hidden;background:#f0f2f5;color:#1c1e21}
-.fb .cover{border-radius:0;aspect-ratio:1.91/1}
-.fb div{padding:8px 10px}
-.fb small{display:block;color:#65676b;font-size:11.5px;text-transform:uppercase}
-.fb b{display:block;font-size:14px;line-height:1.3}
-.fb p{margin:2px 0 0;font-size:12.5px;color:#65676b;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
-.hist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;font-size:13.5px}
-.hist li{display:grid;grid-template-columns:26px 1fr auto;gap:10px;align-items:start}
-.hist .av{width:26px;height:26px;font-size:11px}
-.hist small{display:block;color:var(--faint)}
 .warnbar{background:rgba(233,185,73,.1);border:1px solid rgba(233,185,73,.45);color:var(--warn);border-radius:8px;padding:9px 14px;font-size:13.5px;margin-top:18px}
 html[data-theme="light"] .warnbar{background:rgba(135,90,0,.08);border-color:rgba(135,90,0,.4)}
 .auth{min-height:100vh;display:grid;place-items:center;padding:24px 16px}
@@ -139,14 +89,6 @@ html[data-theme="light"] .warnbar{background:rgba(135,90,0,.08);border-color:rgb
 .s-locked{color:var(--danger)}
 table.users{min-width:760px}
 .users .acts{align-items:center;flex-wrap:nowrap}
-.pop-pics{flex-direction:column;align-items:stretch}
-.pop-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.pop-row .lbl{margin-top:4px}
-.upl{display:flex;flex-direction:column;align-items:flex-start;gap:6px;margin-top:12px}
-.upl-btn{position:relative;overflow:hidden;margin-left:auto;text-transform:none;letter-spacing:0;font-size:13.5px;font-weight:600;color:var(--text)}
-.upl .upl-btn{margin-left:0}
-.upl-btn input{position:absolute;inset:0;opacity:0;cursor:pointer}
-.ce td img,.ce th img{display:inline-block;width:auto;max-height:56px;vertical-align:middle;border-radius:4px;margin:2px 6px 2px 0}
 .theme-float{position:fixed;top:14px;right:16px;z-index:30}
 @media (max-width:600px){.auth{padding-top:64px}}
 html[data-theme="light"] .btn-danger{border-color:rgba(179,55,42,.5)}
@@ -209,19 +151,19 @@ html[data-theme="light"] .btn-danger:hover{background:rgba(179,55,42,.08)}
   @keyframes adm-in-left{from{transform:translateX(-18px);opacity:.4}to{transform:none;opacity:1}}
   @media (prefers-reduced-motion:reduce){.adm-in-right,.adm-in-left{animation:none}}
 
-  /* editor */
-  .ed{padding-block:16px 28px;gap:18px}
-  .tb{top:var(--adm-h);gap:4px}
-  .tb button{min-height:38px;font-size:14px}
-  .side{position:static}
-  .ce{padding:16px 14px;min-height:320px}
-  .lib{grid-template-columns:repeat(3,1fr)}
-  .btns .btn{min-height:44px}
 }
 `;
 
-const PREVIEW_CSS = `.preview-flag{background:rgba(233,185,73,.14);border:1px solid rgba(233,185,73,.5);color:#e9b949;border-radius:8px;padding:10px 14px;margin-top:20px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center}
-html[data-theme="light"] .preview-flag{color:#875a00;background:rgba(135,90,0,.08);border-color:rgba(135,90,0,.4)}`;
+const PREVIEW_CSS = `.preview-flag{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:20px;padding:12px 16px;border-radius:6px;background:#fbf1d9;border:1px solid #e7e6e3;color:#1c1c1a;font:500 13px/1.5 "Be Vietnam Pro","Segoe UI",system-ui,sans-serif}
+.preview-flag svg{width:16px;height:16px;flex:none;stroke:#8a5a00;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.preview-flag b{font-weight:600}
+.preview-flag a{margin-left:auto;display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border-radius:6px;border:1px solid #d6d4cf;background:#fff;color:#1c1c1a;font-size:12px;font-weight:500;text-decoration:none;white-space:nowrap}
+.preview-flag a:hover{background:#f0f0ed}
+.preview-flag a svg{stroke:currentColor}
+html[data-theme="dark"] .preview-flag{background:#2e2513;border-color:#2e2e2b;color:#ecebe7}
+html[data-theme="dark"] .preview-flag svg{stroke:#e3b55c}
+html[data-theme="dark"] .preview-flag a{background:#1a1a19;border-color:#3c3b37;color:#ecebe7}
+html[data-theme="dark"] .preview-flag a:hover{background:#262624}`;
 
 const STATE_WORDS = { draft: 'Nháp', pending: 'Chờ duyệt', published: 'Đã đăng' };
 
@@ -270,13 +212,14 @@ function appPage(nonce) {
 <title>Quản trị | wanmeivn.com</title>
 <link rel="icon" href="${LOGO}">
 <link rel="stylesheet" href="${FONTS}">
-<style>${NEWS_CSS}${ADMIN_CSS}${SHELL_CSS}</style>
+<style>${NEWS_CSS}${ADMIN_CSS}${SHELL_CSS}${UI_CSS}${NEWS_ADMIN_CSS}</style>
 </head><body>
 <div id="app"><main class="auth"><p class="meta">Đang tải…</p></main></div>
-<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div id="overlay"></div>
+<div class="sh-toasts" id="toasts" role="region" aria-label="Thông báo" aria-live="polite"></div>
 <noscript><p style="padding:20px">Trang quản trị cần bật JavaScript.</p></noscript>
 <script type="application/json" id="adm-data" nonce="${nonce}">${JSON.stringify(data).replace(/</g, '\\u003c')}</script>
-<script nonce="${nonce}">(${adminApp.toString()})();</script>
+<script nonce="${nonce}">(${adminApp.toString()})(${adminNews.toString()});</script>
 </body></html>`;
 }
 
@@ -293,7 +236,9 @@ async function previewPage(id, nonce, gameId) {
   const others = visible.filter((p) => p.id !== post.id);
   const html = renderDetailPage(post, [post, ...others]);
   const state = post.status === 'published' && Date.parse(post.publishAt) > Date.now() ? 'Hẹn giờ' : STATE_WORDS[post.status];
-  const flag = `<div class="preview-flag"><span>Bản xem trước · trạng thái: <b>${esc(state)}</b> · người chơi ${post.status === 'published' && state !== 'Hẹn giờ' ? 'đang thấy bài này' : 'chưa thấy bài này'}</span><a class="btn btn-ghost btn-sm" href="/quan-tri#/g/${game.id}/sua/${post.id}">← Về trang sửa bài</a></div>`;
+  const EYE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+  const BACK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>';
+  const flag = `<div class="preview-flag" role="status">${EYE}<span>Bản xem trước. Trạng thái: <b>${esc(state)}</b>. Người chơi ${post.status === 'published' && state !== 'Hẹn giờ' ? 'đang thấy bài này' : 'chưa thấy bài này'}.</span><a href="/quan-tri#/g/${game.id}/sua/${post.id}">${BACK} Về trang sửa bài</a></div>`;
   return html
     .replace('<main class="wrap">', `<main class="wrap">${flag}`)
     .replace('</head>', `<meta name="robots" content="noindex, nofollow"><style>${PREVIEW_CSS}</style></head>`)

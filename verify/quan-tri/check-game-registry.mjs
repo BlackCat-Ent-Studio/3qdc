@@ -46,8 +46,8 @@ ok('3qdc: news sites and hosts as before', () => {
 });
 ok('3qdc lists the pages without an admin part; skystory has nothing on', () => {
   const g = GAMES.find((x) => x.id === '3qdc');
-  const plain = g.sites.filter((s) => !s.module).map((s) => s.path);
-  assert.deepEqual(plain, ['/wiki/', '/hoi-dap/', '/duyet/', '/privacy']);
+  const plain = g.sites.filter((s) => !s.module).map((s) => s.path || s.hosts[0]);
+  assert.deepEqual(plain, ["phieubengoan.3qdc.wanmeivn.com", "/wiki/", "/hoi-dap/", "/duyet/", "/privacy"]);
   const sky = GAMES.find((x) => x.id === 'skystory');
   assert.equal(sky.name, 'Thiên Không Kỳ Truyện');
   assert.deepEqual(Object.keys(sky.modules), []);
