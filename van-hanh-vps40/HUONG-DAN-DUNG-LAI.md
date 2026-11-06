@@ -47,7 +47,12 @@ mkdir -p /srv/3q-hoi-dap/hoi-dap/nhat-ky /srv/3q-hoi-dap/duyet/du-lieu
 chown -R web3q:web3q /srv/3qdc-unified /srv/3qdaichien /srv/3q-hoi-dap
 ```
 
-Dữ liệu trang chính nằm trong `/srv/3qdc-unified/data/`: `news/` (bài tin có trong git, trừ `users.json`), `dang-ky-som/`, `phieu-be-ngoan/` (lấy từ gói bí mật).
+Dữ liệu nằm trong `/srv/3qdc-unified/data/` (gốc dữ liệu = biến môi trường `DATA_ROOT`, mặc định thư mục `data/` cạnh `server.mjs`; từ 06/11/2026 tách theo game):
+- `games/<game>/tin-tuc/{posts,revisions,uploads,trash}`: bài tin của từng game, **có trong git** (hiện chỉ `games/3qdc/tin-tuc`).
+- `games/3qdc/phieu-be-ngoan/`, `games/3qdc/dang-ky-som/`: phiếu và đăng ký sớm (ngoài git, lấy từ gói bí mật).
+- `he-thong/`: `users.json`, `invites.json`, `mcp-tokens.json`, `nhat-ky-quyen.jsonl` (ngoài git; có hash mật khẩu và hash mã Claude).
+
+Mọi đường dẫn đi qua `scripts/lib/admin/paths.mjs`. Các biến cũ `NEWS_DATA_DIR`, `PHIEU_DATA_DIR`, `SIGNUP_DATA_DIR` bị cấm: server không khởi động nếu còn đặt biến đó, còn dữ liệu ở đường cũ (`data/news/users.json`, `data/phieu-be-ngoan/`, `data/dang-ky-som/`) hoặc `users.json` còn vai trò cũ (manager/editor/phieu); thông báo lỗi nêu đúng lệnh cần chạy.
 
 ## 4. Dịch vụ systemd + Caddy
 
@@ -86,20 +91,20 @@ Giải nén ở thư mục tạm, chép vào chỗ dưới, **xoá bản giải 
 
 | File trong gói | Đặt vào |
 |---|---|
-| `users.json` | `/srv/3qdc-unified/data/news/users.json` (tài khoản `/quan-tri`) |
-| `dang-ky.jsonl` | `/srv/3qdc-unified/data/dang-ky-som/` |
-| `phieu.json` | `/srv/3qdc-unified/data/phieu-be-ngoan/` |
+| `users.json` | `/srv/3qdc-unified/data/he-thong/users.json` (tài khoản `/quan-tri`) |
+| `dang-ky.jsonl` | `/srv/3qdc-unified/data/games/3qdc/dang-ky-som/` |
+| `phieu.json` | `/srv/3qdc-unified/data/games/3qdc/phieu-be-ngoan/` |
 | `env-*` | các dòng tương ứng trong `/etc/3q/*.env` |
 | `grok-acc` | `/home/web3q/.grok/auth.json` |
 | `Caddyfile-basic-auth.txt` | dòng `basic_auth` khối `/duyet` |
 
-Chưa có `users.json` thì tạo quản trị bằng `node scripts/news-user.mjs`. Nhớ `chown web3q:web3q` các file dữ liệu.
+Gói bí mật ngày 15/10 có tài khoản **dạng cũ** (manager/phieu) và `invites.json`/`mcp-tokens.json` (nếu có) cũng dạng cũ. Sau khi chép: dừng dịch vụ, rồi `node scripts/migrate-users-grants.mjs --owner <tên chủ> --dry-run` (xem bảng "ai thành quyền gì") → `--apply`. (Nếu chép vào đường cũ `data/news/…`, `data/dang-ky-som/`, `data/phieu-be-ngoan/` thì chạy `node scripts/migrate-games-data.mjs --apply` trước.) Cả hai script so đếm trước/sau, tự trả lại như cũ khi lệch, và có `--undo`. Chưa có `users.json` thì tạo chủ bằng `node scripts/news-user.mjs` (vai `owner`). Nhớ `chown -R web3q:web3q /srv/3qdc-unified/data`.
 
 ## 6. Sửa code và đưa lên LIVE (cách đang dùng)
 
 1. Nháp: `git worktree add /srv/_nhap-<x> -b <nhánh>`; `mount --bind /srv/3qdc-unified/mirror /srv/_nhap-<x>/mirror` (không dùng symlink — worktree đã có `mirror/` 68 file trong git); symlink `node_modules`; chép `data/` sang `/srv/_nhap-<x>-data`.
-2. Chạy nháp: `systemd-run --unit=nhap-<x> --uid=web3q` với `PORT=13399`, `NEWS_DATA_DIR/SIGNUP_DATA_DIR/PHIEU_DATA_DIR=<bản chép>`, `NEWS_INSECURE_COOKIE=1`, `NEWS_SITE_ORIGIN=http://127.0.0.1:13399` (thiếu dòng này mọi POST bị chặn). Laptop mở đường hầm `ssh -L 127.0.0.1:13399:127.0.0.1:13399 vps40`, kiểm bằng Playwright.
-3. Deploy: xem log Caddy `/var/log/caddy/3qdc-wanmeivn-access.log` 15 phút gần nhất có ai đang ở `/quan-tri` không (restart sẽ đăng xuất họ) → sao lưu `data/` vào `/srv/_backup/3qdc-unified-<ngày>-<x>/` → `git tag pre-<x>` → `git merge --ff-only` → `systemctl restart 3qdc-unified` → kiểm LIVE.
+2. Chạy nháp: `systemd-run --unit=nhap-<x> --uid=web3q` với `PORT=13399`, `DATA_ROOT=<bản chép>`, `NEWS_INSECURE_COOKIE=1`, `NEWS_SITE_ORIGIN=http://127.0.0.1:13399` (thiếu dòng này mọi POST bị chặn). Laptop mở đường hầm `ssh -L 127.0.0.1:13399:127.0.0.1:13399 vps40`, kiểm bằng Playwright.
+3. Deploy: xem log Caddy `/var/log/caddy/3qdc-wanmeivn-access.log` 15 phút gần nhất có ai đang ở `/quan-tri` không (restart sẽ đăng xuất họ) → sao lưu `data/` vào `/srv/_backup/3qdc-unified-<ngày>-<x>/` → `git tag pre-<x>` → `git merge --ff-only` → `systemctl restart 3qdc-unified` → kiểm LIVE. (Lần đổi sang nhiều game 06/11/2026 phải dừng dịch vụ trước merge, rồi sau merge chạy `migrate-games-data.mjs --apply` và `migrate-users-grants.mjs --owner <chủ> --apply` + `chown -R web3q:web3q data`; các lần sau không cần.)
 4. Dọn: dừng unit nháp, `umount` rồi `git worktree remove`, đóng đường hầm.
 5. Đẩy GitHub: `git bundle create` trên VPS → `scp` về laptop → `git fetch` vào clone laptop → `git push` (gh trên laptop đã đăng nhập).
 
@@ -109,3 +114,9 @@ Chưa có `users.json` thì tạo quản trị bằng `node scripts/news-user.mj
 - `https://3qdc.wanmeivn.com/` (trang chủ, bé gái Live2D, nút "Mun Vạn Sự Thông", bàn nhạc), `/tin-tuc`, `/dang-ky-som`, `/privacy`, `/quan-tri` (đăng nhập được), `/wiki/`, `/hoi-dap/widget.js`, `/duyet/` (hỏi mật khẩu).
 - `https://3qdaichien.wanmeivn.com/`, `https://phieubengoan.3qdc.wanmeivn.com/` (nút Google thật, không có ô "Đăng nhập thử").
 - Bộ kiểm trên laptop: `plans\reports\dung-lai-vps40-261015\kiem-live-ubuntu.cjs`.
+
+## 8. Thêm game, cấp quyền (từ 06/11/2026)
+
+- **Thêm game:** sửa `scripts/lib/admin/games.mjs` (thêm 1 mục `{ id, name, sites, modules }`; id chữ thường/số/gạch ngang, không toàn số), rồi `systemctl restart 3qdc-unified` (mọi người bị đăng xuất). Không phải sửa file nào khác. Phần (`modules`) hiện có: `tin-tuc` (mọi game), `nhac`, `dang-ky-som`, `phieu-be-ngoan` (chỉ game `3qdc`). Server không khởi động nếu sổ game sai (trùng id, trùng host…).
+- **Cấp quyền** chỉ chủ (`owner`) làm được: trang Phân quyền ở `/quan-tri`, link mời mang quyền (người nhận chờ chủ duyệt), hoặc mã Claude "mã chủ" (công cụ `ds_game`, `xem_quyen`, `cap_quyen`, `thu_quyen`, `tao_link_moi`; tối đa 20 lần ghi/giờ; không có công cụ nào lập chủ). Mọi thay đổi quyền ghi vào `data/he-thong/nhat-ky-quyen.jsonl`.
+- **Lùi bản 06/11:** xem `HANDOFF.md` (tag `pre-nhieu-game`, sao lưu `/srv/_backup/3qdc-unified-261106-nhieu-game/`).

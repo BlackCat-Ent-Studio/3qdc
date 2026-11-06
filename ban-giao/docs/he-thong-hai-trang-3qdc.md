@@ -5,6 +5,8 @@
 
 ---
 
+> **Cập nhật 06/11/2026: nhiều game.** Trang chính, trang phụ, trang phiếu... nay do **sổ game** `scripts/lib/admin/games.mjs` khai báo (mỗi game có danh sách trang `sites` và các phần bật `modules`); game `3qdc` có Trang chính (`3qdc.wanmeivn.com`), Trang phụ (`3qdaichien.wanmeivn.com`), Trang phiếu, Wiki, Hỏi đáp, Duyệt thẻ, Chính sách. Thêm game = sửa `games.mjs` + restart. Tin tức tách theo game ở `data/games/<game>/tin-tuc/` (mỗi bài vẫn có trường `site` = `chinh` hoặc `phu`); tài khoản và quyền ở `data/he-thong/`, phiếu và đăng ký sớm ở `data/games/3qdc/`. Các đường `C:\...` và NSSM trong tài liệu này là của thời trước 15/10 (VPS nay là Ubuntu, code ở `/srv/3qdc-unified`, dịch vụ systemd `3qdc-unified`): xem `van-hanh-vps40/HUONG-DAN-DUNG-LAI.md`.
+
 ## 0. Tóm tắt trong 1 phút
 
 Từ 28/09/2026, game 3Q Đại Chiến có **hai hệ thống trang web** chạy song song trên **cùng một máy chủ (VPS .40)**:
