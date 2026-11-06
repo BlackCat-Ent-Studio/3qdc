@@ -4,7 +4,7 @@
 import assert from 'node:assert/strict';
 import { checkGames, MODULES } from '../../scripts/lib/admin/modules.mjs';
 import { gamesOf } from '../../scripts/lib/admin/grants.mjs';
-import { GAMES, GAME_ID_RE } from '../../scripts/lib/admin/games.mjs';
+import { GAMES, GAME_ID_RE, gameOfHost } from '../../scripts/lib/admin/games.mjs';
 import { TEST_PASSWORD } from './make-test-accounts.mjs';
 import { SITES, siteOfHost, IMAGE_LIBRARY } from '../../scripts/lib/news/news-config.mjs';
 
@@ -35,6 +35,10 @@ ok('same host in two games', () => throwsWith(/host "a.example.com" is used by b
 ok('site of a module the game has not switched on', () => throwsWith(/has not switched on/, [game({ sites: [{ id: 's', module: 'tin-tuc' }] })]));
 ok('duplicate site id', () => throwsWith(/duplicate site id/, [game({ sites: [{ id: 's' }, { id: 's' }] })]));
 ok('bad host', () => throwsWith(/bad host/, [game({ sites: [{ id: 's', hosts: ['Not A Host'] }] })]));
+ok('a game written without a sites list does not break the host lookup', () => {
+  GAMES.push({ id: 'khong-sites', name: 'X', modules: {} });
+  try { assert.equal(gameOfHost('la.example.com').id, '3qdc'); assert.equal(gameOfHost('3qdaichien.wanmeivn.com').id, '3qdc'); } finally { GAMES.pop(); }
+});
 
 ok('3qdc: news sites and hosts as before', () => {
   assert.deepEqual(SITES.map((s) => s.id), ['chinh', 'phu']);
