@@ -171,7 +171,7 @@ export function adminApp(adminNews, adminParts, adminAccess, adminAuth) {
   // A game's mark: a picture, or a few letters on the game's colour (sizes in px)
   function tile(g, size) {
     const m = MARKS[g.id] || {};
-    if (m.img) return `<img class="sh-tile" src="${esc(m.img)}" width="${size}" height="${size}" alt="" aria-hidden="true">`;
+    if (m.img && size >= (m.imgFrom || 0)) return `<img class="sh-tile" src="${esc(m.img)}" width="${size}" height="${size}" alt="" aria-hidden="true">`;
     const mono = m.mono || String(g.name || g.id).trim().split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase();
     return `<span class="sh-tile" style="width:${size}px;height:${size}px;background:${m.color || 'var(--game-thu)'};font-size:${Math.round(size * 0.4)}px" aria-hidden="true">${esc(mono)}</span>`;
   }
