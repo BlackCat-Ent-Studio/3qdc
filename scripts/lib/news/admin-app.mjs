@@ -1,11 +1,12 @@
 // admin-app.mjs — the browser side of /quan-tri: the frame (side bar, top bar, game switcher, overview, dialogs), sign-in,
 // set password, accounts, and the older screens that are not redrawn yet. The news screens live in admin-news-app.mjs and are
-// handed in as adminNews (both are serialised into the page; neither runs on the server).
+// handed in as adminNews; the gift tickets, early sign-ups and music screens live in admin-parts-app.mjs, handed in as adminParts
+// (all are serialised into the page; none runs on the server).
 // It talks only to /quan-tri/api/*; the server re-checks every permission and cleans every article, so nothing here is a
 // security boundary — it only keeps the screens honest.
 // No inline event attributes anywhere: the page's Content-Security-Policy would block them.
 
-export function adminApp(adminNews) {
+export function adminApp(adminNews, adminParts) {
   const DATA = JSON.parse(document.getElementById('adm-data').textContent);
   const CATS = DATA.cats, LIB = DATA.library, HOST = DATA.host, LOGO = DATA.logo, MARKS = DATA.marks || {}, THEME_KEY = DATA.themeKey;
   const app = document.getElementById('app');
@@ -759,227 +760,6 @@ ${accessHtml}`;
     }));
   }
 
-  // ---------- background music of the home page (managers) ----------
-  // The songs are plain files in one folder on the server, so this page is that folder: upload adds a file, delete
-  // removes it, and the player on the home page follows at once (it reads the same folder on every visit).
-  const MUSIC_TYPES = ['audio/mpeg', 'audio/mp3', 'audio/mp4', 'audio/x-m4a', 'audio/ogg', 'audio/wav', 'audio/x-wav'];
-  const mb = (n) => (n / 1048576).toFixed(1) + ' MB';
-
-  async function renderMusic() {
-    cleanupEditor();
-    const mine = screen;
-    app.innerHTML = `${header('music')}<main class="wrap"><p class="meta" style="padding:40px 0">Đang tải danh sách nhạc…</p></main>`;
-    const r = await api('GET', '/nhac');
-    if (mine !== screen || !me) return;
-    if (!r.ok) { if (r.status !== 401) $('main').innerHTML = `<div class="err" style="margin:40px 0">${esc(r.data.error)}</div>`; return; }
-    const max = r.data.max || 15728640;
-    const total = r.data.total || 314572800;
-
-    const draw = (items, notice) => {
-      const used = items.reduce((n, s) => n + (s.bytes || 0), 0);
-      $('main').innerHTML = `<div class="adm-top"><div><h1>Nhạc nền</h1>
-<p>Những bài này phát ở bàn nhạc góc dưới phải <b>trang chủ</b>. Thêm hoặc xoá là có hiệu lực ngay, không cần khởi động lại web.
-Đặt tên file kiểu <b>Tên bài - Ca sĩ.mp3</b> để bàn nhạc hiện đúng tên và ca sĩ. Mỗi bài tối đa ${mb(max)}, tất cả cộng lại tối đa ${mb(total)}.</p></div>
-<div><input type="file" id="m-file" accept="audio/*" multiple hidden><button type="button" class="btn btn-fire" id="m-add">+ Thêm bài hát</button></div></div>
-<div class="err" id="m-err" role="alert"${notice ? '' : ' hidden'}>${esc(notice || '')}</div>
-<p class="meta" id="m-used">Đang dùng ${mb(used)} / ${mb(total)} — ${items.length} bài.</p>
-<div class="tbl-wrap"><table class="posts posts-nhac"><thead><tr><th>Bài hát</th><th>Ca sĩ</th><th>Dung lượng</th><th>Nghe thử</th><th></th></tr></thead><tbody>
-${items.map((s) => `<tr data-name="${esc(s.name)}">
-<td><div class="p-title"><div><b>${esc(s.title)}</b><div class="meta">${esc(s.name)}</div></div></div></td>
-<td class="meta">${esc(s.artist || '—')}</td>
-<td class="meta">${mb(s.bytes || 0)}</td>
-<td><audio controls preload="none" src="${esc(s.file)}" style="height:32px;max-width:220px"></audio></td>
-<td><div class="acts"><button type="button" class="btn btn-ghost btn-sm" data-del-song="${esc(s.name)}">Xoá</button></div></td></tr>`).join('')}
-${items.length ? '' : '<tr><td colspan="5" class="meta" style="text-align:center;padding:30px">Chưa có bài hát nào. Bấm “Thêm bài hát” để tải lên.</td></tr>'}
-</tbody></table></div>`;
-
-      const err = (msg) => { const e = $('#m-err'); e.textContent = msg; e.hidden = !msg; };
-      $('#m-add').addEventListener('click', () => $('#m-file').click());
-      $('#m-file').addEventListener('change', async () => {
-        const files = [...$('#m-file').files];
-        $('#m-file').value = '';
-        if (!files.length) return;
-        const mine2 = screen;
-        let list = items;
-        for (const f of files) {
-          if (!MUSIC_TYPES.includes(f.type)) { err(`“${f.name}”: chỉ nhận MP3, M4A, OGG hoặc WAV.`); continue; }
-          if (f.size > max) { err(`“${f.name}” nặng ${mb(f.size)}, quá giới hạn ${mb(max)} mỗi bài.`); continue; }
-          $('#m-used').textContent = `Đang tải lên “${f.name}” (${mb(f.size)})…`;
-          let res;
-          try {
-            res = await fetch('/quan-tri/api' + gp('/nhac'), {
-              method: 'POST', credentials: 'same-origin', body: f,
-              headers: { 'Content-Type': f.type, 'X-Ten-File': encodeURIComponent(f.name) },
-            });
-          } catch (e2) { err('Mất kết nối khi tải bài hát lên. Thử lại.'); break; }
-          let data = {};
-          try { data = await res.json(); } catch (e2) { data = { error: 'Máy chủ trả lời lạ (' + res.status + ').' }; }
-          if (res.status === 401) { me = null; renderLogin(data.error); return; }
-          if (mine2 !== screen) return;
-          if (!res.ok) { err(data.error || `Không tải lên được “${f.name}”.`); continue; }
-          list = data.items;
-          toast(`Đã thêm “${data.name}”`);
-        }
-        draw(list, '');
-      });
-      $$('[data-del-song]').forEach((b) => b.addEventListener('click', async () => {
-        const name = b.getAttribute('data-del-song');
-        if (!window.confirm(`Xoá “${name}” khỏi nhạc nền? Người chơi sẽ không nghe bài này nữa.`)) return;
-        $$('[data-del-song]').forEach((x) => { x.disabled = true; });
-        const mine2 = screen;
-        const res = await api('POST', `/nhac/${encodeURIComponent(name)}/xoa`, {});
-        if (mine2 !== screen) return;
-        if (!res.ok) { if (res.status !== 401) draw(items, res.data.error || 'Không xoá được bài này.'); return; }
-        toast(`Đã xoá “${name}”`);
-        draw(res.data.items, '');
-      }));
-    };
-    draw(r.data.items, '');
-  }
-
-  // ---------- early sign-ups (managers) ----------
-  // Phone numbers left on /dang-ky-som, newest first: search by digits, page through, download everything as CSV (the
-  // gifts are sent by hand for now), and set the milestones the page shows.
-  const fmtNum = (n) => Number(n || 0).toLocaleString('vi-VN');
-
-  async function renderSignups() {
-    cleanupEditor();
-    const mine = screen;
-    const view = { q: '', page: 1 };
-    app.innerHTML = `${header('signup')}<main class="wrap"><p class="meta" style="padding:40px 0">Đang tải danh sách đăng ký…</p></main>`;
-
-    const load = async () => {
-      const r = await api('GET', `/dang-ky-som?q=${encodeURIComponent(view.q)}&trang=${view.page}`);
-      if (mine !== screen || !me) return null;
-      if (!r.ok) { if (r.status !== 401) $('main').innerHTML = `<div class="err" style="margin:40px 0">${esc(r.data.error)}</div>`; return null; }
-      return r.data;
-    };
-
-    const draw = (d) => {
-      $('main').innerHTML = `<div class="adm-top"><div><h1>Đăng ký sớm</h1>
-<p>Số điện thoại khách để lại ở trang <a href="/dang-ky-som" target="_blank" rel="noopener">/dang-ky-som</a>. Quà chưa phát tự động — tải CSV để gửi tay.</p></div>
-<a class="btn btn-fire" href="/quan-tri/api${gp('/dang-ky-som/csv')}" download>Tải CSV (${fmtNum(d.total)} số)</a></div>
-<form class="dks-find" id="s-find"><input class="inp" id="s-q" type="search" inputmode="numeric" placeholder="Tìm theo số, ví dụ 0912" value="${esc(view.q)}" aria-label="Tìm theo số điện thoại">
-<button type="submit" class="btn btn-ghost">Tìm</button>${view.q ? '<button type="button" class="btn btn-ghost" id="s-clear">Bỏ lọc</button>' : ''}
-<span class="meta">${view.q ? `${fmtNum(d.count)} / ${fmtNum(d.total)} số khớp` : `Tổng ${fmtNum(d.total)} số`}</span></form>
-<div class="tbl-wrap"><table class="posts posts-dks"><thead><tr><th>Số điện thoại</th><th>STT</th><th>Thời gian</th><th>Nguồn</th><th>IP</th><th></th></tr></thead><tbody>
-${d.items.map((s) => `<tr><td><b>${esc(s.sdt)}</b></td><td class="meta">#${s.stt}</td><td class="meta">${fmtTime(s.luc)}</td><td class="meta">${esc(s.nguon || '—')}</td><td class="meta">${esc(s.ip || '—')}</td><td><div class="acts"><button type="button" class="btn btn-danger btn-sm" data-del-sdt="${esc(s.sdt)}">Xoá</button></div></td></tr>`).join('')}
-${d.items.length ? '' : `<tr><td colspan="6" class="meta" style="text-align:center;padding:30px">${view.q ? 'Không có số nào khớp.' : 'Chưa có ai đăng ký.'}</td></tr>`}
-</tbody></table></div>
-${d.pages > 1 ? `<div class="dks-pager"><button type="button" class="btn btn-ghost btn-sm" id="s-prev"${d.page <= 1 ? ' disabled' : ''}>‹ Mới hơn</button>
-<span class="meta">Trang ${d.page} / ${d.pages}</span><button type="button" class="btn btn-ghost btn-sm" id="s-next"${d.page >= d.pages ? ' disabled' : ''}>Cũ hơn ›</button></div>` : ''}
-<div class="box dks-moc"><h3>Mốc hiện trên trang đăng ký</h3>
-<p class="meta">Các số người đăng ký, tăng dần, cách nhau bằng dấu phẩy (tối đa 8 mốc). Trang đăng ký đổi theo ngay.</p>
-<form class="row" id="s-moc-form"><input class="inp" id="s-moc" value="${esc(d.milestones.join(', '))}" aria-label="Các mốc"><button type="submit" class="btn btn-ghost">Lưu mốc</button></form>
-<div class="err" id="s-moc-err" role="alert" hidden></div></div>`;
-
-      const again = async () => { const nd = await load(); if (nd) draw(nd); };
-      $('#s-find').addEventListener('submit', (e) => { e.preventDefault(); view.q = $('#s-q').value.replace(/\D/g, ''); view.page = 1; again(); });
-      if ($('#s-clear')) $('#s-clear').addEventListener('click', () => { view.q = ''; view.page = 1; again(); });
-      if ($('#s-prev')) $('#s-prev').addEventListener('click', () => { view.page = d.page - 1; again(); });
-      if ($('#s-next')) $('#s-next').addEventListener('click', () => { view.page = d.page + 1; again(); });
-      $$('[data-del-sdt]').forEach((b) => b.addEventListener('click', async () => {
-        if (!armDelete(b, 'Xoá')) return;
-        const sdt = b.getAttribute('data-del-sdt');
-        b.disabled = true;
-        const mine2 = screen;
-        const res = await api('POST', '/dang-ky-som/xoa', { sdt });
-        if (mine2 !== screen) return;
-        if (!res.ok) { b.disabled = false; b.textContent = 'Xoá'; if (res.status !== 401) toast(res.data.error || 'Không xoá được.'); return; }
-        toast(`Đã xoá ${sdt} — còn ${fmtNum(res.data.count)} số`);
-        again();
-      }));
-      $('#s-moc-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const err = $('#s-moc-err');
-        // "10.000" is ten thousand here: dots are thousand separators, commas/semicolons/spaces separate milestones
-        const list = $('#s-moc').value.replace(/\./g, '').split(/[,;\s]+/).filter(Boolean).map(Number);
-        const mine2 = screen;
-        const res = await api('POST', '/dang-ky-som/moc', { milestones: list });
-        if (mine2 !== screen) return;
-        if (!res.ok) { if (res.status !== 401) { err.textContent = res.data.error || 'Không lưu được mốc.'; err.hidden = false; } return; }
-        err.hidden = true;
-        $('#s-moc').value = res.data.milestones.join(', ');
-        toast('Đã lưu mốc: ' + res.data.milestones.map(fmtNum).join(' · '));
-      });
-    };
-
-    const d = await load();
-    if (d) draw(d);
-  }
-
-  // ---------- gift tickets from Phiếu Bé Ngoan (managers) ----------
-  // Players ask for gifts on phieubengoan.3qdc.wanmeivn.com, one ticket a day. Give the gifts in the game, then mark the
-  // ticket given (or refused) here with an optional reply: the player sees both in their history.
-  const PHIEU_ST = { cho: 'Đang chờ', tra: 'Đã trả', tu: 'Từ chối' };
-  const phieuView = { ngay: 'hom-nay', st: 'all' };
-
-  async function renderPhieu() {
-    cleanupEditor();
-    const mine = screen;
-    app.innerHTML = `${header('phieu')}<main class="wrap"><p class="meta" style="padding:40px 0">Đang tải phiếu…</p></main>`;
-    const qs = () => `ngay=${phieuView.ngay}&st=${phieuView.st}`;
-
-    const load = async () => {
-      const r = await api('GET', `/phieu-be-ngoan?${qs()}`);
-      if (mine !== screen || !me) return null;
-      if (!r.ok) { if (r.status !== 401) $('main').innerHTML = `<div class="err" style="margin:40px 0">${esc(r.data.error)}</div>`; return null; }
-      return r.data;
-    };
-
-    // "Duyệt phiếu" accounts see no email addresses, no CSV and no delete button (the server refuses those anyway)
-    const full = can('phieu-be-ngoan', 'quan-ly');
-    const draw = (d) => {
-      const c = d.counts;
-      $('main').innerHTML = `<div class="adm-top"><div><h1>Phiếu Bé Ngoan</h1>
-<p>Người chơi gửi phiếu ở <a href="https://phieubengoan.3qdc.wanmeivn.com/" target="_blank" rel="noopener">phieubengoan.3qdc.wanmeivn.com</a>. Trả quà trong game xong thì bấm <b>Đã trả</b>, người chơi sẽ thấy trong lịch sử.</p></div>
-${full ? `<a class="btn btn-fire" href="/quan-tri/api${gp('/phieu-be-ngoan/csv')}?${qs()}" download>Xuất CSV</a>` : ''}</div>
-<div class="filters">${['all', 'cho', 'tra', 'tu'].map((s) => `<button type="button" class="tab${phieuView.st === s ? ' on' : ''}" data-pst="${s}">${s === 'all' ? 'Tất cả' : PHIEU_ST[s]}<small>${fmtNum(c[s])}</small></button>`).join('')}
-<select id="fngay" aria-label="Ngày gửi">${[['hom-nay', 'Hôm nay'], ['hom-qua', 'Hôm qua'], ['tat-ca', 'Mọi ngày']].map(([v, l]) => `<option value="${v}"${phieuView.ngay === v ? ' selected' : ''}>${l}</option>`).join('')}</select>
-<span class="meta">${fmtNum(d.cho)} phiếu đang chờ (mọi ngày)</span></div>
-<div class="tbl-wrap"><table class="posts posts-phieu"><thead><tr><th>Phiếu</th><th>Nhân vật</th><th>Quà muốn nhận</th><th>Ghi chú</th><th>Trạng thái</th><th>Xử lý</th></tr></thead><tbody>
-${d.items.map((t) => `<tr data-id="${esc(t.id)}">
-<td>${full ? `<b>${esc(t.email)}</b>` : `<span class="meta">Mã ${esc(t.id)}</span>`}<div class="meta">${fmtTime(t.luc)}</div></td>
-<td><b>${esc(t.acc)}</b><div class="meta">Server ${esc(t.serverTen || t.server)}</div></td>
-<td><ul class="phieu-qua">${t.qua.map((g) => `<li>${esc(g)}</li>`).join('')}</ul></td>
-<td class="meta">${esc(t.ghiChu) || '—'}</td>
-<td><span class="pill s-phieu-${esc(t.st)}">${PHIEU_ST[t.st] || esc(t.st)}</span>${t.xuLyBoi ? `<div class="meta" style="margin-top:4px">${esc(t.xuLyBoi)} · ${fmtTime(t.xuLyLuc)}</div>` : ''}</td>
-<td>${t.st === 'cho'
-    ? `<div class="phieu-act"><input class="inp" maxlength="160" placeholder="Phản hồi cho người chơi (không bắt buộc)" aria-label="Phản hồi" data-reply="${esc(t.id)}"><div class="acts"><button type="button" class="btn btn-fire btn-sm" data-set="tra" data-id="${esc(t.id)}">Đã trả</button><button type="button" class="btn btn-danger btn-sm" data-set="tu" data-id="${esc(t.id)}">Từ chối</button></div></div>`
-    : `<div class="meta">${t.phanHoi ? esc(t.phanHoi) : 'Không có phản hồi.'}</div><button type="button" class="btn btn-ghost btn-xs" data-set="cho" data-id="${esc(t.id)}" style="margin-top:6px">Đưa về Đang chờ</button>`}
-${full ? `<div style="margin-top:8px"><button type="button" class="btn btn-danger btn-xs" data-del-phieu="${esc(t.id)}">Xoá phiếu</button></div>` : ''}</td></tr>`).join('')}
-${d.items.length ? '' : `<tr><td colspan="6" class="meta" style="text-align:center;padding:30px">${c.all ? 'Không có phiếu nào khớp bộ lọc.' : 'Chưa có phiếu nào trong ngày này.'}</td></tr>`}
-</tbody></table></div>`;
-
-      const again = async () => { const nd = await load(); if (nd) draw(nd); };
-      $$('[data-pst]').forEach((b) => b.addEventListener('click', () => { phieuView.st = b.getAttribute('data-pst'); again(); }));
-      $('#fngay').addEventListener('change', (e) => { phieuView.ngay = e.target.value; again(); });
-      $$('[data-set]').forEach((b) => b.addEventListener('click', async () => {
-        const id = b.getAttribute('data-id');
-        const st = b.getAttribute('data-set');
-        const box = $(`[data-reply="${id}"]`);
-        b.disabled = true;
-        const r = await api('POST', `/phieu-be-ngoan/${id}`, { st, phanHoi: box ? box.value : '' });
-        if (mine !== screen) return;
-        if (!r.ok) { b.disabled = false; if (r.status !== 401) toast(r.data.error || 'Không đổi được trạng thái.'); return; }
-        toast(st === 'cho' ? 'Đã đưa phiếu về Đang chờ' : `Đã đánh dấu: ${PHIEU_ST[st]}`);
-        again();
-      }));
-      $$('[data-del-phieu]').forEach((b) => b.addEventListener('click', async () => {
-        if (!armDelete(b, 'Xoá phiếu')) return;
-        b.disabled = true;
-        const r = await api('POST', `/phieu-be-ngoan/${b.getAttribute('data-del-phieu')}/xoa`, {});
-        if (mine !== screen) return;
-        if (!r.ok) { b.disabled = false; b.textContent = 'Xoá phiếu'; if (r.status !== 401) toast(r.data.error || 'Không xoá được phiếu.'); return; }
-        toast('Đã xoá phiếu');
-        again();
-      }));
-    };
-
-    const d = await load();
-    if (d) draw(d);
-  }
-
   // ---------- editor ----------
   function cleanupEditor() {
     screen++;
@@ -1190,6 +970,13 @@ ${g.sites.length ? `<div>${I.layers} <span class="ov-mono">${esc(siteHost(g, g.s
     gameHead: gameHeadHtml, paintHead, setCrumb: (t) => { crumbTail = t; }, dialogOpen,
   });
 
+  // ---------- gift tickets, early sign-ups, background music (admin-parts-app.mjs) ----------
+  const PARTS = adminParts({
+    $, $$, esc, api, toast, can, gp, header, app, I, svgIcon, fmtTime, armDelete, disarm, confirmDlg,
+    screen: () => screen, me: () => me, game: () => gameOf(curGame), cleanupEditor,
+    loginAgain: (msg) => { me = null; renderLogin(msg); }, gameHead: gameHeadHtml, paintHead,
+  });
+
   // ---------- routing ----------
   // Addresses: #/tong-quan · #/g/<game>/<section> · #/nguoi-dung. The older ones that name no game (#/sua/12, #/phieu-be-ngoan, …)
   // are game 3qdc's, so bookmarks keep working. A bare #/ is the account's home: the overview, or the one game it has.
@@ -1201,9 +988,9 @@ ${g.sites.length ? `<div>${I.layers} <span class="ov-mono">${esc(siteHost(g, g.s
   const SECTION_TABLE = [
     { test: (r) => r === '/viet-bai', mod: 'tin-tuc', perm: 'viet', tab: 'posts', draw: (r) => NEWS.renderEditor(null) },
     { test: (r) => /^\/sua\/\d+$/.test(r), mod: 'tin-tuc', perm: 'viet', tab: 'posts', draw: (r) => NEWS.renderEditor(+r.slice(5)) },
-    { test: (r) => r === '/nhac', mod: 'nhac', perm: 'quan-ly', tab: 'music', draw: () => renderMusic() },
-    { test: (r) => r === '/dang-ky-som', mod: 'dang-ky-som', perm: 'quan-ly', tab: 'signup', draw: () => renderSignups() },
-    { test: (r) => r === '/phieu-be-ngoan', mod: 'phieu-be-ngoan', perm: 'duyet', tab: 'phieu', draw: () => renderPhieu() },
+    { test: (r) => r === '/nhac', mod: 'nhac', perm: 'quan-ly', tab: 'music', draw: () => PARTS.renderMusic() },
+    { test: (r) => r === '/dang-ky-som', mod: 'dang-ky-som', perm: 'quan-ly', tab: 'signup', draw: () => PARTS.renderSignups() },
+    { test: (r) => r === '/phieu-be-ngoan', mod: 'phieu-be-ngoan', perm: 'duyet', tab: 'phieu', draw: () => PARTS.renderPhieu() },
     { test: (r) => r === '/thung-rac', mod: 'tin-tuc', perm: 'duyet', tab: 'trash', draw: () => NEWS.renderTrash() },
     { test: (r) => r === '/', mod: 'tin-tuc', perm: 'viet', tab: 'posts', draw: () => NEWS.renderList() },
   ];

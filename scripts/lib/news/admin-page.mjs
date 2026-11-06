@@ -15,6 +15,8 @@ import { can } from '../admin/grants.mjs';
 import { renderDetailPage } from './news-pages.mjs';
 import { adminApp } from './admin-app.mjs';
 import { adminNews } from './admin-news-app.mjs';
+import { adminParts } from './admin-parts-app.mjs';
+import { PARTS_CSS } from './admin-parts-css.mjs';
 
 const FONTS = 'https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Cormorant+Garamond:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap';
 
@@ -58,20 +60,6 @@ table.posts{border-collapse:collapse;width:100%;min-width:860px}
 .inp:disabled{opacity:.75}
 .box{border:1px solid var(--line);border-radius:var(--r);background:var(--panel);padding:16px}
 .box h3{margin:0 0 12px;font-size:14px;font-weight:600;color:var(--gold-hi)}
-/* early sign-ups: search row, pager, milestones box */
-.dks-find{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
-.dks-find .inp{flex:1 1 220px;max-width:320px}
-.dks-find .meta{margin-left:auto}
-.dks-pager{display:flex;gap:10px;align-items:center;justify-content:center;margin:16px 0}
-.dks-moc{margin:24px 0 40px}
-.dks-moc .row{display:flex;gap:8px;flex-wrap:wrap}
-.dks-moc .inp{flex:1 1 260px;max-width:480px}
-.posts-dks td:first-child b{font-variant-numeric:tabular-nums;letter-spacing:.03em}
-.s-phieu-cho{color:var(--warn)}.s-phieu-tra{color:var(--ok)}.s-phieu-tu{color:var(--danger)}
-.posts-phieu td{vertical-align:top}.posts-phieu td:nth-child(3),.posts-phieu td:nth-child(4){white-space:normal;min-width:180px}.posts-phieu td:nth-child(4){min-width:140px}
-/* who handled a ticket and the reply can be long: these two columns wrap, so the table stays inside its frame */
-.posts-phieu td:nth-child(5){white-space:normal;min-width:130px}.posts-phieu td:nth-child(6){white-space:normal;min-width:220px;max-width:280px}
-.phieu-qua{margin:0;padding-left:18px}.phieu-act{display:grid;gap:8px;min-width:220px}.phieu-act .inp{width:100%}
 .err{color:var(--danger);font-size:13.5px;margin-top:10px}
 .warnbar{background:rgba(233,185,73,.1);border:1px solid rgba(233,185,73,.45);color:var(--warn);border-radius:8px;padding:9px 14px;font-size:13.5px;margin-top:18px}
 html[data-theme="light"] .warnbar{background:rgba(135,90,0,.08);border-color:rgba(135,90,0,.4)}
@@ -130,15 +118,9 @@ html[data-theme="light"] .btn-danger:hover{background:rgba(179,55,42,.08)}
   /* the author already reads "bởi …" in the last-edited line, so the separate author cell is dropped here */
   .posts-bai td:nth-child(4),.posts-rac td:nth-child(4){display:none}
   .posts-bai td:nth-child(5){font-size:12.5px;color:var(--faint)}
-  /* the preview player is inline in the markup, so it needs display:block before a width applies */
-  .posts audio{display:block;width:100%!important;max-width:none!important;height:40px!important}
   .posts td:last-child .acts{flex-wrap:wrap;gap:8px}
   .posts td:last-child .acts .btn{flex:1 1 auto;min-height:44px;font-size:14px}
   .users .acts{flex-wrap:wrap}
-  .dks-find .inp,.dks-moc .inp{max-width:none;min-height:44px}
-  .dks-find .meta{margin-left:0;flex:1 0 100%}
-  .dks-find .btn,.dks-pager .btn,.dks-moc .btn{min-height:44px}
-  .posts audio{width:100%;max-width:none}
 
   /* a sideways swipe here changes section, so the browser must not read it as its own back/forward gesture
      (the phone's system edge gesture still works — that one is outside the page) */
@@ -212,14 +194,14 @@ function appPage(nonce) {
 <title>Quản trị | wanmeivn.com</title>
 <link rel="icon" href="${LOGO}">
 <link rel="stylesheet" href="${FONTS}">
-<style>${NEWS_CSS}${ADMIN_CSS}${SHELL_CSS}${UI_CSS}${NEWS_ADMIN_CSS}</style>
+<style>${NEWS_CSS}${ADMIN_CSS}${SHELL_CSS}${UI_CSS}${NEWS_ADMIN_CSS}${PARTS_CSS}</style>
 </head><body>
 <div id="app"><main class="auth"><p class="meta">Đang tải…</p></main></div>
 <div id="overlay"></div>
 <div class="sh-toasts" id="toasts" role="region" aria-label="Thông báo" aria-live="polite"></div>
 <noscript><p style="padding:20px">Trang quản trị cần bật JavaScript.</p></noscript>
 <script type="application/json" id="adm-data" nonce="${nonce}">${JSON.stringify(data).replace(/</g, '\\u003c')}</script>
-<script nonce="${nonce}">(${adminApp.toString()})(${adminNews.toString()});</script>
+<script nonce="${nonce}">(${adminApp.toString()})(${adminNews.toString()}, ${adminParts.toString()});</script>
 </body></html>`;
 }
 
