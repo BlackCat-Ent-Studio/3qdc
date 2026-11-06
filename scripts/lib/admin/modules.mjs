@@ -1,6 +1,7 @@
 // modules.mjs — the book of parts (modules) a game can switch on. One entry per part:
 //   perms        the permissions of the part and their labels
 //   implies      a permission that includes others: holding the key holds every permission listed for it
+//   short        a few words for each permission, for lists and table headings (perms keeps the full sentence)
 //   menu         [tab, hash, label, permission needed] — what the editor pages show
 //   paths        API address prefixes owned by the part (below /quan-tri/api/g/<game>/)
 //   dataDir      where the part keeps its data for a game
@@ -19,24 +20,28 @@ export const MODULES = {
   'tin-tuc': part('tin-tuc', 'Tin tức', {
     perms: { viet: 'Viết bài, gửi duyệt, đưa ảnh lên', duyet: 'Đăng, hẹn giờ, trả lại, gỡ, ghim, xoá bài, thùng rác' },
     implies: { duyet: ['viet'] },
+    short: { viet: 'Viết bài', duyet: 'Duyệt đăng' },
     menu: [['posts', '#/', 'Bài viết', 'viet'], ['trash', '#/thung-rac', 'Thùng rác', 'duyet']],
     paths: ['/anh', '/bai', '/thung-rac'],
   }, tinTuc),
   'phieu-be-ngoan': part('phieu-be-ngoan', 'Phiếu Bé Ngoan', {
     perms: { duyet: 'Xem phiếu (không email), trả quà hoặc từ chối', 'quan-ly': 'Xem email, tải CSV, xoá phiếu' },
     implies: { 'quan-ly': ['duyet'] },
+    short: { duyet: 'Duyệt phiếu', 'quan-ly': 'Quản lý phiếu' },
     menu: [['phieu', '#/phieu-be-ngoan', 'Phiếu Bé Ngoan', 'duyet']],
     paths: ['/phieu-be-ngoan'],
   }, phieu),
   'dang-ky-som': part('dang-ky-som', 'Đăng ký sớm', {
     perms: { 'quan-ly': 'Xem, tải, xoá danh sách đăng ký sớm và đặt mốc' },
     implies: {},
+    short: { 'quan-ly': 'Quản lý' },
     menu: [['signup', '#/dang-ky-som', 'Đăng ký sớm', 'quan-ly']],
     paths: ['/dang-ky-som'],
   }, dangKySom),
   'nhac': part('nhac', 'Nhạc nền', {
     perms: { 'quan-ly': 'Thêm, xoá nhạc nền trang chủ' },
     implies: {},
+    short: { 'quan-ly': 'Quản lý' },
     menu: [['music', '#/nhac', 'Nhạc nền', 'quan-ly']],
     paths: ['/nhac'],
   }, nhac),

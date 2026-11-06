@@ -121,3 +121,38 @@ export function gamesOf(user, reg = defaultReg()) {
   }
   return out;
 }
+
+/**
+ * Rights written for people: [{ id, name, all, parts: [{ id, name, perms: [short words] }] }]. What is not in the books is
+ * left out. Used where a person who is not signed in reads what an invite link carries.
+ */
+export function describeGrants(grants, reg = defaultReg()) {
+  const out = [];
+  for (const [gid, value] of Object.entries(isObj(grants) ? grants : {})) {
+    const game = gameIn(reg, gid);
+    if (!game) continue;
+    if (value === '*') { out.push({ id: gid, name: game.name, all: true, parts: [] }); continue; }
+    if (!isObj(value)) continue;
+    const parts = [];
+    for (const [mid, list] of Object.entries(value)) {
+      const mod = Object.hasOwn(reg.modules, mid) ? reg.modules[mid] : null;
+      if (!mod || !Array.isArray(list)) continue;
+      const perms = list.filter((p) => Object.hasOwn(mod.perms, p)).map((p) => (mod.short && mod.short[p]) || mod.perms[p]);
+      if (perms.length) parts.push({ id: mid, name: mod.name, perms });
+    }
+    if (parts.length) out.push({ id: gid, name: game.name, all: false, parts });
+  }
+  return out;
+}
+
+/** The books as the accounts page needs them: every game with the parts it has switched on, their permissions, short words and `implies`. */
+export function rightsCatalog(reg = defaultReg()) {
+  return reg.games.map((g) => ({
+    id: g.id,
+    name: g.name,
+    parts: Object.keys(g.modules || {}).filter((mid) => Object.hasOwn(reg.modules, mid)).map((mid) => {
+      const m = reg.modules[mid];
+      return { id: mid, name: m.name, perms: m.perms, short: m.short || {}, implies: m.implies || {} };
+    }),
+  }));
+}

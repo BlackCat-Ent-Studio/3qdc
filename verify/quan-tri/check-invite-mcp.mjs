@@ -165,8 +165,8 @@ try {
   assert.deepEqual(userOf('moi-tc').grants, wanted, 'exactly the rights of the link, not a kind picked by the page');
   assert.equal(userOf('moi-tc').wantGrants, undefined);
   const page = (await req('GET', '/quan-tri', { cookie: cookies.chu })).text;
-  assert.ok(page.includes('Quyền theo link mời') && page.includes("byLink ? undefined : PRESET_GRANTS[role]"), 'the page shows the link rights text and sends no rights for it');
-  ok('a custom link: approving sends no rights, the account gets exactly the link rights; the page shows "Quyền theo link mời"');
+  assert.ok(page.includes('Link mời cho') && page.includes("{ action: 'duyet' }") && !page.includes('PRESET_GRANTS'), 'the page shows the rights the link offers and approves without sending any');
+  ok('a custom link: approving sends no rights, the account gets exactly the link rights; the page shows what the link offers');
 
   const second = json(await post('chu', '/loi-moi', { grants: TV3 })).token;
   const file = join(root, 'he-thong', 'invites.json');

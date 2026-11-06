@@ -1,12 +1,13 @@
-// admin-app.mjs — the browser side of /quan-tri: the frame (side bar, top bar, game switcher, overview, dialogs), sign-in,
-// set password, accounts, and the older screens that are not redrawn yet. The news screens live in admin-news-app.mjs and are
-// handed in as adminNews; the gift tickets, early sign-ups and music screens live in admin-parts-app.mjs, handed in as adminParts
+// admin-app.mjs — the browser side of /quan-tri: the frame (side bar, top bar, game switcher, overview, dialogs) and the routing.
+// The news screens live in admin-news-app.mjs and are handed in as adminNews; the gift tickets, early sign-ups and music screens
+// live in admin-parts-app.mjs (adminParts); the owner's screens (rights, invite links, Claude codes, record) live in
+// admin-access-app.mjs (adminAccess); sign-in, register, set password and accept-invite live in admin-auth-app.mjs (adminAuth)
 // (all are serialised into the page; none runs on the server).
 // It talks only to /quan-tri/api/*; the server re-checks every permission and cleans every article, so nothing here is a
 // security boundary — it only keeps the screens honest.
 // No inline event attributes anywhere: the page's Content-Security-Policy would block them.
 
-export function adminApp(adminNews, adminParts) {
+export function adminApp(adminNews, adminParts, adminAccess, adminAuth) {
   const DATA = JSON.parse(document.getElementById('adm-data').textContent);
   const CATS = DATA.cats, LIB = DATA.library, HOST = DATA.host, LOGO = DATA.logo, MARKS = DATA.marks || {}, THEME_KEY = DATA.themeKey;
   const app = document.getElementById('app');
@@ -45,6 +46,7 @@ export function adminApp(adminNews, adminParts) {
   const siteNowLocal = (ms) => new Date((ms || Date.now()) + 7 * 3600e3).toISOString().slice(0, 16);
 
   let me = null;
+  let ownerFlag = false; // set when /toi says the account is an owner
   let leaving = null; // cleanup for the open editor (stop the lock heartbeat, release the lock)
   let dirty = () => false;
   // bumped whenever a new screen is drawn; an answer that arrives after the user moved on is ignored
@@ -113,7 +115,7 @@ export function adminApp(adminNews, adminParts) {
   let preSetter = null; // the news list takes its first filter from a link on the overview (data-pre)
   let work = null; // jobs waiting per game { at, byGame: { game: [{ n, txt, tab, pre, info }] }, accounts }
   let siteState = null; // which web addresses answer { "game/site": { ok, code } }
-  const isOwner = () => !!me && me.role === 'owner';
+  const isOwner = () => !!me && ownerFlag;
   const gameOf = (id) => GAMES.find((g) => g.id === id) || null;
   const can = (mod, perm) => { const g = gameOf(curGame); return !!g && (g.perms[mod] || []).includes(perm); };
   const gh = (rest) => '#/g/' + curGame + (rest || '/'); // a hash inside the open game
@@ -128,15 +130,8 @@ export function adminApp(adminNews, adminParts) {
   // Loads /toi: who is signed in and which games they can open. Resolves the answer (the caller checks .ok).
   async function loadMe() {
     const r = await api('GET', '/toi');
-    if (r.ok) { me = r.data.user; GAMES = r.data.games || []; work = null; siteState = null; }
+    if (r.ok) { me = r.data.user; ownerFlag = r.data.user.role === 'owner'; GAMES = r.data.games || []; work = null; siteState = null; }
     return r;
-  }
-
-  // The accounts page still sets rights by presets (Biên tập / Duyệt phiếu / Quản lý) on game 3qdc.
-  const PRESET_GRANTS = { manager: { '3qdc': '*' }, editor: { '3qdc': { 'tin-tuc': ['viet'] } }, phieu: { '3qdc': { 'phieu-be-ngoan': ['duyet'] } } };
-  function presetOf(grants) {
-    const s = JSON.stringify(grants || {});
-    return Object.keys(PRESET_GRANTS).find((k) => JSON.stringify(PRESET_GRANTS[k]) === s) || 'custom';
   }
 
   // ---------- frame: side bar, top bar, game switcher ----------
@@ -162,6 +157,9 @@ export function adminApp(adminNews, adminParts) {
     userplus: svgIcon('<circle cx="10" cy="8" r="3.5"/><path d="M3.5 19a6.5 6.5 0 0113 0M19 8v6M16 11h6"/>'),
     music: svgIcon('<path d="M9 18V6l11-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/>'),
     x: svgIcon('<path d="M6 6l12 12M18 6L6 18"/>'),
+    link: svgIcon('<path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1"/>'),
+    key: svgIcon('<circle cx="8" cy="15" r="4"/><path d="M11 12l8-8M16 7l2 2M14 9l2 2"/>'),
+    list: svgIcon('<path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01"/>'),
   };
   // the part each tab belongs to (the trash is a step inside the news part)
   const PART_OF = { posts: 'tin-tuc', trash: 'tin-tuc', phieu: 'phieu-be-ngoan', signup: 'dang-ky-som', music: 'nhac' };
@@ -226,8 +224,12 @@ export function adminApp(adminNews, adminParts) {
       }
     }
     if (isOwner()) {
+      const sys = (k) => nav.kind === 'system' && nav.sys === k;
       h += '<div class="sh-label">Hệ thống</div>';
-      h += navLink('Phân quyền', '#/nguoi-dung', nav.kind === 'system', I.users, accountsWaiting());
+      h += navLink('Phân quyền', '#/nguoi-dung', sys('perm'), I.users, accountsWaiting());
+      h += navLink('Link mời', '#/link-moi', sys('invite'), I.link);
+      h += navLink('Mã cho Claude', '#/ma-claude', sys('codes'), I.key);
+      h += navLink('Nhật ký', '#/nhat-ky', sys('log'), I.list);
     }
     return h;
   }
@@ -248,11 +250,6 @@ ${newsSite ? `<div class="sh-foot"><a href="https://${esc(newsSite.host)}/tin-tu
     return `<button type="button" class="sh-btn sh-btn-ghost sh-btn-icon sh-theme" data-adm-theme aria-pressed="${dark}" aria-label="${dark ? 'Chuyển sang nền sáng' : 'Chuyển sang nền tối'}" title="${dark ? 'Nền sáng' : 'Nền tối'}">${I.sun}${I.moon}</button>`;
   }
 
-  // the round button of the sign-in pages (the news theme's own look)
-  function authThemeButton() {
-    return `<button type="button" class="theme-btn" data-adm-theme aria-pressed="${isDark()}" aria-label="Đổi giao diện sáng / tối" title="Đổi giao diện sáng / tối">${I.sun}${I.moon}</button>`;
-  }
-
   function switcherHtml(g) {
     return `<div class="sh-sw" id="sw"><button type="button" class="sh-sw-btn" id="sw-btn" aria-haspopup="listbox" aria-expanded="false" aria-controls="sw-pop" aria-label="Đổi game, đang chọn ${esc(g.name)}">${tile(g, 20)}<span>${esc(g.name)}</span>${I.updown}</button>
 <div class="sh-sw-pop" id="sw-pop" hidden>
@@ -262,6 +259,8 @@ ${newsSite ? `<div class="sh-foot"><a href="https://${esc(newsSite.host)}/tin-tu
 <div class="sh-sw-foot"><a href="#/tong-quan">${I.home} Xem tổng quan mọi game</a></div>
 </div></div>`;
   }
+
+  const SYS_NAMES = { perm: 'Phân quyền', invite: 'Link mời', codes: 'Mã cho Claude', log: 'Nhật ký' };
 
   function topHtml(active) {
     const tab = active || 'posts';
@@ -283,7 +282,7 @@ ${newsSite ? `<div class="sh-foot"><a href="https://${esc(newsSite.host)}/tin-tu
       }
     } else if (nav.kind === 'system') {
       if (!isSingle()) c.push(crumb('Tổng quan', '#/tong-quan'));
-      c.push('<li><span class="sh-plain">Hệ thống</span></li>', here('Phân quyền'));
+      c.push('<li><span class="sh-plain">Hệ thống</span></li>', here(SYS_NAMES[nav.sys] || 'Phân quyền'));
     } else {
       if (!isSingle() && GAMES.length) c.push(crumb('Tổng quan', '#/tong-quan'));
       c.push(here('Không có quyền'));
@@ -304,7 +303,7 @@ ${newsSite ? `<div class="sh-foot"><a href="https://${esc(newsSite.host)}/tin-tu
     if (!confirmed && dirty()) return leaveDlg(() => doLogout(true));
     cleanupEditor();
     await api('POST', '/dang-xuat', {});
-    me = null; GAMES = []; work = null; siteState = null;
+    me = null; ownerFlag = false; GAMES = []; work = null; siteState = null;
     renderLogin();
   }
 
@@ -390,7 +389,7 @@ ${newsSite ? `<div class="sh-foot"><a href="https://${esc(newsSite.host)}/tin-tu
     let right;
     if (isOwner()) {
       const ppl = work && work.accounts ? work.accounts.filter((u) => u.role === 'member' && !u.disabled && u.grants && Object.hasOwn(u.grants, g.id)).length : null;
-      right = `${ppl != null ? `<span>${ppl} người có quyền</span>` : ''}<a class="sh-btn" href="#/nguoi-dung">${I.users} Phân quyền game này</a>`;
+      right = `${ppl != null ? `<span>${ppl} người có quyền</span>` : ''}<a class="sh-btn" href="#/nguoi-dung/${esc(g.id)}">${I.users} Phân quyền game này</a>`;
     } else {
       right = (me.grants || {})[g.id] === '*' ? '<span>Bạn quản lý cả game này</span>' : `<span>Bạn được làm: ${esc(g.parts.filter((p) => (g.perms[p.id] || []).length).map((p) => p.name).join(', '))}</span>`;
     }
@@ -479,286 +478,11 @@ ${newsSite ? `<div class="sh-foot"><a href="https://${esc(newsSite.host)}/tin-tu
     });
   }
 
-  // ---------- sign in / set password ----------
-  function authShell(inner) {
-    cleanupEditor();
-    app.innerHTML = `<main class="auth"><div class="theme-float">${authThemeButton()}</div><div class="auth-box"><img src="${esc(LOGO)}" alt="3Q Đại Chiến" class="auth-logo">${inner}</div></main>`;
-  }
-
-  function renderLogin(notice) {
-    authShell(`<h1>Quản trị tin tức</h1><p class="meta">Đăng nhập để viết và đăng bài.</p>
-<form id="login" novalidate>
-<div class="field"><label for="l-user">Tên đăng nhập</label><input class="inp" id="l-user" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" required></div>
-<div class="field"><label for="l-pass">Mật khẩu</label><input class="inp" id="l-pass" name="password" type="password" autocomplete="current-password" required></div>
-<div class="err" id="l-err" role="alert"${notice ? '' : ' hidden'}>${esc(notice || '')}</div>
-<button class="btn btn-fire auth-btn" type="submit">Đăng nhập</button>
-<p class="auth-alt">Chưa có tài khoản? <a href="/quan-tri/dang-ky">Đăng ký</a></p>
-<p class="meta small">Quên mật khẩu: liên hệ Quản lý để được cấp link đặt lại.</p>
-</form>`);
-    $('#l-user').focus();
-    $('#login').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const err = $('#l-err');
-      const btn = e.target.querySelector('button[type=submit]');
-      err.hidden = true; btn.disabled = true;
-      const r = await api('POST', '/dang-nhap', { username: $('#l-user').value, password: $('#l-pass').value });
-      btn.disabled = false;
-      if (!r.ok) { err.textContent = r.data.error || 'Không đăng nhập được.'; err.hidden = false; $('#l-pass').select(); return; }
-      const t = await loadMe();
-      if (!t.ok) { if (t.status !== 401) { err.textContent = t.data.error || 'Không đăng nhập được.'; err.hidden = false; } return; }
-      route();
-    });
-  }
-
-  function renderSetPassword() {
-    // the one-time token is in the # part of the link; take it and clear it from the address bar and history
-    const token = location.hash.replace(/^#/, '');
-    try { history.replaceState(null, '', '/quan-tri/dat-mat-khau'); } catch (e) { /* keep going */ }
-    authShell(`<h1>Đặt mật khẩu</h1><p class="meta">Link này dùng được một lần trong 30 phút. Mật khẩu ít nhất 10 ký tự — nên là một câu dễ nhớ.</p>
-<form id="setpw" novalidate>
-<div class="field"><label for="s-pass">Mật khẩu mới</label><input class="inp" id="s-pass" type="password" autocomplete="new-password" minlength="10" required></div>
-<div class="field"><label for="s-pass2">Nhập lại mật khẩu</label><input class="inp" id="s-pass2" type="password" autocomplete="new-password" minlength="10" required></div>
-<div class="err" id="s-err" role="alert" hidden></div>
-<button class="btn btn-fire auth-btn" type="submit">Lưu mật khẩu</button>
-</form>`);
-    if (!token) { $('#s-err').textContent = 'Link thiếu mã. Hãy mở đúng link được gửi cho bạn.'; $('#s-err').hidden = false; }
-    $('#s-pass').focus();
-    $('#setpw').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const err = $('#s-err');
-      const a = $('#s-pass').value, b = $('#s-pass2').value;
-      err.hidden = true;
-      if (a.length < 10) { err.textContent = 'Mật khẩu cần ít nhất 10 ký tự.'; err.hidden = false; return; }
-      if (a !== b) { err.textContent = 'Hai lần nhập không giống nhau.'; err.hidden = false; return; }
-      const r = await api('POST', '/dat-mat-khau', { token, password: a });
-      if (!r.ok) { err.textContent = r.data.error || 'Không đặt được mật khẩu.'; err.hidden = false; return; }
-      authShell(`<h1>Đã đặt mật khẩu</h1><p>Tài khoản <b>${esc(r.data.user.username)}</b> (${esc(r.data.user.name)}) đã sẵn sàng.</p><a class="btn btn-fire auth-btn" href="/quan-tri">Đăng nhập</a>`);
-    });
-  }
-
-  // Registration: the account waits for a manager's approval before it can sign in.
-  function renderRegister() {
-    authShell(`<h1>Đăng ký</h1><p class="meta">Tài khoản mới cần <b>Quản lý duyệt</b> trước khi đăng nhập được.</p>
-<form id="reg" novalidate>
-<div class="field"><label for="r-user">Tên đăng nhập</label><input class="inp" id="r-user" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="32" required>
-<span class="hint">3–32 ký tự: chữ thường không dấu, số, dấu chấm, gạch ngang, gạch dưới.</span></div>
-<div class="field"><label for="r-name">Tên hiển thị</label><input class="inp" id="r-name" autocomplete="name" maxlength="60" required>
-<span class="hint">Hiện dưới bài viết: “Đăng bởi …”.</span></div>
-<div class="field"><label for="r-pass">Mật khẩu</label><input class="inp" id="r-pass" type="password" autocomplete="new-password" minlength="10" required>
-<span class="hint">Ít nhất 10 ký tự — nên là một câu dễ nhớ.</span></div>
-<div class="field"><label for="r-pass2">Nhập lại mật khẩu</label><input class="inp" id="r-pass2" type="password" autocomplete="new-password" minlength="10" required></div>
-<div class="err" id="r-err" role="alert" hidden></div>
-<button class="btn btn-fire auth-btn" type="submit">Đăng ký</button>
-<p class="auth-alt">Đã có tài khoản? <a href="/quan-tri">Đăng nhập</a></p>
-</form>`);
-    $('#r-user').focus();
-    $('#r-user').addEventListener('change', (e) => { e.target.value = e.target.value.trim().toLowerCase(); });
-    $('#reg').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const err = $('#r-err');
-      const btn = e.target.querySelector('button[type=submit]');
-      const username = $('#r-user').value.trim().toLowerCase();
-      const name = $('#r-name').value.trim();
-      const a = $('#r-pass').value, b = $('#r-pass2').value;
-      err.hidden = true;
-      const say = (msg) => { err.textContent = msg; err.hidden = false; };
-      if (!/^[a-z0-9][a-z0-9._-]{2,31}$/.test(username)) return say('Tên đăng nhập 3–32 ký tự: chữ thường không dấu, số, dấu chấm, gạch ngang, gạch dưới; bắt đầu bằng chữ hoặc số.');
-      if (!name) return say('Nhập tên hiển thị.');
-      if (a.length < 10) return say('Mật khẩu cần ít nhất 10 ký tự.');
-      if (a !== b) return say('Hai lần nhập mật khẩu không giống nhau.');
-      btn.disabled = true;
-      const r = await api('POST', '/dang-ky', { username, name, password: a });
-      btn.disabled = false;
-      if (!r.ok) return say(r.data.error || 'Không đăng ký được.');
-      authShell(`<h1>Đã gửi đăng ký</h1><p>Tài khoản <b>${esc(r.data.user.username)}</b> (${esc(r.data.user.name)}) đang <b>chờ Quản lý duyệt</b>.</p>
-<p class="meta">Khi được duyệt, bạn đăng nhập bằng tên đăng nhập và mật khẩu vừa tạo. Hãy báo Quản lý tên đăng nhập của bạn để được duyệt nhanh.</p>
-<a class="btn btn-fire auth-btn" href="/quan-tri">Về trang đăng nhập</a>`);
-    });
-  }
-
-  // A manager's invite link (/quan-tri/moi#<token>): the person picks a name and password; the account then waits for
-  // a manager's approval, with the invite's role ("Duyệt phiếu") preselected. The token is taken from the # part and
-  // cleared from the address bar.
-  function renderAcceptInvite() {
-    const token = location.hash.replace(/^#/, '');
-    try { history.replaceState(null, '', '/quan-tri/moi'); } catch (e) { /* keep going */ }
-    authShell(`<h1>Nhận lời mời</h1><p class="meta">Bạn được mời làm <b>Duyệt phiếu</b> cho Phiếu Bé Ngoan. Tạo tài khoản rồi chờ <b>Quản lý duyệt</b> là đăng nhập được — link chỉ dùng được một lần.</p>
-<form id="inv" novalidate>
-<div class="field"><label for="i-user">Tên đăng nhập</label><input class="inp" id="i-user" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="32" required>
-<span class="hint">3–32 ký tự: chữ thường không dấu, số, dấu chấm, gạch ngang, gạch dưới.</span></div>
-<div class="field"><label for="i-name">Tên hiển thị</label><input class="inp" id="i-name" autocomplete="name" maxlength="60" required></div>
-<div class="field"><label for="i-pass">Mật khẩu</label><input class="inp" id="i-pass" type="password" autocomplete="new-password" minlength="10" required>
-<span class="hint">Ít nhất 10 ký tự — nên là một câu dễ nhớ.</span></div>
-<div class="field"><label for="i-pass2">Nhập lại mật khẩu</label><input class="inp" id="i-pass2" type="password" autocomplete="new-password" minlength="10" required></div>
-<div class="err" id="i-err" role="alert" hidden></div>
-<button class="btn btn-fire auth-btn" type="submit">Tạo tài khoản</button>
-</form>`);
-    const err = $('#i-err');
-    const say = (msg) => { err.textContent = msg; err.hidden = false; };
-    if (!token) say('Link thiếu mã. Hãy mở đúng link Quản lý gửi cho bạn.');
-    $('#i-user').focus();
-    $('#i-user').addEventListener('change', (e) => { e.target.value = e.target.value.trim().toLowerCase(); });
-    $('#inv').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const btn = e.target.querySelector('button[type=submit]');
-      const username = $('#i-user').value.trim().toLowerCase();
-      const name = $('#i-name').value.trim();
-      const a = $('#i-pass').value, b = $('#i-pass2').value;
-      err.hidden = true;
-      if (!/^[a-z0-9][a-z0-9._-]{2,31}$/.test(username)) return say('Tên đăng nhập 3–32 ký tự: chữ thường không dấu, số, dấu chấm, gạch ngang, gạch dưới; bắt đầu bằng chữ hoặc số.');
-      if (!name) return say('Nhập tên hiển thị.');
-      if (a.length < 10) return say('Mật khẩu cần ít nhất 10 ký tự.');
-      if (a !== b) return say('Hai lần nhập mật khẩu không giống nhau.');
-      btn.disabled = true;
-      const r = await api('POST', '/nhan-loi-moi', { token, username, name, password: a });
-      btn.disabled = false;
-      if (!r.ok) return say(r.data.error || 'Không tạo được tài khoản.');
-      authShell(`<h1>Đã tạo tài khoản</h1><p>Tài khoản <b>${esc(r.data.user.username)}</b> (${esc(r.data.user.name)}) đang <b>chờ Quản lý duyệt</b> làm Duyệt phiếu.</p>
-<p class="meta">Khi được duyệt, bạn đăng nhập bằng tên đăng nhập và mật khẩu vừa tạo. Hãy báo Quản lý tên đăng nhập của bạn để được duyệt nhanh.</p>
-<a class="btn btn-fire auth-btn" href="/quan-tri">Về trang đăng nhập</a>`);
-    });
-  }
-
-  // ---------- accounts (managers) ----------
-  const ROLE_PILL = { owner: ['Chủ', 's-published'], manager: ['Quản lý', 's-published'], editor: ['Biên tập', 's-draft'], phieu: ['Duyệt phiếu', 's-scheduled'], custom: ['Tuỳ chỉnh', 's-draft'], pending: ['Chờ duyệt', 's-pending'] };
-
-  async function renderUsers() {
-    cleanupEditor();
-    const mine = screen;
-    app.innerHTML = `${header('users')}<main class="wrap"><p class="meta" style="padding:40px 0">Đang tải danh sách người dùng…</p></main>`;
-    const r = await api('GET', '/nguoi-dung');
-    if (mine !== screen || !me) return;
-    if (!r.ok) { if (r.status !== 401) $('main').innerHTML = `<div class="err" style="margin:40px 0">${esc(r.data.error)}</div>`; return; }
-    access = { invites: r.data.invites || [], codes: r.data.codes || [] };
-    drawUsers(r.data.users, r.data.me, '');
-  }
-
-  // open invite links and live Claude codes, kept between redraws of the accounts page; a link or code just made is
-  // shown once in `fresh` and gone on the next redraw (the server never shows it again)
-  let access = { invites: [], codes: [] };
-  let fresh = null;
-
-  function drawUsers(users, myName, notice) {
-    // the kind shown for an account: owner, pending, or the preset its grants equal ("custom" = anything else)
-    const kindOf = (u) => (u.role === 'member' ? presetOf(u.grants) : u.role);
-    const order = { pending: 0, owner: 1, manager: 2, editor: 3, phieu: 4 };
-    const rows = users.slice().sort((a, b) => (order[kindOf(a)] ?? 5) - (order[kindOf(b)] ?? 5) || String(b.createdAt).localeCompare(String(a.createdAt)));
-    const waiting = users.filter((u) => u.role === 'pending').length;
-    const roleSelect = (kind, username, id) => `<select class="sel" id="${id}" aria-label="Vai trò của ${esc(username)}">${[['editor', 'Biên tập'], ['phieu', 'Duyệt phiếu'], ['manager', 'Quản lý'], ['custom', 'Tuỳ chỉnh (giữ nguyên)']]
-      .filter(([v]) => v !== 'custom' || kind === 'custom')
-      .map(([v, l]) => `<option value="${v}"${kind === v ? ' selected' : ''}>${l}</option>`).join('')}</select>`;
-    const phieuUsers = users.filter((u) => kindOf(u) === 'phieu' && !u.disabled);
-    const nameOf = (un) => (users.find((u) => u.username === un) || {}).name || un;
-    const shown = fresh;
-    fresh = null;
-    const freshBox = shown ? `<div class="warnbar" style="margin:12px 0"><b>${shown.kind === 'link' ? 'Link mời mới' : 'Mã cho Claude mới'}</b> — chỉ hiện <b>một lần</b>, hãy sao chép và gửi riêng cho người dùng ngay:
-<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><input class="inp" id="fresh-val" readonly value="${esc(shown.value)}" style="flex:1;min-width:260px;font-family:monospace"><button type="button" class="btn btn-fire btn-sm" id="fresh-copy">Sao chép</button></div></div>` : '';
-    const accessHtml = `<section class="adm-access" style="margin:28px 0">
-<h2>Link mời Duyệt phiếu</h2>
-<p class="meta">Người nhận link tự tạo tài khoản rồi <b>chờ bạn duyệt</b> trong bảng trên (vai trò <b>Duyệt phiếu</b> đã chọn sẵn). Duyệt phiếu chỉ thấy mục Phiếu Bé Ngoan, không thấy email người chơi, không xoá phiếu, không xuất CSV. Mỗi link dùng một lần, hết hạn sau 7 ngày.</p>
-<div class="acts" style="margin:10px 0"><button type="button" class="btn btn-fire btn-sm" id="inv-new">Tạo link mời</button></div>
-${access.invites.length ? `<ul class="meta">${access.invites.map((i) => `<li>Link tạo bởi ${esc(i.createdBy)} lúc ${fmtTime(i.createdAt)} · hết hạn ${fmtTime(siteNowLocal(i.exp))} <button type="button" class="btn btn-ghost btn-xs" data-inv-huy="${esc(i.id)}">Huỷ</button></li>`).join('')}</ul>` : '<p class="meta">Không có link mời nào đang chờ dùng.</p>'}
-<h2 style="margin-top:22px">Mã cho Claude</h2>
-<p class="meta">Mã để Claude của người Duyệt phiếu tự xem và xử lý phiếu qua <code>https://${esc(HOST)}/mcp</code>. Khoá tài khoản hoặc đổi vai trò thì mã của người đó tự hết hiệu lực.</p>
-${phieuUsers.length ? `<div class="acts" style="margin:10px 0"><select class="sel" id="code-user" aria-label="Tài khoản">${phieuUsers.map((u) => `<option value="${esc(u.username)}">${esc(u.name)} (${esc(u.username)})</option>`).join('')}</select>
-<input class="inp" id="code-label" maxlength="40" placeholder="Ghi chú, vd: Claude máy nhà" aria-label="Ghi chú cho mã" style="max-width:240px"><button type="button" class="btn btn-fire btn-sm" id="code-new">Tạo mã</button></div>` : '<p class="meta">Chưa có tài khoản Duyệt phiếu nào đang hoạt động.</p>'}
-${access.codes.length ? `<ul class="meta">${access.codes.map((c) => `<li><b>${esc(nameOf(c.username))}</b> · ${esc(c.label)} · mã …${esc(c.hint)} · tạo ${fmtTime(c.createdAt)} · ${c.lastUsedAt ? 'dùng lần cuối ' + fmtTime(c.lastUsedAt) : 'chưa dùng'} <button type="button" class="btn btn-danger btn-xs" data-code-thu="${esc(c.id)}">Thu hồi</button></li>`).join('')}</ul>` : '<p class="meta">Chưa có mã nào đang dùng.</p>'}
-</section>`;
-    $('main').innerHTML = `<div class="adm-top"><div><h1>Người dùng</h1><p>${waiting ? `<b>${waiting}</b> tài khoản đăng ký đang chờ duyệt. Chỉ duyệt người bạn biết — Biên tập viết bài, Quản lý đăng bài và quản lý các phần của game.` : 'Không có tài khoản nào chờ duyệt. Người mới đăng ký tại trang Đăng ký và sẽ hiện ở đây.'}</p></div></div>
-<div class="err" id="u-err" role="alert"${notice ? '' : ' hidden'}>${esc(notice)}</div>
-${freshBox}
-<div class="tbl-wrap"><table class="posts users"><thead><tr><th>Người dùng</th><th>Tên đăng nhập</th><th>Vai trò</th><th>Ngày tạo</th><th>Thao tác</th></tr></thead><tbody>
-${rows.map((u) => {
-    const [label, cls] = u.disabled ? ['Đã khoá', 's-locked'] : (ROLE_PILL[kindOf(u)] || [u.role, 's-draft']);
-    const self = u.username === myName;
-    let acts;
-    if (self) acts = '<span class="meta">Tài khoản của bạn</span>';
-    else if (u.role === 'pending') {
-      // an account from an invite link comes with the invite's rights already chosen. When they match none of the kinds
-      // (a "custom" link), there is nothing to choose: the button sends no rights and the server uses the link's own
-      const fromLink = Object.keys(u.wantGrants || {}).length > 0 && presetOf(u.wantGrants) === 'custom';
-      acts = `${fromLink ? '<span class="meta">Quyền theo link mời</span>' : roleSelect(presetOf(u.wantGrants) === 'custom' ? 'editor' : presetOf(u.wantGrants), u.username, 'role-' + esc(u.username))}<button type="button" class="btn btn-fire btn-sm" data-act="duyet" data-user="${esc(u.username)}">Duyệt</button><button type="button" class="btn btn-danger btn-sm" data-act="tu-choi" data-user="${esc(u.username)}">Từ chối</button>`;
-    } else {
-      acts = `${u.role === 'owner' ? '' : roleSelect(kindOf(u), u.username, 'role-' + esc(u.username)) + `<button type="button" class="btn btn-ghost btn-sm" data-act="vai-tro" data-user="${esc(u.username)}">Đổi vai trò</button>`}${u.disabled
-        ? `<button type="button" class="btn btn-ghost btn-sm" data-act="mo-khoa" data-user="${esc(u.username)}">Mở khoá</button>`
-        : `<button type="button" class="btn btn-danger btn-sm" data-act="khoa" data-user="${esc(u.username)}">Khoá</button>`}`;
-    }
-    return `<tr data-user="${esc(u.username)}"><td><div class="person">${avatar(u.name)}<b>${esc(u.name)}</b></div></td><td class="meta">${esc(u.username)}${u.invitedBy ? `<div class="small">qua link mời của ${esc(u.invitedBy)}</div>` : ''}</td>
-<td><span class="pill ${cls}">${label}</span></td><td class="meta">${fmtTime(u.createdAt)}</td><td><div class="acts">${acts}</div></td></tr>`;
-  }).join('')}
-</tbody></table></div>
-${accessHtml}`;
-    const armed = {};
-    if (shown) {
-      $('#fresh-val').addEventListener('focus', (e) => e.target.select());
-      $('#fresh-copy').addEventListener('click', async () => {
-        const v = $('#fresh-val');
-        try { await navigator.clipboard.writeText(v.value); toast('Đã sao chép'); } catch (e) { v.select(); toast('Bấm Ctrl+C để sao chép'); }
-      });
-    }
-    // invite links and Claude codes: each answer brings the new lists (and the new link or code, once)
-    const accessCall = async (path, body, b, onFresh) => {
-      if (b) b.disabled = true;
-      const mine = screen;
-      const r = await api('POST', path, body);
-      if (mine !== screen) return;
-      if (!r.ok) {
-        if (b) b.disabled = false;
-        if (r.status !== 401) { const e = $('#u-err'); e.textContent = r.data.error || 'Không thực hiện được.'; e.hidden = false; }
-        return;
-      }
-      access = { invites: r.data.invites || [], codes: r.data.codes || [] };
-      if (onFresh) fresh = onFresh(r.data);
-      drawUsers(users, myName, '');
-    };
-    $('#inv-new').addEventListener('click', (e) => accessCall('/loi-moi', { grants: PRESET_GRANTS.phieu }, e.target,
-      (d) => ({ kind: 'link', value: `${location.origin}/quan-tri/moi#${d.token}` })));
-    $$('[data-inv-huy]').forEach((b) => b.addEventListener('click', () => accessCall(`/loi-moi/${b.getAttribute('data-inv-huy')}/huy`, {}, b)));
-    if ($('#code-new')) $('#code-new').addEventListener('click', (e) => accessCall('/ma-claude', { username: $('#code-user').value, label: $('#code-label').value }, e.target,
-      (d) => ({ kind: 'code', value: d.code })));
-    $$('[data-code-thu]').forEach((b) => b.addEventListener('click', () => {
-      if (!(armed['code' + b.getAttribute('data-code-thu')] > Date.now() - 4000)) {
-        armed['code' + b.getAttribute('data-code-thu')] = Date.now();
-        b.textContent = 'Bấm lần nữa';
-        setTimeout(() => { if (b.isConnected) b.textContent = 'Thu hồi'; }, 4000);
-        return;
-      }
-      accessCall(`/ma-claude/${b.getAttribute('data-code-thu')}/thu-hoi`, {}, b);
-    }));
-    $$('[data-act]').forEach((b) => b.addEventListener('click', async () => {
-      const action = b.getAttribute('data-act');
-      const username = b.getAttribute('data-user');
-      // refusing and locking ask for a second click
-      if ((action === 'tu-choi' || action === 'khoa') && !(armed[username + action] > Date.now() - 4000)) {
-        armed[username + action] = Date.now();
-        const was = b.textContent;
-        b.textContent = 'Bấm lần nữa';
-        setTimeout(() => { if (b.isConnected) b.textContent = was; }, 4000);
-        return;
-      }
-      const sel = document.getElementById('role-' + username);
-      const role = sel ? sel.value : undefined;
-      // approving without a choice box = the rights of the invite link, sent as no rights at all
-      const byLink = action === 'duyet' && !sel;
-      // "Tuỳ chỉnh" has no preset to send: such an account keeps its rights unless another kind is chosen
-      if ((action === 'duyet' || action === 'vai-tro') && !byLink && !PRESET_GRANTS[role]) {
-        const e = $('#u-err'); e.textContent = 'Chọn Biên tập, Duyệt phiếu hoặc Quản lý.'; e.hidden = false;
-        return;
-      }
-      $$('[data-act]').forEach((x) => { x.disabled = true; });
-      const mine = screen;
-      const r = await api('POST', '/nguoi-dung/' + encodeURIComponent(username), { action: action === 'vai-tro' ? 'quyen' : action, grants: byLink ? undefined : PRESET_GRANTS[role] });
-      if (mine !== screen) return;
-      if (!r.ok) {
-        if (r.status === 401) return;
-        $$('[data-act]').forEach((x) => { x.disabled = false; });
-        const e = $('#u-err'); e.textContent = r.data.error || 'Không thực hiện được.'; e.hidden = false;
-        return;
-      }
-      toast({ duyet: `Đã duyệt ${username}`, 'tu-choi': `Đã từ chối ${username}`, khoa: `Đã khoá ${username}`, 'mo-khoa': `Đã mở khoá ${username}`, 'vai-tro': `Đã đổi vai trò ${username}` }[action]);
-      drawUsers(r.data.users, r.data.me, '');
-    }));
-  }
+  // ---------- sign in, register, set password, accept an invite (admin-auth-app.mjs) ----------
+  const renderLogin = (notice) => AUTH.renderLogin(notice);
+  const renderSetPassword = () => AUTH.renderSetPassword();
+  const renderRegister = () => AUTH.renderRegister();
+  const renderAcceptInvite = () => AUTH.renderAcceptInvite();
 
   // ---------- editor ----------
   function cleanupEditor() {
@@ -871,7 +595,7 @@ ${accessHtml}`;
 
     let h = `<div class="ov-head"><div><div class="ov-eyebrow">${esc(todayWords())}</div><h1>Tổng quan</h1>
 <p>${owner ? 'Bạn là Quản lý tổng nên thấy mọi game. Chọn một game để làm việc.' : 'Chỉ hiện các game bạn được cấp quyền. Chọn một game để làm việc.'}</p></div>
-${owner ? `<div><a class="sh-btn" href="#/nguoi-dung">${I.users} Phân quyền</a></div>` : ''}</div>`;
+${owner ? `<div class="ov-acts"><a class="sh-btn" href="#/nguoi-dung">${I.users} Phân quyền</a><a class="sh-btn sh-btn-primary" href="#/link-moi">${I.link} Tạo link mời</a></div>` : ''}</div>`;
     h += `<section class="ov-kpis" aria-label="Tóm tắt">
 <div class="ov-kpi"><span>Game</span><b>${GAMES.length}</b><a class="ov-lnk" href="#ov-games" data-scroll="ov-games">Xem từng game ${arrow}</a></div>
 <div class="ov-kpi"><span>Trang web đang quản lý</span><b>${siteCount}</b><span class="ov-sub" id="ov-up">Đang kiểm tra…</span></div>
@@ -977,6 +701,17 @@ ${g.sites.length ? `<div>${I.layers} <span class="ov-mono">${esc(siteHost(g, g.s
     loginAgain: (msg) => { me = null; renderLogin(msg); }, gameHead: gameHeadHtml, paintHead,
   });
 
+  // ---------- the owner's screens (admin-access-app.mjs) and the pages before sign-in (admin-auth-app.mjs) ----------
+  const ACCESS = adminAccess({
+    $, $$, esc, api, toast, header, app, I, svgIcon, fmtTime, siteNowLocal, initials, tile, armDelete, LOG_WORDS,
+    screen: () => screen, me: () => me, cleanupEditor, openOverlay, closeOverlay,
+    setNav: (sys) => { nav = { kind: 'system', part: false, sys }; },
+  });
+  const AUTH = adminAuth({
+    $, esc, api, app, I, svgIcon, fmtTime, siteNowLocal, tile, themeButton,
+    cleanupEditor, loadMe, route: () => route(),
+  });
+
   // ---------- routing ----------
   // Addresses: #/tong-quan · #/g/<game>/<section> · #/nguoi-dung. The older ones that name no game (#/sua/12, #/phieu-be-ngoan, …)
   // are game 3qdc's, so bookmarks keep working. A bare #/ is the account's home: the overview, or the one game it has.
@@ -1011,11 +746,15 @@ ${g.sites.length ? `<div>${I.layers} <span class="ov-mono">${esc(siteHost(g, g.s
       renderOverview();
       return shown('#/tong-quan');
     }
-    if (!gm && rest === '/nguoi-dung') {
-      if (!isOwner()) { renderDenied('Chỉ Quản lý tổng xem và đổi được quyền của người khác.'); return shown(''); }
-      nav = { kind: 'system', part: false };
-      renderUsers();
-      return shown('#/nguoi-dung');
+    const sysm = !gm && rest.match(/^\/(nguoi-dung|link-moi|ma-claude|nhat-ky)(?:\/([a-z0-9-]+))?$/);
+    if (sysm) {
+      if (!isOwner()) { renderDenied('Chỉ Quản lý tổng xem và đổi được quyền, link mời, mã Claude và nhật ký.'); return shown(''); }
+      nav = { kind: 'system', part: false, sys: 'perm' };
+      if (sysm[1] === 'nguoi-dung') ACCESS.renderPerm(sysm[2]);
+      else if (sysm[1] === 'link-moi') ACCESS.renderInvites(sysm[2]);
+      else if (sysm[1] === 'ma-claude') ACCESS.renderCodes();
+      else ACCESS.renderLog(1);
+      return shown('#/' + sysm[1]);
     }
 
     // a game's sections
@@ -1048,7 +787,7 @@ ${g.sites.length ? `<div>${I.layers} <span class="ov-mono">${esc(siteHost(g, g.s
   // swipe must never drop unsaved text.
   const sections = () => {
     const g = gameOf(curGame);
-    return (g && nav.kind === 'game' ? g.menu.map((m) => menuHref(g, m)) : []).concat(isOwner() && nav.kind !== 'overview' ? ['#/nguoi-dung'] : []);
+    return (g && nav.kind === 'game' ? g.menu.map((m) => menuHref(g, m)) : []).concat(isOwner() && nav.kind !== 'overview' ? ['#/nguoi-dung', '#/link-moi', '#/ma-claude', '#/nhat-ky'] : []);
   };
   let slideFrom = '';
 

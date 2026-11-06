@@ -17,6 +17,9 @@ import { adminApp } from './admin-app.mjs';
 import { adminNews } from './admin-news-app.mjs';
 import { adminParts } from './admin-parts-app.mjs';
 import { PARTS_CSS } from './admin-parts-css.mjs';
+import { adminAccess } from './admin-access-app.mjs';
+import { adminAuth } from './admin-auth-app.mjs';
+import { ACCESS_CSS, AUTH_CSS } from './admin-access-css.mjs';
 
 const FONTS = 'https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Cormorant+Garamond:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap';
 
@@ -61,24 +64,7 @@ table.posts{border-collapse:collapse;width:100%;min-width:860px}
 .box{border:1px solid var(--line);border-radius:var(--r);background:var(--panel);padding:16px}
 .box h3{margin:0 0 12px;font-size:14px;font-weight:600;color:var(--gold-hi)}
 .err{color:var(--danger);font-size:13.5px;margin-top:10px}
-.warnbar{background:rgba(233,185,73,.1);border:1px solid rgba(233,185,73,.45);color:var(--warn);border-radius:8px;padding:9px 14px;font-size:13.5px;margin-top:18px}
-html[data-theme="light"] .warnbar{background:rgba(135,90,0,.08);border-color:rgba(135,90,0,.4)}
-.auth{min-height:100vh;display:grid;place-items:center;padding:24px 16px}
-.auth-box{width:100%;max-width:400px;border:1px solid var(--line);border-radius:14px;background:var(--panel);padding:30px 28px}
-.auth-logo{height:64px;width:auto;display:block;margin-bottom:14px}
-.auth h1{font-family:var(--display);font-size:36px;margin:0 0 4px;color:var(--gold-hi);line-height:1.1}
-.auth .field{margin-top:16px;margin-bottom:0}
-.auth-btn{width:100%;margin-top:20px}
-.auth-alt{margin:16px 0 6px;text-align:center;font-size:14px;color:var(--muted)}
-.auth-alt a,.warnbar a{color:var(--gold-hi);font-weight:600}
 .hint{font-size:12.5px;color:var(--faint)}
-.auth-box{margin-block:24px}
-.sel{background:var(--ink-2);border:1px solid var(--line);border-radius:6px;padding:4px 8px;font-size:13.5px}
-.s-locked{color:var(--danger)}
-table.users{min-width:760px}
-.users .acts{align-items:center;flex-wrap:nowrap}
-.theme-float{position:fixed;top:14px;right:16px;z-index:30}
-@media (max-width:600px){.auth{padding-top:64px}}
 html[data-theme="light"] .btn-danger{border-color:rgba(179,55,42,.5)}
 html[data-theme="light"] .btn-danger:hover{background:rgba(179,55,42,.08)}
 
@@ -96,7 +82,7 @@ html[data-theme="light"] .btn-danger:hover{background:rgba(179,55,42,.08)}
 
   /* tables become cards */
   .tbl-wrap{overflow:visible;border:0;background:transparent;border-radius:0}
-  table.posts,table.posts.users{min-width:0;width:100%;display:block}
+  table.posts{min-width:0;width:100%;display:block}
   .posts thead{display:none}
   .posts tbody{display:flex;flex-direction:column;gap:10px}
   .posts tr{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;
@@ -120,7 +106,6 @@ html[data-theme="light"] .btn-danger:hover{background:rgba(179,55,42,.08)}
   .posts-bai td:nth-child(5){font-size:12.5px;color:var(--faint)}
   .posts td:last-child .acts{flex-wrap:wrap;gap:8px}
   .posts td:last-child .acts .btn{flex:1 1 auto;min-height:44px;font-size:14px}
-  .users .acts{flex-wrap:wrap}
 
   /* a sideways swipe here changes section, so the browser must not read it as its own back/forward gesture
      (the phone's system edge gesture still works — that one is outside the page) */
@@ -194,14 +179,14 @@ function appPage(nonce) {
 <title>Quản trị | wanmeivn.com</title>
 <link rel="icon" href="${LOGO}">
 <link rel="stylesheet" href="${FONTS}">
-<style>${NEWS_CSS}${ADMIN_CSS}${SHELL_CSS}${UI_CSS}${NEWS_ADMIN_CSS}${PARTS_CSS}</style>
+<style>${NEWS_CSS}${ADMIN_CSS}${SHELL_CSS}${UI_CSS}${NEWS_ADMIN_CSS}${PARTS_CSS}${ACCESS_CSS}${AUTH_CSS}</style>
 </head><body>
-<div id="app"><main class="auth"><p class="meta">Đang tải…</p></main></div>
+<div id="app"><div class="au"><p class="au-foot" style="margin:auto">Đang tải…</p></div></div>
 <div id="overlay"></div>
 <div class="sh-toasts" id="toasts" role="region" aria-label="Thông báo" aria-live="polite"></div>
 <noscript><p style="padding:20px">Trang quản trị cần bật JavaScript.</p></noscript>
 <script type="application/json" id="adm-data" nonce="${nonce}">${JSON.stringify(data).replace(/</g, '\\u003c')}</script>
-<script nonce="${nonce}">(${adminApp.toString()})(${adminNews.toString()}, ${adminParts.toString()});</script>
+<script nonce="${nonce}">(${adminApp.toString()})(${adminNews.toString()}, ${adminParts.toString()}, ${adminAccess.toString()}, ${adminAuth.toString()});</script>
 </body></html>`;
 }
 

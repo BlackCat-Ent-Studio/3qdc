@@ -15,7 +15,7 @@ import { mkdir } from 'node:fs/promises';
 import { systemDir } from '../admin/paths.mjs';
 import { readJson, writeJsonAtomic, siteNow } from './news-files.mjs';
 import { changeUsers, readUsers, hashPassword, USERNAME_RE, PASSWORD_MIN } from './admin-auth.mjs';
-import { can, isOwner, cleanGrants } from '../admin/grants.mjs';
+import { can, isOwner, cleanGrants, describeGrants } from '../admin/grants.mjs';
 import { appendAudit, whoIs } from '../admin/audit-log.mjs';
 
 const INVITE_MS = 7 * 86400e3;
@@ -102,6 +102,19 @@ export async function revokeInvite(actor, id) {
   });
   if (!r.error) await appendAudit({ ai: actor.username, qua: 'web', viec: 'huy-link-moi', doiTuong: id });
   return r;
+}
+
+// What an invite link carries, for the person who opened it (before any account exists): the games and rights in words and
+// the time it runs out -> { games, exp } or { status, error }. Reveals nothing to someone without the token.
+export async function previewInvite(token) {
+  token = String(token ?? '');
+  const bad = { status: 400, error: 'Link mời không hợp lệ, đã được dùng hoặc đã hết hạn. Hãy xin chủ link mới.' };
+  if (!/^[A-Za-z0-9_-]{40,60}$/.test(token)) return bad;
+  const want = sha256(token);
+  const now = Date.now();
+  const i = (await invites.read()).find((x) => openInvite(x, now) && sameHash(x.hash, want));
+  if (!i) return bad;
+  return { games: describeGrants(cleanGrants(grantsOfInvite(i), { lenient: true }).grants), exp: i.exp };
 }
 
 // Someone opened an invite link and filled in the form. → { user } or { status, error }.

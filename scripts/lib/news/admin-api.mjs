@@ -6,14 +6,14 @@
 // one game's content lives in a part (scripts/lib/admin/modules/) and is reached at /quan-tri/api/g/<game>/<address>;
 // the account must hold a grant in that game (403 otherwise, before the part is even looked at) and each part checks its
 // own permissions with ctx.can().
-import { signIn, endSession, setPassword, currentUser, sameOrigin, sessionCookie, clearedCookie, clientIp } from './admin-auth.mjs';
-import { listInvites, createInvite, revokeInvite, acceptInvite, listCodes, createCode, revokeCode } from './admin-access.mjs';
+import { signIn, endSession, setPassword, currentUser, sameOrigin, sessionCookie, clearedCookie, clientIp, readUsers } from './admin-auth.mjs';
+import { listInvites, createInvite, revokeInvite, acceptInvite, previewInvite, listCodes, createCode, revokeCode, hasMcpTools } from './admin-access.mjs';
 import { register, listUsers, manageUser } from './admin-users.mjs';
 import { USERNAME_RE } from './admin-auth.mjs';
 import { siteNow } from './news-files.mjs';
 import { GAME_ID_RE, gameById } from '../admin/games.mjs';
 import { moduleOfPath } from '../admin/modules.mjs';
-import { can, gamesOf, hasAnyAccess, isOwner, cleanGrants } from '../admin/grants.mjs';
+import { can, gamesOf, hasAnyAccess, isOwner, cleanGrants, rightsCatalog } from '../admin/grants.mjs';
 import { siteStatus } from '../admin/site-status.mjs';
 import { send, oops } from '../admin/api-http.mjs';
 import { readAudit } from '../admin/audit-log.mjs';
@@ -117,6 +117,12 @@ async function route(req, res, path) {
     endSession(req);
     return send(res, 200, { ok: true }, { 'Set-Cookie': clearedCookie() });
   }
+  // what an invite link carries, shown to the person who opened it above the sign-up form
+  if (method === 'POST' && path === '/xem-loi-moi') {
+    const r = await previewInvite(body.token);
+    if (r.error) return oops(res, r.status, r.error);
+    return send(res, 200, { games: r.games, exp: r.exp });
+  }
   // an invite link: the account is created waiting for an owner's approval, with the invite's grants preselected
   if (method === 'POST' && path === '/nhan-loi-moi') {
     const r = await acceptInvite(body);
@@ -161,6 +167,12 @@ async function route(req, res, path) {
     else return oops(res, 404, 'Không có địa chỉ này.');
     if (r.error) return oops(res, r.status, r.error);
     return send(res, 200, { token: r.token, code: r.code, invites: await listInvites(), codes: await listCodes() });
+  }
+
+  // the books for the accounts page: every game with its parts and permissions, and the accounts whose rights have tools for Claude
+  if (method === 'GET' && path === '/danh-muc-quyen') {
+    if (!isOwner(user)) return oops(res, 403, 'Chỉ chủ mới quản lý người dùng.');
+    return send(res, 200, { games: rightsCatalog(), mcpUsers: (await readUsers()).filter((u) => u.hash && hasMcpTools(u)).map((u) => u.username) });
   }
 
   // the record of who changed whose rights, newest first, 50 a page (owners only)
