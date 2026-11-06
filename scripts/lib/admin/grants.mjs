@@ -95,20 +95,29 @@ export function newsRoleOf(user, gameId, reg = defaultReg()) {
   return null;
 }
 
-/** What /toi tells the page: the games the account can open, each with its menu (filtered) and permissions per part. */
+/**
+ * What /toi tells the page: the games the account can open. Each has its menu (filtered) and the permissions held per part,
+ * plus what the overview shows: the parts the game has switched on (with their permission labels) and its web addresses.
+ * A game with nothing switched on is still listed for an account that has rights in it (an owner, or "Quản lý game").
+ */
 export function gamesOf(user, reg = defaultReg()) {
   const out = [];
   for (const g of reg.games) {
     const menu = [];
     const perms = {};
+    const parts = [];
     for (const mid of Object.keys(g.modules || {})) {
       const m = reg.modules[mid];
       if (!m) continue;
+      parts.push({ id: mid, name: m.name, perms: m.perms });
       const held = Object.keys(m.perms).filter((p) => can(user, g.id, mid, p, reg));
       if (held.length) perms[mid] = held;
       for (const [tab, hash, label, perm] of m.menu) if (can(user, g.id, mid, perm, reg)) menu.push([tab, hash, label]);
     }
-    if (menu.length) out.push({ id: g.id, name: g.name, logo: g.logo, menu, perms });
+    if (menu.length || hasAnyAccess(user, g.id, reg)) {
+      const sites = (g.sites || []).map((s) => ({ id: s.id, name: s.name, host: (s.hosts || [])[0] || s.path || '', path: s.path || '', module: s.module || null }));
+      out.push({ id: g.id, name: g.name, logo: g.logo, menu, perms, parts, sites });
+    }
   }
   return out;
 }

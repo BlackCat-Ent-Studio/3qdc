@@ -60,6 +60,9 @@ ok('menus by account', () => {
   assert.deepEqual(tabs({ role: 'member', grants: { '3qdc': { 'tin-tuc': ['viet'] } } }), [['3qdc', 'posts']]);
   assert.deepEqual(tabs({ role: 'member', grants: { '3qdc': { 'phieu-be-ngoan': ['duyet'] } } }), [['3qdc', 'phieu']]);
   assert.deepEqual(tabs({ role: 'pending', grants: { '3qdc': '*' } }), []);
+  // a game with nothing switched on is listed for whoever has rights in it, with an empty menu; others do not see it
+  assert.deepEqual(tabs({ role: 'member', grants: { skystory: '*' } }), [['skystory', '']]);
+  assert.deepEqual(tabs({ role: 'member', grants: { '3qdc': { 'tin-tuc': ['viet'] } } }).map((x) => x[0]), ['3qdc']);
 });
 
 // ---- online part ----
@@ -84,7 +87,15 @@ if (portAt > 0) {
       assert.equal(r.status, want, p); n++; console.log(`ok   GET ${p} -> ${want}`);
     }
     const me = JSON.parse((await get('/toi')).text);
-    assert.deepEqual(me.games.map((g) => g.id), ['3qdc']); n++; console.log('ok   /toi lists game 3qdc only');
+    assert.deepEqual(me.games.map((g) => g.id), ['3qdc', 'skystory']); n++; console.log('ok   /toi lists 3qdc and, with no part switched on, skystory (empty menu)');
+    const [g3, sk] = me.games;
+    assert.deepEqual(sk.menu, []); assert.deepEqual(sk.parts, []); assert.deepEqual(sk.sites, []);
+    assert.deepEqual(g3.parts.map((p) => p.id).sort(), ['dang-ky-som', 'nhac', 'phieu-be-ngoan', 'tin-tuc']);
+    assert.ok(g3.sites.some((s) => s.id === 'chinh' && s.host === '3qdc.wanmeivn.com' && s.module === 'tin-tuc') && g3.sites.some((s) => s.id === 'wiki' && s.path === '/wiki/'));
+    assert.ok(g3.parts.every((p) => p.perms && Object.keys(p.perms).length)); n++; console.log('ok   /toi carries the parts switched on (with permission labels) and the sites of each game');
+    const st = JSON.parse((await get('/trang-thai-trang')).text);
+    assert.deepEqual(Object.keys(st.sites).sort(), g3.sites.map((s) => '3qdc/' + s.id).sort());
+    assert.ok(Object.values(st.sites).every((v) => typeof v.ok === 'boolean' && Number.isInteger(v.code))); n++; console.log('ok   /trang-thai-trang answers for each site of the games the account can open');
   }
 }
 console.log(`${n} checks passed`);

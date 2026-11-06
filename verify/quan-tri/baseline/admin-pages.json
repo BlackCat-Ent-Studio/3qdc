@@ -6,8 +6,8 @@
   "robots": "noindex, nofollow",
   "csp": "default-src 'self'; script-src 'nonce-N'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
   "ui": true,
-  "len": 129458,
-  "sha": "e3fb5c5c9bf1b1fb12995ffcda63a9e9f1c2b9c2e76f55d4586a904900e21cfb"
+  "len": 176255,
+  "sha": "966af826fd0344f0a633a7c7d8cbc974212777ab5e85fbae77e5cf6f6dadd6b1"
  },
  "register": {
   "status": 200,
@@ -16,8 +16,8 @@
   "robots": "noindex, nofollow",
   "csp": "default-src 'self'; script-src 'nonce-N'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
   "ui": true,
-  "len": 129458,
-  "sha": "e3fb5c5c9bf1b1fb12995ffcda63a9e9f1c2b9c2e76f55d4586a904900e21cfb"
+  "len": 176255,
+  "sha": "966af826fd0344f0a633a7c7d8cbc974212777ab5e85fbae77e5cf6f6dadd6b1"
  },
  "set-password": {
   "status": 200,
@@ -26,8 +26,8 @@
   "robots": "noindex, nofollow",
   "csp": "default-src 'self'; script-src 'nonce-N'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
   "ui": true,
-  "len": 129458,
-  "sha": "e3fb5c5c9bf1b1fb12995ffcda63a9e9f1c2b9c2e76f55d4586a904900e21cfb"
+  "len": 176255,
+  "sha": "966af826fd0344f0a633a7c7d8cbc974212777ab5e85fbae77e5cf6f6dadd6b1"
  },
  "invite": {
   "status": 200,
@@ -36,8 +36,8 @@
   "robots": "noindex, nofollow",
   "csp": "default-src 'self'; script-src 'nonce-N'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
   "ui": true,
-  "len": 129458,
-  "sha": "e3fb5c5c9bf1b1fb12995ffcda63a9e9f1c2b9c2e76f55d4586a904900e21cfb"
+  "len": 176255,
+  "sha": "966af826fd0344f0a633a7c7d8cbc974212777ab5e85fbae77e5cf6f6dadd6b1"
  },
  "preview-anon": {
   "status": 302,
@@ -86,8 +86,8 @@
   "cache": "no-store",
   "robots": "noindex, nofollow",
   "csp": "default-src 'self'; script-src 'nonce-N'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
-  "len": 95658,
-  "sha": "79ca8f0e74aeecde2932a951eb4ea56f2bfec72aa2e4534c5cd9770fdbf94a26"
+  "len": 95665,
+  "sha": "4efba79488901b4477162f5e866eb8ead6624349938f544b252ac5176c0cfa01"
  },
  "preview-missing-manager": {
   "status": 404,
@@ -105,8 +105,8 @@
   "cache": "no-store",
   "robots": "noindex, nofollow",
   "csp": "default-src 'self'; script-src 'nonce-N'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
-  "len": 95658,
-  "sha": "79ca8f0e74aeecde2932a951eb4ea56f2bfec72aa2e4534c5cd9770fdbf94a26"
+  "len": 95665,
+  "sha": "4efba79488901b4477162f5e866eb8ead6624349938f544b252ac5176c0cfa01"
  },
  "preview-missing-editor": {
   "status": 404,
@@ -143,8 +143,8 @@
   "cache": "no-store",
   "robots": "noindex, nofollow",
   "csp": "default-src 'self'; script-src 'nonce-N'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
-  "len": 95658,
-  "sha": "79ca8f0e74aeecde2932a951eb4ea56f2bfec72aa2e4534c5cd9770fdbf94a26"
+  "len": 95665,
+  "sha": "4efba79488901b4477162f5e866eb8ead6624349938f544b252ac5176c0cfa01"
  },
  "preview-missing-owner": {
   "status": 404,

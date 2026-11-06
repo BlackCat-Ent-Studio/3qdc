@@ -14,6 +14,7 @@ import { siteNow } from './news-files.mjs';
 import { GAME_ID_RE, gameById } from '../admin/games.mjs';
 import { moduleOfPath } from '../admin/modules.mjs';
 import { can, gamesOf, hasAnyAccess, isOwner, cleanGrants } from '../admin/grants.mjs';
+import { siteStatus } from '../admin/site-status.mjs';
 import { send, oops } from '../admin/api-http.mjs';
 import { readAudit } from '../admin/audit-log.mjs';
 
@@ -133,6 +134,9 @@ async function route(req, res, path) {
     if (dropped.length) console.warn(`[news-auth] ${siteNow()} ${user.username} has grants that are not in the books and are ignored: ${dropped.join('; ')}`);
     return send(res, 200, { user: { username: user.username, name: user.name, role: user.role, grants: user.grants }, games: gamesOf(user) });
   }
+
+  // which web addresses of the account's games answer (the overview's coloured dots)
+  if (method === 'GET' && path === '/trang-thai-trang') return send(res, 200, { sites: await siteStatus(gamesOf(user).map((g) => g.id)) });
 
   // a game's own address: first the account's right to the game at all (403, so the answer does not tell which parts
   // the game has), then whether the game has the part (404), then the part's own permission checks

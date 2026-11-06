@@ -3,29 +3,23 @@
 // These pages are never indexed, never framed, and run only scripts carrying this response's nonce.
 import { randomBytes } from 'node:crypto';
 import { CATS, IMAGE_LIBRARY, LOGO, SITE_ORIGIN, SPLIT_SITES, SITES, onSite, siteOf } from './news-config.mjs';
-import { NEWS_CSS, THEME_BUTTON, THEME_HEAD_JS, THEME_JS, esc } from './news-theme.mjs';
+import { NEWS_CSS, esc } from './news-theme.mjs';
+import { SHELL_CSS } from './admin-shell-css.mjs';
 import { handleAdminApi } from './admin-api.mjs';
 import { currentUser } from './admin-auth.mjs';
 import { newsStore } from './news-store.mjs';
 import { gameById } from '../admin/games.mjs';
 import { can } from '../admin/grants.mjs';
 import { renderDetailPage } from './news-pages.mjs';
-import { ROLES } from './news-workflow.mjs';
 import { adminApp } from './admin-app.mjs';
 
-const FONTS = 'https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Cormorant+Garamond:wght@600;700&display=swap';
+const FONTS = 'https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Cormorant+Garamond:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap';
 
 const ADMIN_CSS = `
 :root{--panel-2:#1b2140;--ok:#72c28f;--warn:#e9b949;--draft:#9aa3c9;--danger:#e36b5b;--review:#8fb8ff}
 html[data-theme="light"]{--panel-2:#f2f2f2;--ok:#2a7046;--warn:#875a00;--draft:#56607f;--danger:#b3372a;--review:#2e5ca8}
 textarea,select{font:inherit;color:inherit}
 .small{font-size:13px}
-.adm-h{background:var(--ink-2);border-bottom:1px solid var(--line-soft);position:sticky;top:env(safe-area-inset-top,0px);z-index:20}
-.adm-h .wrap{display:flex;align-items:center;gap:16px;min-height:60px;flex-wrap:wrap}
-.adm-logo img{height:38px;width:auto;display:block}
-.adm-h .ttl{font-weight:600;color:var(--gold-hi)}
-.who{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:13.5px;color:var(--muted);flex-wrap:wrap}
-.who b{color:var(--text);font-weight:600}
 .av{width:30px;height:30px;flex:none;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:12.5px;color:var(--on-gold);background:var(--gold)}
 .person{display:flex;gap:8px;align-items:center}
 .adm-top{display:flex;justify-content:space-between;align-items:end;gap:14px;flex-wrap:wrap;padding-block:30px 16px}
@@ -68,7 +62,7 @@ table.posts{border-collapse:collapse;width:100%;min-width:860px}
 .count{align-self:flex-end;font-size:12px;color:var(--faint);font-variant-numeric:tabular-nums}
 .count.over{color:var(--danger)}
 .editor{border:1px solid var(--line);border-radius:var(--r);background:var(--ink-2)}
-.tb{display:flex;flex-wrap:wrap;gap:2px;padding:6px;border-bottom:1px solid var(--line);position:sticky;top:var(--adm-h,60px);background:var(--ink-2);z-index:5;border-radius:var(--r) var(--r) 0 0}
+.tb{display:flex;flex-wrap:wrap;gap:2px;padding:6px;border-bottom:1px solid var(--line);position:sticky;top:var(--adm-h,56px);background:var(--ink-2);z-index:5;border-radius:var(--r) var(--r) 0 0}
 .tb[hidden]{display:none}
 .tb button{background:transparent;border:1px solid transparent;border-radius:6px;padding:5px 9px;cursor:pointer;color:var(--nav);font-size:13.5px}
 .tb button:hover{border-color:var(--line);background:var(--tint)}
@@ -80,7 +74,7 @@ table.posts{border-collapse:collapse;width:100%;min-width:860px}
 .ce{min-height:420px;padding:20px 24px;outline:none;max-width:none}
 .ce:empty::before{content:attr(data-ph);color:var(--faint)}
 .ce .gift code{outline:1px dashed var(--line)}
-.side{display:flex;flex-direction:column;gap:14px;position:sticky;top:76px}
+.side{display:flex;flex-direction:column;gap:14px;position:sticky;top:calc(var(--adm-h,56px) + 16px)}
 @media (max-width:980px){.side{position:static}}
 .box{border:1px solid var(--line);border-radius:var(--r);background:var(--panel);padding:16px}
 .box h3{margin:0 0 12px;font-size:14px;font-weight:600;color:var(--gold-hi)}
@@ -141,10 +135,6 @@ html[data-theme="light"] .warnbar{background:rgba(135,90,0,.08);border-color:rgb
 .auth-alt a,.warnbar a{color:var(--gold-hi);font-weight:600}
 .hint{font-size:12.5px;color:var(--faint)}
 .auth-box{margin-block:24px}
-.adm-nav{display:flex;gap:4px;margin-left:12px}
-.adm-nav a{text-decoration:none;padding:6px 12px;border-radius:6px;color:var(--nav);font-weight:500;font-size:14px}
-.adm-nav a:hover{color:var(--gold-hi)}
-.adm-nav a.on{color:var(--gold-hi);box-shadow:inset 0 -2px 0 var(--ember)}
 .sel{background:var(--ink-2);border:1px solid var(--line);border-radius:6px;padding:4px 8px;font-size:13.5px}
 .s-locked{color:var(--danger)}
 table.users{min-width:760px}
@@ -157,34 +147,16 @@ table.users{min-width:760px}
 .upl .upl-btn{margin-left:0}
 .upl-btn input{position:absolute;inset:0;opacity:0;cursor:pointer}
 .ce td img,.ce th img{display:inline-block;width:auto;max-height:56px;vertical-align:middle;border-radius:4px;margin:2px 6px 2px 0}
-.who .theme-btn{width:32px;height:32px}
 .theme-float{position:fixed;top:14px;right:16px;z-index:30}
 @media (max-width:600px){.auth{padding-top:64px}}
 html[data-theme="light"] .btn-danger{border-color:rgba(179,55,42,.5)}
 html[data-theme="light"] .btn-danger:hover{background:rgba(179,55,42,.08)}
 
 /* ---------- phones and narrow tablets ----------
-   The desktop layout stays exactly as it is above 760px. Below that the header keeps one row (logo, title, a menu
-   button) with the section tabs as a scrolling strip under it, and every table drops its columns to become one card
-   per row: the identity cell on its own line, the short cells flowing after it, the buttons on a full-width line with
-   44px touch targets. --adm-h is the header height the sticky editor toolbar sits below. */
-.adm-menu{display:none}
+   Below 820px every table drops its columns to become one card per row: the identity cell on its own line, the short
+   cells flowing after it, the buttons on a full-width line with 44px touch targets. (The frame's own phone layout is in
+   admin-shell-css.mjs.) --adm-h is the top bar height the sticky editor toolbar sits below. */
 @media (max-width:820px){
-  :root{--adm-h:56px}
-  .adm-h .wrap{gap:10px;min-height:0;padding-block:8px;align-items:center}
-  .adm-logo img{height:30px}
-  .adm-h .ttl{font-size:15.5px;margin-right:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .adm-menu{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;flex:none;
-    border:1px solid var(--line);border-radius:10px;background:transparent;color:var(--text);cursor:pointer;padding:0}
-  .adm-menu svg{width:20px;height:20px}
-  .adm-nav{order:3;flex:1 0 100%;margin:0 -16px;padding:0 16px 2px;gap:2px;overflow-x:auto;scrollbar-width:none}
-  .adm-nav::-webkit-scrollbar{display:none}
-  .adm-nav a{white-space:nowrap;min-height:40px;display:inline-flex;align-items:center;font-size:14.5px}
-  .who{order:4;flex:1 0 100%;display:none;margin-left:0;gap:10px;align-items:center;
-    padding:12px 0 4px;border-top:1px solid var(--line-soft)}
-  .adm-h[data-menu] .who{display:flex}
-  .who .btn{min-height:44px}
-  .who .theme-btn{width:40px;height:40px}
 
   .adm-top{padding-block:20px 12px}
   .adm-top h1{font-size:30px}
@@ -280,22 +252,30 @@ function sendHtml(req, res, status, html, nonce) {
   res.end(req.method === 'HEAD' ? undefined : html);
 }
 
+// Marks shown in the game tiles: a few letters on the game's colour, or a picture. A game not listed gets its first letters.
+const GAME_MARKS = {
+  '3qdc': { mono: '3Q', color: 'var(--game-3qdc)' },
+  skystory: { img: 'data:image/webp;base64,UklGRoYEAABXRUJQVlA4IHoEAABwFwCdASpAAEAAPj0WiUMiISEY+q5IIAPEtgBOmaE7f8k/HH9t/hPqX9O/EO7tzB5z3NnOT/LvsAeNB6qf2V9QH2zcIB/ef8z1nfoAeW37JH7l/tv7XlYv58feOWpjztD6e++2YCwV0oM1LyW6g7FGGSiFqw1NRS7QbscTOblPaUVIrzN6l75mAHcMz9rkmghuyeAcro35PGKff7MUJOhqpu+Zv1nGWOB4BNZj+ijRR40VvhdOM45Hk5tDGK0vOYup7uIAAP7ssix+agrH//PN0fIZfMs0f/9YtoV3/em3r7tBhzqnL5OI7b6S0o1VxxUoTTHiSfK5I/rewCEaeq66QWcFVS0OppNPLUEb6BVwfSmPF41qGV8gz3Qyu451jjvibZSa8Uq7xzywu4gJOidYL/33F3VLUSvYLVd6k0BiRjj8v9N71LyWY1Nc8lC06ZYTbYAJJrCCpLCSSbd1o/1jap8+hWRFZVechIpG6rvh30rv3F8Duu18zds/ZlTlLNmmr8lxZpXaw3S0Ji1Abl5htqq7z3QWwIKJMIGVOFjjCOKTFt3NQv5/lOBdCfGfmAPI0grptOcYCzQZPgDAPg7gz1LmbPSvDy3S740m71W4t+E+Vjxo2LJlFwW9zjITmFWiC93HEuVP/InBhj6xThrCOPYePNbtRhRjaSKWSGTn/YI+BxOFaKLx+nczy9Zv7T+xBKM2/2Lk9NZb53VOweut+eC3AS+DJ2SRRODpJjAC8C/BOH/mYEx0pg/CnFY0bGUAZtUqAEECk3Ye/4PRqjR1fLZ0sKpWNAa7r+8UTXlXfnc2R55KlycgDXn0VG60/GN9XRdu3MaAPLV849MFdV/DRqHMznwAKCIZFWV8XTreEiYj/a7zZunUegd2EI0g4e59Hc0JB3oamk4DIYAJfM/9y+a6Y/Eve19EUXBkyghoeO5DCmz0XKBECQe6jHkcW3zyAT9oFzJ+h03HIVobGPZPeN+1yIdqe5e+rKGc2R67PSt7evVg4/GGZJfZGghDzYgNlxEaxH3+eg8eL577olrNiuPGTKKGypZ0OgUNB6kKv/Eb996eH+HbH3dcJJWCVv//6BPVNrnkEW/J5BwFuWDiWVDnpiBOqxKmOi3CKM4l4zCtZPkUsgE4x0Z/wsBoGTHjPnwaYcO17k1SUy5GL9siivPIIfc+XhC4qGIOdgW2xjWxtaPN6K/1CfudWYCt1Xxxc0xfRUZmAmZyW7OJ3+3F5tmQ/3kAQ9ReY/rl2eElJFm2+eeIivP0pKghk2D2gNVUTa3rNEJ/xRSX3BcczP+0BaVmb8xaQ7q68b1DDq8u+b/PyJcwNkel97QA9b+1KXAHVZjBXl3bc+FZeDfkvlvUWsBMzaz8yp3QPATT0Xtx1MxIrqH+ruMncfzbNtTSwhtLIVY3Qp6n0ACIhZGcPxH0pDwDYyYX0yBv6sLePeuOiJtPjm+MpOtY/y2v0D76khtJ99albtUuBooix3VaYLidvtLYoxVZzLqE2hUzIWoAS1i8RudasHgAAAA=' },
+};
+// the light / dark choice of the editor pages lives in this browser (default light); one key, read before the first paint
+const ADMIN_THEME_KEY = '3qdc-admin-theme';
+const THEME_HEAD = `try{document.documentElement.setAttribute('data-theme',localStorage.getItem('${ADMIN_THEME_KEY}')==='dark'?'dark':'light')}catch(e){document.documentElement.setAttribute('data-theme','light')}`;
+
 function appPage(nonce) {
-  const data = { cats: CATS, sites: SPLIT_SITES ? SITES : [], library: IMAGE_LIBRARY, host: SITE_ORIGIN.replace(/^https?:\/\//, ''), logo: LOGO, roles: ROLES, themeButton: THEME_BUTTON };
+  const data = { cats: CATS, sites: SPLIT_SITES ? SITES : [], library: IMAGE_LIBRARY, host: SITE_ORIGIN.replace(/^https?:\/\//, ''), logo: LOGO, marks: GAME_MARKS, themeKey: ADMIN_THEME_KEY };
   return `<!doctype html><html lang="vi"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
-<script nonce="${nonce}">${THEME_HEAD_JS}</script>
-<title>Quản trị tin tức | 3Q Đại Chiến</title>
+<script nonce="${nonce}">${THEME_HEAD}</script>
+<title>Quản trị | wanmeivn.com</title>
 <link rel="icon" href="${LOGO}">
 <link rel="stylesheet" href="${FONTS}">
-<style>${NEWS_CSS}${ADMIN_CSS}</style>
+<style>${NEWS_CSS}${ADMIN_CSS}${SHELL_CSS}</style>
 </head><body>
 <div id="app"><main class="auth"><p class="meta">Đang tải…</p></main></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <noscript><p style="padding:20px">Trang quản trị cần bật JavaScript.</p></noscript>
 <script type="application/json" id="adm-data" nonce="${nonce}">${JSON.stringify(data).replace(/</g, '\\u003c')}</script>
-<script nonce="${nonce}">${THEME_JS}</script>
 <script nonce="${nonce}">(${adminApp.toString()})();</script>
 </body></html>`;
 }
@@ -313,7 +293,7 @@ async function previewPage(id, nonce, gameId) {
   const others = visible.filter((p) => p.id !== post.id);
   const html = renderDetailPage(post, [post, ...others]);
   const state = post.status === 'published' && Date.parse(post.publishAt) > Date.now() ? 'Hẹn giờ' : STATE_WORDS[post.status];
-  const flag = `<div class="preview-flag"><span>Bản xem trước · trạng thái: <b>${esc(state)}</b> · người chơi ${post.status === 'published' && state !== 'Hẹn giờ' ? 'đang thấy bài này' : 'chưa thấy bài này'}</span><a class="btn btn-ghost btn-sm" href="/quan-tri#/sua/${post.id}">← Về trang sửa bài</a></div>`;
+  const flag = `<div class="preview-flag"><span>Bản xem trước · trạng thái: <b>${esc(state)}</b> · người chơi ${post.status === 'published' && state !== 'Hẹn giờ' ? 'đang thấy bài này' : 'chưa thấy bài này'}</span><a class="btn btn-ghost btn-sm" href="/quan-tri#/g/${game.id}/sua/${post.id}">← Về trang sửa bài</a></div>`;
   return html
     .replace('<main class="wrap">', `<main class="wrap">${flag}`)
     .replace('</head>', `<meta name="robots" content="noindex, nofollow"><style>${PREVIEW_CSS}</style></head>`)
