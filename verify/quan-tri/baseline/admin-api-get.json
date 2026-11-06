@@ -203,7 +203,7 @@
   "cache": "no-store",
   "robots": "noindex, nofollow",
   "len": 1388,
-  "sha": "4937ceeec86e92d0e321e8bb8367ccec48c37cd8c5b4b0d346e2e007dc7c56e0",
+  "sha": "cb49a43d5ae3d8ca711cf32aaa4ba4974b108b619724d4d4fe07b608aa318270",
   "shape": "{items:[15]}"
  },
  "manager GET /nhac": {
@@ -247,9 +247,9 @@
   "ct": "application/json; charset=utf-8",
   "cache": "no-store",
   "robots": "noindex, nofollow",
-  "len": 188207,
-  "sha": "d7579010a07d0908ad39121928427ce95438d9da3a64007997e83bcc4b321f85",
-  "shape": "{cho,counts:{all,cho,tra,tu},items:[382]}",
+  "len": 188641,
+  "sha": "bb00b199f15e21cc0a9b19b411ea2fabba9c36be413088f1c0f198292f53b0bf",
+  "shape": "{cho,counts:{all,cho,tra,tu},items:[383]}",
   "hasEmail": true
  },
  "manager GET /phieu-be-ngoan?ngay=tat-ca&st=cho": {
@@ -257,9 +257,9 @@
   "ct": "application/json; charset=utf-8",
   "cache": "no-store",
   "robots": "noindex, nofollow",
-  "len": 2823,
-  "sha": "b786849414b62081c4f4081a211868bbfdbd29b31050e2319f5392bf337aebd9",
-  "shape": "{cho,counts:{all,cho,tra,tu},items:[6]}",
+  "len": 3257,
+  "sha": "34efd59344f2ad8c5e35458ff1586558d2a13a2b1e033ba771979739f48ed557",
+  "shape": "{cho,counts:{all,cho,tra,tu},items:[7]}",
   "hasEmail": true
  },
  "manager GET /phieu-be-ngoan": {
@@ -267,7 +267,7 @@
   "ct": "application/json; charset=utf-8",
   "cache": "no-store",
   "robots": "noindex, nofollow",
-  "hasEmail": false
+  "hasEmail": true
  },
  "manager GET /phieu-be-ngoan/csv?ngay=tat-ca": {
   "status": 200,
@@ -275,8 +275,8 @@
   "cache": "no-store",
   "disp": "attachment; filename=\"phieu-be-ngoan-STAMP.csv\"",
   "robots": "noindex, nofollow",
-  "len": 111751,
-  "sha": "a099d87256d5a43026d15d0f0e086324999c70785b8ea78a515b8301f777a124"
+  "len": 112008,
+  "sha": "7968285a8d25cf9f5bbf55fd7b8116b4d5b28edf99aefe8f6bd8952c6a067a94"
  },
  "manager GET /thung-rac": {
   "status": 200,
@@ -356,7 +356,7 @@
   "cache": "no-store",
   "robots": "noindex, nofollow",
   "len": 1388,
-  "sha": "4937ceeec86e92d0e321e8bb8367ccec48c37cd8c5b4b0d346e2e007dc7c56e0",
+  "sha": "cb49a43d5ae3d8ca711cf32aaa4ba4974b108b619724d4d4fe07b608aa318270",
   "shape": "{items:[15]}"
  },
  "editor GET /nhac": {
@@ -553,9 +553,9 @@
   "ct": "application/json; charset=utf-8",
   "cache": "no-store",
   "robots": "noindex, nofollow",
-  "len": 175331,
-  "sha": "9f7eb7f3b6deea2b70a81bd1d6b98d6709ea793aa446a0897ecb500885669a95",
-  "shape": "{cho,counts:{all,cho,tra,tu},items:[382]}",
+  "len": 175734,
+  "sha": "d27a16b7f1253604d64e97363f79a9eebb3c79c3821b65a843ddebec6ca50880",
+  "shape": "{cho,counts:{all,cho,tra,tu},items:[383]}",
   "hasEmail": false
  },
  "phieu GET /phieu-be-ngoan?ngay=tat-ca&st=cho": {
@@ -563,9 +563,9 @@
   "ct": "application/json; charset=utf-8",
   "cache": "no-store",
   "robots": "noindex, nofollow",
-  "len": 2613,
-  "sha": "5d038d16d25406c794d101d94faa16fa7b10379f76f9819e9fb127dff623be72",
-  "shape": "{cho,counts:{all,cho,tra,tu},items:[6]}",
+  "len": 3016,
+  "sha": "b34541365683ec4ab2ecab02f8ab824f78d5e561850b5d8201abbe272afc73a8",
+  "shape": "{cho,counts:{all,cho,tra,tu},items:[7]}",
   "hasEmail": false
  },
  "phieu GET /phieu-be-ngoan": {
@@ -662,7 +662,7 @@
   "cache": "no-store",
   "robots": "noindex, nofollow",
   "len": 1388,
-  "sha": "4937ceeec86e92d0e321e8bb8367ccec48c37cd8c5b4b0d346e2e007dc7c56e0",
+  "sha": "cb49a43d5ae3d8ca711cf32aaa4ba4974b108b619724d4d4fe07b608aa318270",
   "shape": "{items:[15]}"
  },
  "owner GET /nhac": {
@@ -706,9 +706,9 @@
   "ct": "application/json; charset=utf-8",
   "cache": "no-store",
   "robots": "noindex, nofollow",
-  "len": 188207,
-  "sha": "d7579010a07d0908ad39121928427ce95438d9da3a64007997e83bcc4b321f85",
-  "shape": "{cho,counts:{all,cho,tra,tu},items:[382]}",
+  "len": 188641,
+  "sha": "bb00b199f15e21cc0a9b19b411ea2fabba9c36be413088f1c0f198292f53b0bf",
+  "shape": "{cho,counts:{all,cho,tra,tu},items:[383]}",
   "hasEmail": true
  },
  "owner GET /phieu-be-ngoan?ngay=tat-ca&st=cho": {
@@ -716,9 +716,9 @@
   "ct": "application/json; charset=utf-8",
   "cache": "no-store",
   "robots": "noindex, nofollow",
-  "len": 2823,
-  "sha": "b786849414b62081c4f4081a211868bbfdbd29b31050e2319f5392bf337aebd9",
-  "shape": "{cho,counts:{all,cho,tra,tu},items:[6]}",
+  "len": 3257,
+  "sha": "34efd59344f2ad8c5e35458ff1586558d2a13a2b1e033ba771979739f48ed557",
+  "shape": "{cho,counts:{all,cho,tra,tu},items:[7]}",
   "hasEmail": true
  },
  "owner GET /phieu-be-ngoan": {
@@ -726,7 +726,7 @@
   "ct": "application/json; charset=utf-8",
   "cache": "no-store",
   "robots": "noindex, nofollow",
-  "hasEmail": false
+  "hasEmail": true
  },
  "owner GET /phieu-be-ngoan/csv?ngay=tat-ca": {
   "status": 200,
@@ -734,8 +734,8 @@
   "cache": "no-store",
   "disp": "attachment; filename=\"phieu-be-ngoan-STAMP.csv\"",
   "robots": "noindex, nofollow",
-  "len": 111751,
-  "sha": "a099d87256d5a43026d15d0f0e086324999c70785b8ea78a515b8301f777a124"
+  "len": 112008,
+  "sha": "7968285a8d25cf9f5bbf55fd7b8116b4d5b28edf99aefe8f6bd8952c6a067a94"
  },
  "owner GET /thung-rac": {
   "status": 200,
@@ -751,8 +751,8 @@
   "ct": "application/json; charset=utf-8",
   "cache": "no-store",
   "robots": "noindex, nofollow",
-  "len": 1718,
-  "sha": "c3ccd28df0398d5544548398f3aa6f4e478dece12ab94d113202876292cca022",
+  "len": 1785,
+  "sha": "8f8bfc4f5c1876593fa0543bda1cad88beada30c8c1aeada2907dabece7af370",
   "shape": "{codes:[2],invites:[0],me,users:[6]}"
  },
  "owner GET /khong-co": {
