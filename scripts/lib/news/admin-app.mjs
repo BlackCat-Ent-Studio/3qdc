@@ -543,7 +543,7 @@ ${newsSite ? `<div class="sh-foot"><a href="https://${esc(newsSite.host)}/tin-tu
     for (const k of Object.keys(byGame)) byGame[k].sort((a, b) => order.indexOf(a.tab) - order.indexOf(b.tab));
     work = { at: Date.now(), byGame, accounts, log };
     const nav2 = $('#sh-nav');
-    if (nav2) nav2.innerHTML = navHtml();
+    if (nav2) nav2.innerHTML = navHtml(headTab);
     repaintHead();
   }
 
@@ -731,6 +731,7 @@ ${g.sites.length ? `<div>${I.layers} <span class="ov-mono">${esc(siteHost(g, g.s
   ];
 
   function route() {
+    closeOverlay(); // a dialog belongs to the screen it was opened on
     if (!me) return renderLogin();
     app.classList.remove('sh-open');
     const raw = location.hash.replace(/^#/, '');
@@ -808,7 +809,7 @@ ${g.sites.length ? `<div>${I.layers} <span class="ov-mono">${esc(siteHost(g, g.s
     const owned = (el) => !!(el && el.closest && el.closest('input,textarea,select,audio,video,[contenteditable="true"],.sh-side,.sh-top,.tb,.ce'));
     document.addEventListener('touchstart', (e) => {
       tracking = false;
-      if (e.touches.length !== 1 || !swipeable() || owned(e.target)) return;
+      if (e.touches.length !== 1 || dialogOpen() || !swipeable() || owned(e.target)) return;
       x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; t0 = Date.now(); tracking = true;
     }, { passive: true });
     document.addEventListener('touchend', (e) => {

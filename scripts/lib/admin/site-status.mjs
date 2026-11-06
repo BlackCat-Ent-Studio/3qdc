@@ -6,7 +6,7 @@ import { gameById } from './games.mjs';
 
 const TTL_MS = 30000;
 const TIMEOUT_MS = 4000;
-const cache = new Map(); // "game/site" -> { at, value }
+const cache = new Map(); // "game/site" -> { at, pending } ; pending is the shared answer, so calls made while it is still being asked join it
 
 // opens = any answer below 400, or a refusal that proves the page exists behind a sign-in (401, 403)
 const opens = (code) => code < 400 || code === 401 || code === 403;
@@ -33,9 +33,12 @@ export async function siteStatus(gameIds) {
       const host = (s.hosts || [])[0] || mainHost;
       if (!host) continue;
       const key = `${gid}/${s.id}`;
-      const hit = cache.get(key);
-      if (hit && Date.now() - hit.at < TTL_MS) { out[key] = hit.value; continue; }
-      jobs.push(ask(`https://${host}${s.path || '/'}`).then((value) => { cache.set(key, { at: Date.now(), value }); out[key] = value; }));
+      let hit = cache.get(key);
+      if (!hit || Date.now() - hit.at >= TTL_MS) {
+        hit = { at: Date.now(), pending: ask(`https://${host}${s.path || '/'}`) };
+        cache.set(key, hit);
+      }
+      jobs.push(hit.pending.then((value) => { out[key] = value; }));
     }
   }
   await Promise.all(jobs);

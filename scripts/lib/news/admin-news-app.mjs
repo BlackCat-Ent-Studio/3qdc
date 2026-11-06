@@ -603,6 +603,7 @@ ${uploads.length ? `<h4>Ảnh đã tải lên</h4>${thumbs(uploads)}` : ''}<h4>�
 
     // "someone else is editing" — heartbeat while the editor is open
     let timer = null;
+    const lockGame = K.gameId(); // the release must go to the game the article was opened in, even after the address moved on
     if (post && editable) {
       const lockbar = $('#e-lockbar');
       const showLock = (name) => { lockbar.innerHTML = name ? `<div class="sh-note warn" role="status">${I.users}<div><b>${esc(name)}</b> đang mở bài này. Nếu cả hai cùng sửa, người lưu sau sẽ được báo để tải lại. Hãy báo ${esc(name)} trước khi sửa.</div></div>` : ''; };
@@ -615,7 +616,7 @@ ${uploads.length ? `<h4>Ảnh đã tải lên</h4>${thumbs(uploads)}` : ''}<h4>�
       document.removeEventListener('keydown', onKey);
       if (!timer) return;
       clearInterval(timer);
-      try { fetch('/quan-tri/api' + K.gp(`/bai/${post.id}/khoa`), { method: 'POST', keepalive: true, credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: '{"release":true}' }); } catch (e) { /* page closing */ }
+      try { fetch(`/quan-tri/api/g/${lockGame}/bai/${post.id}/khoa`, { method: 'POST', keepalive: true, credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: '{"release":true}' }); } catch (e) { /* page closing */ }
     });
     renderActs(); drawCover(); syncFb(); grow(); syncSave();
     if (!post) title.focus();

@@ -131,12 +131,24 @@ try {
   assert.ok(Math.abs((inv[0].exp - Date.now()) - 7 * 86400e3) < 60e3, 'valid for 7 days');
   ok('the link is stored with its grants, only as a hash, valid 7 days');
 
+  // what the link shows before sign-up: same refusal for every bad token, and no ids or hashes in a good answer
+  const peek = (t) => req('POST', api + '/xem-loi-moi', { body: { token: t } });
+  const peekBad = [await peek(''), await peek('abc'), await peek('x'.repeat(43))];
+  for (const r of peekBad) expect(r, 400, 'a wrong token is refused');
+  assert.equal(new Set(peekBad.map((r) => r.text)).size, 1, 'every wrong token gets the same answer');
+  const shownLink = await peek(token);
+  expect(shownLink, 200, 'a good token shows what it carries');
+  assert.deepEqual(Object.keys(json(shownLink)).sort(), ['exp', 'games'], 'only games and expiry');
+  assert.ok(!shownLink.text.includes(sha256(token)) && !shownLink.text.includes('"chu"'), 'no hash and no maker');
+  ok('/xem-loi-moi: wrong tokens get one refusal; a good token shows only games and expiry');
+
   const accept = (t, username) => req('POST', api + '/nhan-loi-moi', { body: { token: t, username, name: 'Người Mới', password: PASSWORD } });
   expect(await accept(token, 'moi1'), 201, 'accept');
   assert.equal(userOf('moi1').role, 'pending');
   assert.deepEqual(userOf('moi1').wantGrants, TV3);
   assert.equal((await signIn('moi1')).status, 403, 'waits for approval');
   expect(await accept(token, 'moi2'), 400, 'second use');
+  expect(await peek(token), 400, 'a used link shows nothing');
   assert.equal(userOf('moi2'), undefined);
   ok('accepted: pending with wantGrants, cannot sign in; the same link a second time is refused');
 

@@ -119,6 +119,12 @@ try {
   expect(await get('sky', '/g/3qdc/phieu-be-ngoan'), 403, '3qdc tickets for the skystory writer');
   expect(await req('POST', api + '/g/3qdc/anh', { ...as('sky'), raw: PNG, type: 'image/png' }), 403, 'picture upload into 3qdc by the skystory writer');
   expect(await get('sky', '/nguoi-dung'), 403, 'accounts page');
+  for (const p of ['/danh-muc-quyen', '/nhat-ky']) {
+    expect(await get('sky', p), 403, `owner-only ${p} for a member`);
+    expect(await get('quanly', p), 403, `owner-only ${p} even for a manager of a game`);
+    expect(await get('chu', p), 200, `${p} for the owner`);
+    expect(await req('GET', api + p), 401, `${p} signed out`);
+  }
   ok('only skystory rights: g/skystory works, every 3qdc address is 403');
 
   for (const who of ['viet3', 'tintuc3', 'quanly', 'duyet3', 'qlphieu3', 'rong']) {

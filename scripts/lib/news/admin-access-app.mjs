@@ -285,6 +285,8 @@ ${rows.map((u) => {
 
   // ticking a box in the table saves at once
   async function tick(el) {
+    const m = $('main');
+    if (m && m.classList.contains('ac-busy')) { el.checked = !el.checked; return; } // the last tick is still being saved
     const u = userOf(el.getAttribute('data-u'));
     const g = catGame(S.game);
     if (!u || !g) return;
@@ -413,7 +415,9 @@ ${plain.map((c) => `<tr><td><b>${esc(nameOf(c.username))}</b><div class="sh-fain
       if (input.value.trim().toUpperCase() !== OWNER_CONFIRM) return;
       ok.disabled = true;
       const label = $('#oc-label').value;
+      const here = K.screen();
       const r = await api('POST', '/ma-claude', { username: S.me, label, scope: 'owner' });
+      if (here !== K.screen()) { K.closeOverlay(); if (r.ok) toast('Mã đã tạo nhưng chưa kịp hiện. Vào Mã Claude để thu hồi nếu không dùng.'); return; }
       if (!r.ok) { ok.disabled = false; if (r.status !== 401) { const e = $('#oc-err'); e.querySelector('div').textContent = r.data.error || 'Không tạo được mã.'; e.hidden = false; } return; }
       K.closeOverlay();
       S.invites = r.data.invites || []; S.codes = r.data.codes || [];
@@ -475,7 +479,9 @@ ${rows.map((l) => `<tr><td class="sh-num sh-muted nowrap">${fmtTime(l.luc)}</td>
       case 'mkInvite': {
         if (!INV.cur) break;
         b.disabled = true;
+        const here = K.screen();
         const r = await api('POST', '/loi-moi', { grants: { [INV.game]: INV.cur } });
+        if (here !== K.screen()) { if (r.ok) toast('Link mời đã tạo nhưng chưa kịp hiện. Vào Link mời để huỷ nếu không dùng.'); break; }
         if (!r.ok) { b.disabled = false; if (r.status !== 401) { S.notice = r.data.error || 'Không tạo được link.'; redraw(); } break; }
         S.invites = r.data.invites || []; S.codes = r.data.codes || []; S.notice = '';
         const mine = S.invites[S.invites.length - 1];
@@ -485,7 +491,9 @@ ${rows.map((l) => `<tr><td class="sh-num sh-muted nowrap">${fmtTime(l.luc)}</td>
       }
       case 'revokeInv': {
         if (!armDelete(b, null, 'Bấm lần nữa để huỷ')) break;
+        const here = K.screen();
         const r = await api('POST', `/loi-moi/${b.getAttribute('data-id')}/huy`, {});
+        if (here !== K.screen()) break;
         if (!r.ok) { if (r.status !== 401) { S.notice = r.data.error || 'Không huỷ được.'; redraw(); } break; }
         S.invites = r.data.invites || []; S.codes = r.data.codes || []; S.notice = '';
         toast('Đã huỷ link mời');
@@ -494,7 +502,9 @@ ${rows.map((l) => `<tr><td class="sh-num sh-muted nowrap">${fmtTime(l.luc)}</td>
       }
       case 'mkCode': {
         b.disabled = true;
+        const here = K.screen();
         const r = await api('POST', '/ma-claude', { username: $('#code-user').value, label: $('#code-label').value });
+        if (here !== K.screen()) { if (r.ok) toast('Mã đã tạo nhưng chưa kịp hiện. Vào Mã Claude để thu hồi nếu không dùng.'); break; }
         if (!r.ok) { b.disabled = false; if (r.status !== 401) { S.notice = r.data.error || 'Không tạo được mã.'; redraw(); } break; }
         S.invites = r.data.invites || []; S.codes = r.data.codes || []; S.notice = '';
         fresh = { kind: 'code', title: `Mã cho ${(userOf($('#code-user') ? $('#code-user').value : '') || { name: 'người này' }).name}, chỉ hiện một lần này`, value: r.data.code };
@@ -503,7 +513,9 @@ ${rows.map((l) => `<tr><td class="sh-num sh-muted nowrap">${fmtTime(l.luc)}</td>
       }
       case 'revokeCode': {
         if (!armDelete(b, null, 'Bấm lần nữa để thu hồi')) break;
+        const here = K.screen();
         const r = await api('POST', `/ma-claude/${b.getAttribute('data-id')}/thu-hoi`, {});
+        if (here !== K.screen()) break;
         if (!r.ok) { if (r.status !== 401) { S.notice = r.data.error || 'Không thu hồi được.'; redraw(); } break; }
         S.invites = r.data.invites || []; S.codes = r.data.codes || []; S.notice = '';
         toast('Đã thu hồi mã');
