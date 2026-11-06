@@ -8,7 +8,7 @@ import { STATES, REPLY_MAX, serverName } from '../../phieu/phieu-config.mjs';
 import { siteNow } from '../../news/news-files.mjs';
 import { can } from '../grants.mjs';
 import { moveToTrash } from '../trash.mjs';
-import { text, fail, fmt, needs, audit, refuseWrite } from './common.mjs';
+import { text, fail, fmt, needs, audit, refuseWrite, refuseRead } from './common.mjs';
 
 const GAME = '3qdc';
 const PART = 'phieu-be-ngoan';
@@ -69,8 +69,9 @@ export const PHIEU_TOOLS = [
     async run(ctx, args) {
       const ngay = filterOf(args).ngay;
       const st = filterOf(args).st;
-      const d = await listPhieu({ ngay, st });
       const withEmail = seesEmail(ctx.user);
+      if (withEmail) { const limited = refuseRead(ctx); if (limited) return limited; }
+      const d = await listPhieu({ ngay, st });
       const shown = d.items.slice(0, LIST_MAX);
       const items = withEmail ? shown : shown.map(withoutEmail);
       const head = `Ngày: ${{ 'hom-nay': 'hôm nay', 'hom-qua': 'hôm qua', 'tat-ca': 'mọi ngày' }[ngay]} · lọc: ${st === 'all' ? 'mọi trạng thái' : STATES[st]}. `
@@ -149,6 +150,8 @@ export const PHIEU_TOOLS = [
       annotations: annot({ readOnlyHint: true }),
     },
     async run(ctx, args) {
+      const limited = refuseRead(ctx);
+      if (limited) return limited;
       const f = filterOf(args);
       const total = (await listPhieu(f)).items.length;
       const pages = Math.max(1, Math.ceil(total / CSV_PAGE));

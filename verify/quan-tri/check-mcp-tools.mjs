@@ -1,6 +1,6 @@
 // check-mcp-tools.mjs — Claude's tools on /mcp for every part, by rights: who sees which tools, that a tool outside the rights is
 // refused, that deleting only moves into the trash (and the web brings it back), that taking a right away removes the tools
-// at once, that links to inside the network are refused, and that the record of work through Claude is complete.
+// at once, that links to inside the network or to servers off the allowed list are refused, and that the record of work through Claude is complete.
 //   node verify/quan-tri/check-mcp-tools.mjs      (run from the project folder on a machine that can reach https://3qdc.wanmeivn.com)
 // A temporary server is started with its own data folder; accounts and Claude codes are written into it. The two downloads
 // (a picture and a song) read public files of the live site and nothing is changed there. The music folder is the real
@@ -8,6 +8,8 @@
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import net from 'node:net';
+import https from 'node:https';
+import { EventEmitter } from 'node:events';
 import { spawn } from 'node:child_process';
 import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync, existsSync } from 'node:fs';
 import { createHash } from 'node:crypto';
@@ -364,13 +366,67 @@ try {
       assert.match(say(r), /nội bộ|https|Link|link/, `${name} ${link}: ${say(r)}`);
     }
   }
-  const viaDns = await refusedWith(CODES.viet, 'tai_anh_tu_link', { link: 'https://localtest.me/a.png' });
-  assert.match(say(viaDns), /nội bộ|Không kết nối/, 'a public name that resolves to 127.0.0.1 is refused after the lookup');
-  for (const ip of ['127.0.0.1', '10.1.2.3', '169.254.1.1', '::1', '::ffff:10.0.0.1', '::ffff:a00:1', '64:ff9b::7f00:1', '2002:7f00:1::1', 'fc00::1', 'ff02::1']) assert.equal(safe.isBlockedIp(ip), true, `${ip} is refused`);
-  for (const ip of ['8.8.8.8', '1.1.1.1', '2606:4700:4700::1111', '::ffff:8.8.8.8']) assert.equal(safe.isBlockedIp(ip), false, `${ip} is public`);
+  const viaDns = await safe.openLink('https://localtest.me/a.png', { maxBytes: 1000, allowHost: () => true });
+  assert.match(viaDns.error, /nội bộ|Không kết nối/, 'a public name that resolves to 127.0.0.1 is refused after the lookup');
+  for (const ip of ['127.0.0.1', '10.1.2.3', '169.254.1.1', '::1', '::ffff:10.0.0.1', '::ffff:a00:1', '64:ff9b::7f00:1', '2002:7f00:1::1', 'fc00::1', 'ff02::1',
+    '64:ff9b:1::1', '64:ff9b:1::7f00:1', '2001::1', '2001:0:4136:e378:8000:63bf:3fff:fdd2', '::ffff:0:7f00:1', '::ffff:0:a00:1', '2001:db8::1', '3fff::1', '5f00::1', '100::1']) assert.equal(safe.isBlockedIp(ip), true, `${ip} is refused`);
+  for (const ip of ['8.8.8.8', '1.1.1.1', '2606:4700:4700::1111', '2a00:1450:4001::1', '2001:4860:4860::8888', '::ffff:8.8.8.8']) assert.equal(safe.isBlockedIp(ip), false, `${ip} is public`);
   const big = await safe.openLink(LIVE_PICTURE, { maxBytes: 1000 });
   assert.match(big.error, /lớn hơn/, 'a file over the size limit is refused from its declared size');
   ok('links: http, ports, user:pass, localhost, 127.x, 10.x, 169.254.x, 192.168.x, IPv6 loopback / mapped / link-local, a name resolving to 127.0.0.1, oversize: all refused');
+
+  // ---------- links: only servers on the allowed list, at every step ----------
+  const offList = ['https://example.com/a.png', 'https://evil-imgur.com/a.png', 'https://i.imgur.com.evil.example/a.png', 'https://imgur.com.evil.example/a.png',
+    'https://evilwanmeivn.com/a.png', 'https://x.i.imgur.com/a.png', 'https://xscontent.fbcdn.net/a.png', 'https://scontent.fbcdn.net.evil.example/a.png', 'https://8.8.8.8/a.png'];
+  for (const link of offList) {
+    for (const [code, name] of [[CODES.viet, 'tai_anh_tu_link'], [CODES.nh, 'tai_nhac_tu_link']]) {
+      const r = await refusedWith(code, name, { link }, /danh sách/);
+      assert.match(say(r), /ds_anh/, 'the refusal says to upload on the admin site and use ds_anh');
+    }
+  }
+  const inList = ['https://3qdc.wanmeivn.com/a.png', 'https://wanmeivn.com/a.png', 'https://phieubengoan.3qdc.wanmeivn.com/a.png', 'https://i.imgur.com/a.png', 'https://lh3.googleusercontent.com/a',
+    'https://drive.usercontent.google.com/a', 'https://cdn.discordapp.com/a.png', 'https://media.discordapp.net/a.png', 'https://scontent.fsgn2-1.fna.fbcdn.net/a.jpg', 'https://scontent-sin6-1.xx.fbcdn.net/a.jpg'];
+  for (const link of inList) assert.ok(safe.checkLink(link).url, `${link} is on the list`);
+  // a redirect is checked again: from a listed server to an unlisted one, to inside the network, and the other way round
+  const realRequest = https.request;
+  const answers = [];
+  let asked = 0;
+  https.request = (opts, cb) => {
+    const r = new EventEmitter();
+    r.end = () => {
+      asked++;
+      const a = answers.shift() || { statusCode: 404, headers: {} };
+      setImmediate(() => cb(Object.assign(new EventEmitter(), { resume() {}, destroy() {}, pipe() { throw new Error('no body expected'); } }, a)));
+    };
+    r.destroy = (e) => { setImmediate(() => r.emit('error', e || new Error('destroyed'))); };
+    return r;
+  };
+  try {
+    answers.push({ statusCode: 302, headers: { location: 'https://evil.example/x.png' } });
+    const hop1 = await safe.openLink('https://i.imgur.com/a.png', { maxBytes: 1000 });
+    assert.match(hop1.error, /chuyển hướng không hợp lệ.*danh sách/, 'listed → unlisted redirect refused');
+    assert.equal(asked, 1, 'the second server is never contacted');
+    answers.push({ statusCode: 301, headers: { location: 'https://127.0.0.1/x.png' } });
+    assert.match((await safe.openLink('https://i.imgur.com/a.png', { maxBytes: 1000 })).error, /chuyển hướng không hợp lệ/);
+    answers.push({ statusCode: 302, headers: { location: 'https://cdn.discordapp.com/b.png' } }, { statusCode: 404, headers: {} });
+    asked = 0;
+    assert.match((await safe.openLink('https://i.imgur.com/a.png', { maxBytes: 1000 })).error, /mã 404/, 'listed → listed redirect is followed');
+    assert.equal(asked, 2);
+    // one overall time limit, however the server drips: a request that never finishes its answer stops at the limit
+    https.request = () => {
+      const r = new EventEmitter();
+      r.end = () => {};
+      r.destroy = (e) => { setImmediate(() => r.emit('error', e)); };
+      return r;
+    };
+    const t0 = Date.now();
+    const slow = await safe.openLink('https://i.imgur.com/a.png', { maxBytes: 1000, timeoutMs: 300 });
+    assert.match(slow.error, /không trả lời kịp|quá lâu/);
+    assert.ok(Date.now() - t0 < 2000, `stopped by the overall limit (${Date.now() - t0} ms)`);
+  } finally {
+    https.request = realRequest;
+  }
+  ok('links: only listed servers (evil-imgur.com, look-alike suffixes, IP numbers refused), the list applies to every redirect, one overall time limit, 3 more IPv6 ranges refused');
 
   // ---------- links: a real picture and a real song from public https ----------
   const pic = await done(CODES.viet, 'tai_anh_tu_link', { link: LIVE_PICTURE });
@@ -395,7 +451,22 @@ try {
   await done(CODES.nh, 'khoi_phuc', { phan: 'nhac', key: songTrash[0].key });
   assert.ok(existsSync(SONG_FILE));
   await done(CODES.nh, 'xoa_nhac', { ten: SONG });
-  const again = json(await get('chu', '/g/3qdc/nhac/thung-rac')).items;
+  let again = json(await get('chu', '/g/3qdc/nhac/thung-rac')).items;
+  // a song of the same name is back in the folder: the restore refuses and leaves it alone
+  writeFileSync(SONG_FILE, 'ID3-newer-upload');
+  await refusedWith(CODES.nh, 'khoi_phuc', { phan: 'nhac', key: again[0].key }, /Đã có bài/);
+  assert.equal(readFileSync(SONG_FILE, 'utf8'), 'ID3-newer-upload', 'the newer file is untouched');
+  rmSync(SONG_FILE, { force: true });
+  // two restores at the same moment: one brings it back, the other gets a plain answer (no server error), one file
+  const both = await Promise.all([rpc(CODES.nh, 'tools/call', { name: 'khoi_phuc', arguments: { phan: 'nhac', key: again[0].key } }), rpc(CODES.nh, 'tools/call', { name: 'khoi_phuc', arguments: { phan: 'nhac', key: again[0].key } })]);
+  assert.deepEqual(both.map((r) => r.status), [200, 200], 'no server error from two restores at once');
+  const results = both.map((r) => json(r).result);
+  assert.equal(results.filter((r) => !r.isError).length, 1, 'exactly one restore wins');
+  assert.match(say(results.find((r) => r.isError)), /Không tìm thấy|Đã có bài/);
+  assert.ok(existsSync(SONG_FILE));
+  await done(CODES.nh, 'xoa_nhac', { ten: SONG });
+  again = json(await get('chu', '/g/3qdc/nhac/thung-rac')).items;
+  assert.equal(again.length, 1);
   expect(await post('chu', `/g/3qdc/nhac/thung-rac/${encodeURIComponent(again[0].key)}/xoa-han`), 200, 'the owner deletes the test song for good on the web');
   assert.equal(existsSync(SONG_FILE), false);
   ok('links: a real picture and song are fetched with the web limits and checks; song delete → trash → restore → web purge');
@@ -451,6 +522,15 @@ try {
   await refusedWith(limCodes[2], 'xoa_dang_ky', { sdt: '0912000001' }, /300 lần ghi/);
   assert.match(say(await done(limCodes[1], 'thong_ke_dang_ky')), /Mốc đang đặt: 300/, 'reading still works and the 300th write was kept');
   await done(CODES.dk, 'sua_moc', { moc: [1000, 3000] });
+  // reading personal data: 60 an hour per person, all codes together; reads without personal data are not counted
+  const personal = limCodes.slice(0, 2);
+  for (let i = 0; i < 60; i++) await done(personal[i % 2], i % 3 ? 'ds_dang_ky' : 'xuat_csv_dang_ky', {});
+  await refusedWith(personal[0], 'ds_dang_ky', {}, /60 lần xem hoặc xuất dữ liệu cá nhân trong 1 giờ/);
+  await refusedWith(personal[1], 'xuat_csv_dang_ky', {}, /60 lần/);
+  await refusedWith(limCodes[3], 'thung_rac', { phan: 'dang-ky-som' }, /60 lần/);
+  assert.match(say(await done(limCodes[2], 'thong_ke_dang_ky')), /Mốc đang đặt/, 'statistics (no personal data) are still readable');
+  await done(CODES.dk, 'ds_dang_ky', {});
+  ok('personal data allowance: 60 reads or exports an hour per person across codes; other tools and other people are not affected');
   ok('write allowance: 300 writes an hour per person across all his codes; reads and other people are not affected');
 } catch (e) {
   console.error(e && e.stack ? e.stack : e);

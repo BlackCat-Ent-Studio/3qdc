@@ -20,6 +20,12 @@ export const shorten = (s, n) => { const t = String(s ?? ''); return t.length > 
 export const WORK_WRITE_MAX = 300;
 export const workLimiter = makeWriteLimiter({ max: WORK_WRITE_MAX, what: 'ghi' });
 
+// Reading personal data (players' emails, sign-up phone numbers, CSV exports): 60 reads an hour per person, all codes together.
+// One request can carry up to 20 calls, so without this cap a loop could read the whole list in minutes. Reads that show no
+// personal data are not counted.
+export const PERSONAL_READ_MAX = 60;
+export const personalReadLimiter = makeWriteLimiter({ max: PERSONAL_READ_MAX, what: 'xem hoặc xuất dữ liệu cá nhân' });
+
 /** The ids of the games where the account holds `perm` of `part` (the part switched on in that game). */
 export const gamesWith = (user, part, perm) => GAMES.filter((g) => can(user, g.id, part, perm)).map((g) => g.id);
 /** A tool that needs one permission of one part. */
@@ -39,6 +45,12 @@ export function pickGame(ids, wanted) {
 /** Writes one line of the record of work done through Claude: who ("<username> (Claude)"), what, about what. Never throws. */
 export function audit(ctx, viec, doiTuong, { phan, chiTiet } = {}) {
   return appendAudit({ ai: ctx.who, qua: 'claude', viec, doiTuong: shorten(doiTuong, 120), game: ctx.gameId, phan, chiTiet });
+}
+
+/** Counts one read of personal data against the allowance: the reason it is refused, else null. */
+export function refuseRead(ctx) {
+  const why = ctx.limitRead();
+  return why ? fail(why) : null;
 }
 
 /** Runs one write behind the allowance: the reason it is refused, else null. */

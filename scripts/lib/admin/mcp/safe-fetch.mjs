@@ -6,12 +6,15 @@
 //     a link written as an IP number is checked the same way
 //   - at most 3 redirects, each one checked from the start; at most `maxBytes` bytes; one overall time limit
 //   - no cookies are sent and nothing is read from a redirect except where it leads
+//   - only servers on the allowed list (link-hosts.mjs) are fetched, at every step of a redirect: a link cannot be used to
+//     send anything to a server nobody chose
 // Resolves { body, headers } or { error }. `body` is a readable stream with a `headers` object ({ 'content-type',
 // 'content-length' }) so it can be given to the same save functions the web uploads use. Call `close()` when done.
 import https from 'node:https';
 import dns from 'node:dns';
 import net from 'node:net';
 import { Transform } from 'node:stream';
+import { isAllowedHost, ALLOWED_HINT } from './link-hosts.mjs';
 
 const MAX_REDIRECTS = 3;
 const URL_MAX = 2000;
@@ -57,17 +60,18 @@ export function isBlockedIp(ip) {
   if (zeros(12)) return v4.check(dotted(b, 12), 'ipv4'); // old "IPv4-compatible" form
   if (b[0] === 0x00 && b[1] === 0x64 && b[2] === 0xff && b[3] === 0x9b && b.subarray(4, 12).every((x) => x === 0)) return v4.check(dotted(b, 12), 'ipv4'); // 64:ff9b::/96 (NAT64)
   if (b[0] === 0x20 && b[1] === 0x02) return v4.check(dotted(b, 2), 'ipv4'); // 6to4 carries an IPv4 address
-  if ((b[0] & 0xfe) === 0xfc) return true; // fc00::/7 unique local
-  if (b[0] === 0xfe && (b[1] & 0xc0) === 0x80) return true; // fe80::/10 link-local
-  if (b[0] === 0xfe && (b[1] & 0xc0) === 0xc0) return true; // fec0::/10 site-local (retired)
-  if (b[0] === 0xff) return true; // multicast
-  if (b[0] === 0x20 && b[1] === 0x01 && b[2] === 0x0d && b[3] === 0xb8) return true; // documentation
-  if (b[0] === 0x01 && b.subarray(1, 8).every((x) => x === 0)) return true; // 100::/64 discard
+  // From here on only global unicast (2000::/3) is allowed: everything else is special-purpose or reserved (::/8 including
+  // 64:ff9b:1::/48 and the ::ffff:0:0/96 translation forms, fc00::/7, fe80::/10, fec0::/10, ff00::/8, 100::/64, 5f00::/16 ...)
+  if ((b[0] & 0xe0) !== 0x20) return true;
+  if (b[0] === 0x20 && b[1] === 0x01 && b[2] <= 0x01) return true; // 2001::/23 protocol assignments (Teredo 2001::/32, benchmarking, ORCHID ...)
+  if (b[0] === 0x20 && b[1] === 0x01 && b[2] === 0x0d && b[3] === 0xb8) return true; // 2001:db8::/32 documentation
+  if (b[0] === 0x26 && b[1] === 0x20 && b[2] === 0x00 && b[3] === 0x4f && b[4] === 0x80 && b[5] === 0x00) return true; // 2620:4f:8000::/48 AS112
+  if (b[0] === 0x3f && (b[1] & 0xf0) === 0xf0) return true; // 3fff::/20 documentation
   return false;
 }
 
 // Checks a link as written. → { url: URL } or { error }
-export function checkLink(raw) {
+export function checkLink(raw, allowed = isAllowedHost) {
   const text = String(raw ?? '').trim();
   if (!text) return { error: 'Thiếu link.' };
   if (text.length > URL_MAX) return { error: 'Link quá dài.' };
@@ -79,9 +83,12 @@ export function checkLink(raw) {
   const host = u.hostname.replace(/^\[|\]$/g, '').replace(/\.$/, '').toLowerCase();
   if (!host) return { error: 'Link không hợp lệ.' };
   if (net.isIP(host)) {
-    if (isBlockedIp(host)) return { error: 'Link trỏ tới địa chỉ nội bộ hoặc không công khai, không tải được.' };
+    return { error: isBlockedIp(host) ? 'Link trỏ tới địa chỉ nội bộ hoặc không công khai, không tải được.' : `Không nhận link ghi bằng số IP. ${ALLOWED_HINT}` };
   } else if (host === 'localhost' || host.endsWith('.localhost') || host.endsWith('.local') || host.endsWith('.internal') || !host.includes('.')) {
     return { error: 'Link trỏ tới địa chỉ nội bộ hoặc không công khai, không tải được.' };
+  }
+  if (!net.isIP(host) && !allowed(host)) {
+    return { error: `Máy chủ ${host} không nằm trong danh sách được phép tải. ${ALLOWED_HINT}` };
   }
   return { url: u, host };
 }
@@ -113,32 +120,36 @@ function limiter(maxBytes) {
 }
 
 /**
- * Opens the link. opts.maxBytes (required), opts.timeoutMs (whole download, default 30 s).
+ * Opens the link. opts.maxBytes (required), opts.timeoutMs (whole download, default 30 s), opts.allowHost (host name -> bool; only tests change it).
  * → { body, headers, close } | { error } — the error is a sentence for the person.
  */
-export async function openLink(raw, { maxBytes, timeoutMs = 30e3 } = {}) {
+export async function openLink(raw, { maxBytes, timeoutMs = 30e3, allowHost = isAllowedHost } = {}) {
   const deadline = Date.now() + timeoutMs;
   let current = raw;
   let live = null; // the request / response being read, so close() can stop it
   const closeAll = () => { if (live) { live.req.destroy(); if (live.res) live.res.destroy(); live = null; } };
   for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
-    const c = checkLink(current);
+    const c = checkLink(current, allowHost);
     if (c.error) return { error: hop ? `Link chuyển hướng không hợp lệ: ${c.error}` : c.error };
     const left = deadline - Date.now();
     if (left <= 0) return { error: 'Tải quá lâu, đã dừng.' };
     let res;
+    let headTimer = null;
     try {
       res = await new Promise((resolve, reject) => {
         const req = https.request({
           protocol: 'https:', hostname: c.host, port: 443, path: c.url.pathname + c.url.search, method: 'GET', lookup: guardedLookup,
-          headers: { 'User-Agent': '3qdc-quan-tri/1.0', Accept: '*/*', 'Accept-Encoding': 'identity' }, timeout: left,
+          headers: { 'User-Agent': '3qdc-quan-tri/1.0', Accept: '*/*', 'Accept-Encoding': 'identity' },
         }, resolve);
         live = { req, res: null };
-        req.on('timeout', () => req.destroy(Object.assign(new Error('timeout'), { code: 'E_TIMEOUT' })));
+        // one timer for the whole wait for the answer, however slowly the server drips bytes (a socket idle timeout would not catch that)
+        headTimer = setTimeout(() => req.destroy(Object.assign(new Error('timeout'), { code: 'E_TIMEOUT' })), left);
         req.on('error', reject);
         req.end();
       });
+      clearTimeout(headTimer);
     } catch (e) {
+      clearTimeout(headTimer);
       closeAll();
       if (e.code === 'E_BLOCKED') return { error: 'Link trỏ tới địa chỉ nội bộ hoặc không công khai, không tải được.' };
       if (e.code === 'E_TIMEOUT') return { error: 'Máy chủ của link không trả lời kịp, đã dừng.' };

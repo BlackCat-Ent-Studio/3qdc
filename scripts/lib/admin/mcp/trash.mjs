@@ -4,7 +4,7 @@
 import { GAMES, gameById } from '../games.mjs';
 import { can } from '../grants.mjs';
 import { TRASH_PERMS, TRASH_PARTS, listTrash, restoreFromTrash } from '../trash.mjs';
-import { text, fail, str, fmt, shorten, audit, refuseWrite } from './common.mjs';
+import { text, fail, str, fmt, shorten, audit, refuseWrite, refuseRead } from './common.mjs';
 
 const SHOW_MAX = 50;
 const PART_NAME = { 'tin-tuc': 'Tin tức', 'phieu-be-ngoan': 'Phiếu Bé Ngoan', 'dang-ky-som': 'Đăng ký sớm', nhac: 'Nhạc nền' };
@@ -31,6 +31,7 @@ export const TRASH_TOOLS = [
       const want = str(args.phan);
       if (want && !TRASH_PARTS.includes(want)) return fail(`phan phải là một trong: ${TRASH_PARTS.join(', ')}.`);
       if (want && !allowed.includes(want)) return fail(`Tài khoản này không được mở Thùng rác của phần ${want} (game ${ctx.gameId}).`);
+      if ((want ? [want] : allowed).includes('dang-ky-som')) { const limited = refuseRead(ctx); if (limited) return limited; } // shows phone numbers
       const out = [];
       const structured = {};
       let phones = 0;

@@ -1,13 +1,13 @@
 // music-trash.mjs — the trash of the background music. A deleted song leaves the player's folder (overrides/home/nhac) at once
 // and waits in a folder of its own, data/games/<game>/nhac/thung-rac/<id>/: the song and its cover picture under their own
 // names, plus meta.json (who deleted it, when, through what). Nothing in that tree is served to the public.
-import { readdir, stat, mkdir, rm, rename, copyFile, readFile } from 'node:fs/promises';
+import { readdir, stat, mkdir, rm, rename, copyFile, readFile, link } from 'node:fs/promises';
 import { constants } from 'node:fs';
 import { join, extname, basename } from 'node:path';
 import { randomBytes } from 'node:crypto';
 import { moduleDir } from '../admin/paths.mjs';
 import { writeJsonAtomic, siteNow, siteNowSeconds } from '../news/news-files.mjs';
-import { MUSIC_DIR, SONG_EXT, COVER_EXT, partsOf } from './music-store.mjs';
+import { MUSIC_DIR, SONG_EXT, COVER_EXT, partsOf, musicExclusive } from './music-store.mjs';
 
 const TRASH_ID_RE = /^\d{14}-[a-f0-9]{6}$/;
 const trashRoot = (gameId) => join(moduleDir(gameId, 'nhac'), 'thung-rac');
@@ -27,7 +27,10 @@ async function moveFile(from, to) {
  * Moves one song (and its cover picture, if it has one) to the trash. `via` is 'web' or 'claude'.
  * Returns { ok, id, name } or { status, error }. The player stops listing it at once (it reads the folder).
  */
-export async function trashSong(gameId, rawName, actor, via = 'web') {
+export function trashSong(gameId, rawName, actor, via = 'web') {
+  return musicExclusive(() => trashSongNow(gameId, rawName, actor, via));
+}
+async function trashSongNow(gameId, rawName, actor, via) {
   const name = basename(String(rawName || ''));
   if (!name || !SONG_EXT.includes(extname(name).toLowerCase())) return { status: 400, error: 'Tên file không hợp lệ.' };
   const file = join(MUSIC_DIR, name);
@@ -78,10 +81,27 @@ export async function listSongTrash(gameId) {
   return out.sort((a, b) => b.id.localeCompare(a.id));
 }
 
-/** Brings a trashed song back to the player. Refused when a song of that name is there again. Returns { ok, name } or { status, error }. */
-export async function restoreSong(gameId, id) {
+// moves a file without ever replacing one that is already at the destination
+async function moveNoClobber(from, to) {
+  try {
+    await link(from, to);
+  } catch (e) {
+    if (e.code !== 'EXDEV') throw e;
+    await copyFile(from, to, constants.COPYFILE_EXCL);
+  }
+  await rm(from, { force: true });
+}
+
+/**
+ * Brings a trashed song back to the player. Refused when a song of that name is there again; never replaces a file. Runs in
+ * the music queue, so a second restore of the same song gets the "not found" answer. Returns { ok, name } or { status, error }.
+ */
+export function restoreSong(gameId, id) {
+  return musicExclusive(() => restoreSongNow(gameId, id));
+}
+async function restoreSongNow(gameId, id) {
   const m = await readMeta(gameId, id);
-  if (!m) return { status: 404, error: 'Không tìm thấy bài hát trong thùng rác.' };
+  if (!m) return { status: 404, error: 'Không tìm thấy bài hát trong thùng rác (có thể đã được khôi phục rồi).' };
   const dir = join(trashRoot(gameId), id);
   const here = await readdir(MUSIC_DIR).catch(() => []);
   if (here.some((n) => n.toLowerCase() === m.name.toLowerCase())) {
@@ -89,11 +109,16 @@ export async function restoreSong(gameId, id) {
   }
   if (!(await stat(join(dir, m.name)).catch(() => null))) return { status: 404, error: 'File nhạc trong thùng rác không còn, không khôi phục được.' };
   await mkdir(MUSIC_DIR, { recursive: true });
-  await moveFile(join(dir, m.name), join(MUSIC_DIR, m.name));
+  try {
+    await moveNoClobber(join(dir, m.name), join(MUSIC_DIR, m.name));
+  } catch (e) {
+    if (e.code === 'EEXIST') return { status: 409, error: `Đã có bài “${m.name}” trong nhạc nền. Xoá hoặc đổi tên bài đó trước.` };
+    throw e;
+  }
   for (const c of Array.isArray(m.covers) ? m.covers : []) {
     const clean = basename(String(c));
     // a cover that is there again is left alone: nothing is overwritten
-    if (COVER_EXT.includes(extname(clean).toLowerCase()) && !here.includes(clean)) await moveFile(join(dir, clean), join(MUSIC_DIR, clean)).catch(() => {});
+    if (COVER_EXT.includes(extname(clean).toLowerCase())) await moveNoClobber(join(dir, clean), join(MUSIC_DIR, clean)).catch(() => {});
   }
   await rm(dir, { recursive: true, force: true });
   return { ok: true, name: m.name };

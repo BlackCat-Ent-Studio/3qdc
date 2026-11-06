@@ -4,7 +4,7 @@ import { listSignups, signupsCsv, readMilestones, writeMilestones, cleanMileston
 import { siteNow } from '../../news/news-files.mjs';
 import { moveToTrash } from '../trash.mjs';
 import { maskPhone } from '../audit-log.mjs';
-import { text, fail, needs, audit, refuseWrite } from './common.mjs';
+import { text, fail, needs, audit, refuseWrite, refuseRead } from './common.mjs';
 
 const PART = 'dang-ky-som';
 const CSV_PAGE = 300; // numbers per answer of xuat_csv_dang_ky
@@ -45,6 +45,8 @@ export const SIGNUP_TOOLS = [
       annotations: annot({ readOnlyHint: true }),
     },
     async run(ctx, args) {
+      const limited = refuseRead(ctx);
+      if (limited) return limited;
       const list = await listSignups({ q: typeof args.tim === 'string' ? args.tim : '', page: Number.isInteger(args.trang) ? args.trang : 1 });
       const rows = list.items.map((r) => `• #${r.stt} ${r.sdt} · ${timeOf(r.luc)} · ${r.nguon || '?'}`);
       await audit(ctx, 'xem-sdt-dang-ky', `${list.items.length} số`, { phan: PART, chiTiet: `trang ${list.page}/${list.pages}${args.tim ? ', có tìm kiếm' : ''}` });
@@ -61,6 +63,8 @@ export const SIGNUP_TOOLS = [
       annotations: annot({ readOnlyHint: true }),
     },
     async run(ctx, args) {
+      const limited = refuseRead(ctx);
+      if (limited) return limited;
       const total = (await signupsCsv({ offset: 0, limit: 1 })).rows;
       const pages = Math.max(1, Math.ceil(total / CSV_PAGE));
       const page = Number.isInteger(args.trang) && args.trang >= 1 ? Math.min(args.trang, pages) : 1;

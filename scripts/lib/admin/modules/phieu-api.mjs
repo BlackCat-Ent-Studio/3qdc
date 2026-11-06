@@ -51,7 +51,7 @@ export async function api(ctx, req, res, path, body) {
     if (!seesEmail) return onlyManager('xoá được phiếu');
     const t = await moveToTrash(ctx.game.id, 'phieu-be-ngoan', dm[1], { actor: webActor('phieu-be-ngoan', user), via: 'web' });
     if (t.error) { oops(res, t.status, t.error); return true; }
-    console.log(`[news] ${siteNow()} ${user.username} moved ticket ${t.id} to the trash (${t.email}, ${t.label})`);
+    console.log(`[news] ${siteNow()} ${user.username} moved ticket ${t.id} to the trash`);
     send(res, 200, { id: t.id });
     return true;
   }
