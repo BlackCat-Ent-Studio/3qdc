@@ -158,25 +158,25 @@ function makeStore(gameId) {
   }
 
   // Moves an article file to trash/ (only inside change()) and drops it from the list. Its revisions stay.
-  // The trash copy also records who deleted it and when (trash/<id>-<yyyyMMddHHmmss>.json).
-  async function remove(post, actor = '') {
+  // The trash copy also records who deleted it, when and through what ('web' or 'claude') (trash/<id>-<yyyyMMddHHmmss>.json).
+  async function remove(post, actor = '', via = 'web') {
     await mkdir(trashDir(), { recursive: true });
     const now = siteNow();
-    await writeJsonAtomic(join(trashDir(), `${post.id}-${now.replace(/[^0-9]/g, '').slice(0, 14)}.json`), { ...post, deletedBy: actor, deletedAt: now });
+    await writeJsonAtomic(join(trashDir(), `${post.id}-${now.replace(/[^0-9]/g, '').slice(0, 14)}.json`), { ...post, deletedBy: actor, deletedAt: now, deletedVia: via });
     await rm(join(postsDir(), `${post.id}.json`));
     const posts = await allPosts();
     const i = posts.findIndex((p) => p.id === post.id);
     if (i >= 0) posts.splice(i, 1);
   }
 
-  // Deleted articles, newest deletion first: [{ file, id, title, category, status, author, deletedBy, deletedAt }]
+  // Deleted articles, newest deletion first: [{ file, id, title, category, status, author, deletedBy, deletedAt, deletedVia }]
   async function listTrash() {
     const names = (await readdir(trashDir()).catch(() => [])).filter((n) => TRASH_NAME_RE.test(n));
     const out = [];
     for (const n of names) {
       try {
         const p = JSON.parse(await readFile(join(trashDir(), n), 'utf8'));
-        out.push({ file: n, id: p.id, title: p.title, category: p.category, status: p.status, author: p.author || '', slug: p.slug, cover: p.cover || '', deletedBy: p.deletedBy || '', deletedAt: p.deletedAt || '' });
+        out.push({ file: n, id: p.id, title: p.title, category: p.category, status: p.status, author: p.author || '', slug: p.slug, cover: p.cover || '', deletedBy: p.deletedBy || '', deletedAt: p.deletedAt || '', deletedVia: p.deletedVia || 'web' });
       } catch { /* an unreadable copy is left alone */ }
     }
     return out.sort((a, b) => b.file.slice(-19).localeCompare(a.file.slice(-19)));
@@ -195,7 +195,7 @@ function makeStore(gameId) {
     if (posts.some((x) => x.id === p.id)) return { status: 409, error: 'Đã có bài mang cùng mã này (có thể đã được khôi phục).' };
     const clash = posts.find((x) => x.slug === p.slug);
     if (clash) return { status: 409, error: `Đường dẫn “${p.slug}” đang được bài “${clash.title}” dùng. Hãy đổi đường dẫn bài kia trước.` };
-    const { deletedBy, deletedAt, ...rest } = p;
+    const { deletedBy, deletedAt, deletedVia, ...rest } = p;
     const post = { ...rest, status: 'draft', publishAt: null, pinned: false, reviewNote: '', updatedBy: actor, updatedAt: nowText };
     if (!isValid(post)) return { status: 400, error: 'Bản trong thùng rác bị hỏng, không khôi phục được.' };
     await save(post, { action: 'khoi-phuc', actor });

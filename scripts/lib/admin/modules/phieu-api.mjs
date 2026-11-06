@@ -1,10 +1,12 @@
 // phieu-api.mjs — gift tickets from Phiếu Bé Ngoan: the list for one day and state, marking a ticket given / refused /
-// waiting again with a reply the player sees (`duyet`), the list as CSV and deleting a ticket (`quan-ly` only: the CSV
-// carries players' email addresses, which accounts with only `duyet` never see).
-import { listPhieu, setStatus, phieuCsv, deletePhieu, withoutEmail } from '../../phieu/phieu-store.mjs';
+// waiting again with a reply the player sees (`duyet`), the list as CSV and deleting a ticket into the trash
+// (`quan-ly` only: the CSV and the trash carry players' email addresses, which accounts with only `duyet` never see).
+import { listPhieu, setStatus, phieuCsv, withoutEmail } from '../../phieu/phieu-store.mjs';
 import { STATES, REPLY_MAX } from '../../phieu/phieu-config.mjs';
 import { siteNow } from '../../news/news-files.mjs';
 import { send, oops } from '../api-http.mjs';
+import { moveToTrash } from '../trash.mjs';
+import { trashRoutes, webActor } from '../trash-api.mjs';
 
 // Returns true when it answered, false for an address it does not know.
 export async function api(ctx, req, res, path, body) {
@@ -12,6 +14,7 @@ export async function api(ctx, req, res, path, body) {
   if (!ctx.can('duyet')) { oops(res, 403, 'Chỉ Quản lý hoặc người Duyệt phiếu mới xem được Phiếu Bé Ngoan.'); return true; }
   const onlyManager = (what) => { oops(res, 403, `Chỉ Quản lý mới ${what}.`); return true; };
   const seesEmail = ctx.can('quan-ly');
+  if (path === '/phieu-be-ngoan/thung-rac' || path.startsWith('/phieu-be-ngoan/thung-rac/')) return trashRoutes(ctx, res, 'phieu-be-ngoan', path);
   const q = new URL(req.url, 'http://x').searchParams;
   const filter = { ngay: ['hom-nay', 'hom-qua', 'tat-ca'].includes(q.get('ngay')) ? q.get('ngay') : 'hom-nay', st: Object.hasOwn(STATES, q.get('st') || '') ? q.get('st') : 'all' };
   if (method === 'GET' && path === '/phieu-be-ngoan') {
@@ -46,9 +49,9 @@ export async function api(ctx, req, res, path, body) {
   const dm = path.match(/^\/phieu-be-ngoan\/([a-z0-9]{6,20})\/xoa$/);
   if (method === 'POST' && dm) {
     if (!seesEmail) return onlyManager('xoá được phiếu');
-    const t = await deletePhieu(dm[1]);
-    if (!t) { oops(res, 404, 'Không tìm thấy phiếu này (có thể vừa bị xoá).'); return true; }
-    console.log(`[news] ${siteNow()} ${user.username} deleted ticket ${t.id} (${t.email}, ${t.ngay})`);
+    const t = await moveToTrash(ctx.game.id, 'phieu-be-ngoan', dm[1], { actor: webActor('phieu-be-ngoan', user), via: 'web' });
+    if (t.error) { oops(res, t.status, t.error); return true; }
+    console.log(`[news] ${siteNow()} ${user.username} moved ticket ${t.id} to the trash (${t.email}, ${t.label})`);
     send(res, 200, { id: t.id });
     return true;
   }

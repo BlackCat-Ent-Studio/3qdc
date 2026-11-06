@@ -157,8 +157,8 @@
   "ct": "application/json; charset=utf-8",
   "cache": "no-store",
   "robots": "noindex, nofollow",
-  "len": 1782,
-  "sha": "83c99546fb31fa37af3f9867ac8f6601ae9e0a330c60dd7e9ad4b665c29566de",
+  "len": 1861,
+  "sha": "d7f8b239d48d11d24fe9470a9e0deb3a0fad73ffe8f8fdf90d68d414ebe93e1c",
   "shape": "{games:[1],user:{grants,name,role,username}}"
  },
  "manager GET /bai": {
@@ -283,8 +283,8 @@
   "ct": "application/json; charset=utf-8",
   "cache": "no-store",
   "robots": "noindex, nofollow",
-  "len": 302,
-  "sha": "0696ebfaa108203f6b8c19cf7edf30e19722d931c275fcc8e98bbec140d3e432",
+  "len": 393,
+  "sha": "a77e3f6e495b4546abc1593528c619cba48d0c533a782ef4009c80d96ded6b26",
   "shape": "{items:[1]}"
  },
  "manager GET /nguoi-dung": {
@@ -310,8 +310,8 @@
   "ct": "application/json; charset=utf-8",
   "cache": "no-store",
   "robots": "noindex, nofollow",
-  "len": 1544,
-  "sha": "833a68d724d5e9aed6e75fbe1f4dabf3286988741338a2c9b093d79a4276326c",
+  "len": 1576,
+  "sha": "e39820b54b6eeadbb98855fc6948fcf9cdfd2447bf6ad7d28aff74ed2a361408",
   "shape": "{games:[1],user:{grants,name,role,username}}"
  },
  "editor GET /bai": {
@@ -436,8 +436,8 @@
   "ct": "application/json; charset=utf-8",
   "cache": "no-store",
   "robots": "noindex, nofollow",
-  "len": 60,
-  "sha": "b0f023eaf9b3fc128e1dfb36042b6f8dd1768e440d3058eb8c3b197c35480f39",
+  "len": 83,
+  "sha": "e83e0cccde1016097ecb89e492325378771bfe947bcc1506f33affdd55589758",
   "shape": "{error}"
  },
  "editor GET /nguoi-dung": {
@@ -463,8 +463,8 @@
   "ct": "application/json; charset=utf-8",
   "cache": "no-store",
   "robots": "noindex, nofollow",
-  "len": 1587,
-  "sha": "814c7f21f8f95b936d74da6dae087d271484325755c68e7da63d05cc03bc505a",
+  "len": 1619,
+  "sha": "c7a377f493cb2269ba3f1758ef2f1725159b6af1dbe4edb0d01635b7a3d7c3d1",
   "shape": "{games:[1],user:{grants,name,role,username}}"
  },
  "phieu GET /bai": {
@@ -589,8 +589,8 @@
   "ct": "application/json; charset=utf-8",
   "cache": "no-store",
   "robots": "noindex, nofollow",
-  "len": 60,
-  "sha": "b0f023eaf9b3fc128e1dfb36042b6f8dd1768e440d3058eb8c3b197c35480f39",
+  "len": 83,
+  "sha": "e83e0cccde1016097ecb89e492325378771bfe947bcc1506f33affdd55589758",
   "shape": "{error}"
  },
  "phieu GET /nguoi-dung": {
@@ -616,8 +616,8 @@
   "ct": "application/json; charset=utf-8",
   "cache": "no-store",
   "robots": "noindex, nofollow",
-  "len": 1871,
-  "sha": "a163cbba87b8be110f0779ef55f82025e0c4081d66a4add4c5de4d4d7106e14f",
+  "len": 1961,
+  "sha": "9c4a77b6e35d4fc51dca78585125fb71623228db74a9b23281586efcfe6b896a",
   "shape": "{games:[2],user:{grants,name,role,username}}"
  },
  "owner GET /bai": {
@@ -742,8 +742,8 @@
   "ct": "application/json; charset=utf-8",
   "cache": "no-store",
   "robots": "noindex, nofollow",
-  "len": 302,
-  "sha": "0696ebfaa108203f6b8c19cf7edf30e19722d931c275fcc8e98bbec140d3e432",
+  "len": 393,
+  "sha": "a77e3f6e495b4546abc1593528c619cba48d0c533a782ef4009c80d96ded6b26",
   "shape": "{items:[1]}"
  },
  "owner GET /nguoi-dung": {

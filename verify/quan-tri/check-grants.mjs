@@ -112,7 +112,7 @@ ok('cleanGrants lenient: drops the unknown, keeps the rest, lists what it droppe
 ok('/toi: games with menu and permissions, only what the account may open', () => {
   const v = gamesOf(member({ '3qdc': { 'tin-tuc': ['duyet'], 'phieu-be-ngoan': ['duyet'] } }), REG);
   assert.deepEqual(v.map((g) => g.id), ['3qdc']);
-  assert.deepEqual(v[0].menu.map((m) => m[0]), ['posts', 'trash', 'phieu']);
+  assert.deepEqual(v[0].menu.map((m) => m[0]), ['posts', 'phieu', 'trash']);
   assert.deepEqual(v[0].perms, { 'tin-tuc': ['viet', 'duyet'], 'phieu-be-ngoan': ['duyet'] });
   assert.deepEqual(gamesOf({ role: 'owner' }, REG).map((g) => g.id), ['3qdc', 'skystory']);
   assert.deepEqual(gamesOf(member({}), REG), []);

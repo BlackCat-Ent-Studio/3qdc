@@ -2,9 +2,11 @@
 // so the list is the folder itself and a change is live at once (the player reads the same folder).
 import { currentUser } from '../../news/admin-auth.mjs';
 import { can } from '../grants.mjs';
-import { listSongs, saveSong, removeSong, SONG_MAX, FOLDER_MAX } from '../../home/music-store.mjs';
+import { listSongs, saveSong, SONG_MAX, FOLDER_MAX } from '../../home/music-store.mjs';
 import { siteNow } from '../../news/news-files.mjs';
 import { send, oops, sendAndClose } from '../api-http.mjs';
+import { moveToTrash } from '../trash.mjs';
+import { trashRoutes, webActor } from '../trash-api.mjs';
 
 // One song of the home page's player. The file name (with its Vietnamese text) travels in a header because the body is
 // the sound itself; the store cleans it and keeps names unique.
@@ -31,15 +33,16 @@ export async function upload(req, res, path, game) {
 export async function api(ctx, req, res, path) {
   const { user, method } = ctx;
   if (!ctx.can('quan-ly')) { oops(res, 403, 'Chỉ Quản lý mới quản lý nhạc nền.'); return true; }
+  if (path === '/nhac/thung-rac' || path.startsWith('/nhac/thung-rac/')) return trashRoutes(ctx, res, 'nhac', path);
   if (method === 'GET' && path === '/nhac') {
     send(res, 200, { items: await listSongs(), max: SONG_MAX, total: FOLDER_MAX });
     return true;
   }
   const nm = path.match(/^\/nhac\/([^/]+)\/xoa$/);
   if (method === 'POST' && nm) {
-    const r = await removeSong(decodeURIComponent(nm[1]));
+    const r = await moveToTrash(ctx.game.id, 'nhac', decodeURIComponent(nm[1]), { actor: webActor('nhac', user), via: 'web' });
     if (r.error) { oops(res, r.status, r.error); return true; }
-    console.log(`[news] ${siteNow()} ${user.username} deleted song ${decodeURIComponent(nm[1])}`);
+    console.log(`[news] ${siteNow()} ${user.username} moved song ${r.label} to the trash`);
     send(res, 200, { items: await listSongs() });
     return true;
   }

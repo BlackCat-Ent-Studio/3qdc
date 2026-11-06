@@ -292,8 +292,8 @@
   "ct": "application/json; charset=utf-8",
   "cache": "no-store",
   "robots": "noindex, nofollow",
-  "len": 41,
-  "sha": "154e19f6772ecce49d5e97e9edcc7057dcbcea7a45879fcf922689683897b4fb",
+  "len": 54,
+  "sha": "de1b86c14abd6848327c803ba05108ed54f7b5eeaa72a6b7357072d7bebb6ed8",
   "shape": "{error}"
  },
  "manager POST /khong-co {}": {
@@ -445,8 +445,8 @@
   "ct": "application/json; charset=utf-8",
   "cache": "no-store",
   "robots": "noindex, nofollow",
-  "len": 60,
-  "sha": "b0f023eaf9b3fc128e1dfb36042b6f8dd1768e440d3058eb8c3b197c35480f39",
+  "len": 83,
+  "sha": "e83e0cccde1016097ecb89e492325378771bfe947bcc1506f33affdd55589758",
   "shape": "{error}"
  },
  "editor POST /khong-co {}": {
@@ -598,8 +598,8 @@
   "ct": "application/json; charset=utf-8",
   "cache": "no-store",
   "robots": "noindex, nofollow",
-  "len": 60,
-  "sha": "b0f023eaf9b3fc128e1dfb36042b6f8dd1768e440d3058eb8c3b197c35480f39",
+  "len": 83,
+  "sha": "e83e0cccde1016097ecb89e492325378771bfe947bcc1506f33affdd55589758",
   "shape": "{error}"
  },
  "phieu POST /khong-co {}": {
@@ -751,8 +751,8 @@
   "ct": "application/json; charset=utf-8",
   "cache": "no-store",
   "robots": "noindex, nofollow",
-  "len": 41,
-  "sha": "154e19f6772ecce49d5e97e9edcc7057dcbcea7a45879fcf922689683897b4fb",
+  "len": 54,
+  "sha": "de1b86c14abd6848327c803ba05108ed54f7b5eeaa72a6b7357072d7bebb6ed8",
   "shape": "{error}"
  },
  "owner POST /khong-co {}": {
@@ -778,8 +778,8 @@
   "ct": "application/json; charset=utf-8",
   "cache": "no-store",
   "robots": "noindex, nofollow",
-  "len": 60,
-  "sha": "b0f023eaf9b3fc128e1dfb36042b6f8dd1768e440d3058eb8c3b197c35480f39",
+  "len": 83,
+  "sha": "e83e0cccde1016097ecb89e492325378771bfe947bcc1506f33affdd55589758",
   "shape": "{error}"
  },
  "phieu POST /thung-rac/don-sach": {
@@ -787,8 +787,8 @@
   "ct": "application/json; charset=utf-8",
   "cache": "no-store",
   "robots": "noindex, nofollow",
-  "len": 60,
-  "sha": "b0f023eaf9b3fc128e1dfb36042b6f8dd1768e440d3058eb8c3b197c35480f39",
+  "len": 83,
+  "sha": "e83e0cccde1016097ecb89e492325378771bfe947bcc1506f33affdd55589758",
   "shape": "{error}"
  },
  "anon POST no-origin /bai/999999": {

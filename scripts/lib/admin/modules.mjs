@@ -3,6 +3,7 @@
 //   implies      a permission that includes others: holding the key holds every permission listed for it
 //   short        a few words for each permission, for lists and table headings (perms keeps the full sentence)
 //   menu         [tab, hash, label, permission needed] — what the editor pages show
+//   trash        the permission that opens the part's trash and brings items back (trash.mjs); deleting for good is for owners
 //   paths        API address prefixes owned by the part (below /quan-tri/api/g/<game>/)
 //   dataDir      where the part keeps its data for a game
 //   api          (ctx, req, res, path, body) → true when it answered; ctx = { game, user, method, can(perm) }
@@ -13,15 +14,17 @@ import * as tinTuc from './modules/tin-tuc-api.mjs';
 import * as phieu from './modules/phieu-api.mjs';
 import * as dangKySom from './modules/dang-ky-som-api.mjs';
 import * as nhac from './modules/nhac-api.mjs';
+import { TRASH_PERMS } from './trash.mjs';
 
 const part = (id, name, def, impl) => ({ id, name, ...def, dataDir: (gameId) => moduleDir(gameId, id), api: impl.api, upload: impl.upload || null });
 
 export const MODULES = {
   'tin-tuc': part('tin-tuc', 'Tin tức', {
-    perms: { viet: 'Viết bài, gửi duyệt, đưa ảnh lên', duyet: 'Đăng, hẹn giờ, trả lại, gỡ, ghim, xoá bài, thùng rác' },
+    perms: { viet: 'Viết bài, gửi duyệt, đưa ảnh lên', duyet: 'Đăng, hẹn giờ, trả lại, gỡ, ghim, xoá bài, xem và khôi phục thùng rác' },
     implies: { duyet: ['viet'] },
     short: { viet: 'Viết bài', duyet: 'Duyệt đăng' },
-    menu: [['posts', '#/', 'Bài viết', 'viet'], ['trash', '#/thung-rac', 'Thùng rác', 'duyet']],
+    menu: [['posts', '#/', 'Bài viết', 'viet']],
+    trash: TRASH_PERMS['tin-tuc'],
     paths: ['/anh', '/bai', '/thung-rac'],
   }, tinTuc),
   'phieu-be-ngoan': part('phieu-be-ngoan', 'Phiếu Bé Ngoan', {
@@ -29,6 +32,7 @@ export const MODULES = {
     implies: { 'quan-ly': ['duyet'] },
     short: { duyet: 'Duyệt phiếu', 'quan-ly': 'Quản lý phiếu' },
     menu: [['phieu', '#/phieu-be-ngoan', 'Phiếu Bé Ngoan', 'duyet']],
+    trash: TRASH_PERMS['phieu-be-ngoan'],
     paths: ['/phieu-be-ngoan'],
   }, phieu),
   'dang-ky-som': part('dang-ky-som', 'Đăng ký sớm', {
@@ -36,6 +40,7 @@ export const MODULES = {
     implies: {},
     short: { 'quan-ly': 'Quản lý' },
     menu: [['signup', '#/dang-ky-som', 'Đăng ký sớm', 'quan-ly']],
+    trash: TRASH_PERMS['dang-ky-som'],
     paths: ['/dang-ky-som'],
   }, dangKySom),
   'nhac': part('nhac', 'Nhạc nền', {
@@ -43,6 +48,7 @@ export const MODULES = {
     implies: {},
     short: { 'quan-ly': 'Quản lý' },
     menu: [['music', '#/nhac', 'Nhạc nền', 'quan-ly']],
+    trash: TRASH_PERMS.nhac,
     paths: ['/nhac'],
   }, nhac),
 };

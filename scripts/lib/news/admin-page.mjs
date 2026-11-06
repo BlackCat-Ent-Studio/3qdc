@@ -16,6 +16,7 @@ import { renderDetailPage } from './news-pages.mjs';
 import { adminApp } from './admin-app.mjs';
 import { adminNews } from './admin-news-app.mjs';
 import { adminParts } from './admin-parts-app.mjs';
+import { adminTrash } from './admin-trash-app.mjs';
 import { PARTS_CSS } from './admin-parts-css.mjs';
 import { adminAccess } from './admin-access-app.mjs';
 import { adminAuth } from './admin-auth-app.mjs';
@@ -186,7 +187,7 @@ function appPage(nonce) {
 <div class="sh-toasts" id="toasts" role="region" aria-label="Thông báo" aria-live="polite"></div>
 <noscript><p style="padding:20px">Trang quản trị cần bật JavaScript.</p></noscript>
 <script type="application/json" id="adm-data" nonce="${nonce}">${JSON.stringify(data).replace(/</g, '\\u003c')}</script>
-<script nonce="${nonce}">(${adminApp.toString()})(${adminNews.toString()}, ${adminParts.toString()}, ${adminAccess.toString()}, ${adminAuth.toString()});</script>
+<script nonce="${nonce}">(${adminApp.toString()})(${adminNews.toString()}, ${adminParts.toString()}, ${adminTrash.toString()}, ${adminAccess.toString()}, ${adminAuth.toString()});</script>
 </body></html>`;
 }
 

@@ -106,6 +106,7 @@ export function gamesOf(user, reg = defaultReg()) {
     const menu = [];
     const perms = {};
     const parts = [];
+    const trash = []; // the parts whose trash this account may open (the game's "Thùng rác" screen)
     for (const mid of Object.keys(g.modules || {})) {
       const m = reg.modules[mid];
       if (!m) continue;
@@ -113,10 +114,12 @@ export function gamesOf(user, reg = defaultReg()) {
       const held = Object.keys(m.perms).filter((p) => can(user, g.id, mid, p, reg));
       if (held.length) perms[mid] = held;
       for (const [tab, hash, label, perm] of m.menu) if (can(user, g.id, mid, perm, reg)) menu.push([tab, hash, label]);
+      if (m.trash && can(user, g.id, mid, m.trash, reg)) trash.push(mid);
     }
+    if (trash.length) menu.push(['trash', '#/thung-rac', 'Thùng rác']);
     if (menu.length || hasAnyAccess(user, g.id, reg)) {
       const sites = (g.sites || []).map((s) => ({ id: s.id, name: s.name, host: (s.hosts || [])[0] || s.path || '', path: s.path || '', module: s.module || null }));
-      out.push({ id: g.id, name: g.name, logo: g.logo, menu, perms, parts, sites });
+      out.push({ id: g.id, name: g.name, logo: g.logo, menu, perms, parts, trash, sites });
     }
   }
   return out;

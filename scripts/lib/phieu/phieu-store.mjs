@@ -9,6 +9,9 @@ import { readJson, writeJsonAtomic, siteNow, siteNowSeconds } from '../news/news
 import { DATA_DIR, STATES, serverName } from './phieu-config.mjs';
 
 const listFile = () => join(DATA_DIR, 'phieu.json');
+// Deleted tickets wait here (the ticket as it was, plus who deleted it, when and through what): a ticket in this file is
+// in no list, no count and no CSV, and the player's history does not show it.
+const trashFile = () => join(DATA_DIR, 'thung-rac.json');
 
 // the site's calendar day (+07:00) of a moment, YYYY-MM-DD
 export const dayOf = (ms = Date.now()) => siteNow(ms).slice(0, 10);
@@ -41,6 +44,7 @@ function exclusive(fn) {
         loading = null;
         throw e;
       }
+      if (r.afterSave) await r.afterSave();
     }
     return r && 'value' in r ? r.value : r;
   });
@@ -117,14 +121,79 @@ export function answerPhieu(id, st, phanHoi, username) {
   });
 }
 
-// Deletes a ticket for good. A ticket of today no longer counts, so that player may send another one today.
-// → the deleted ticket, or null when the id is unknown.
-export function deletePhieu(id) {
+// ---------- trash ----------
+async function readTrash() {
+  const saved = await readJson(trashFile(), { items: [] });
+  return Array.isArray(saved && saved.items) ? saved.items : [];
+}
+async function writeTrash(list) {
+  await mkdir(DATA_DIR, { recursive: true });
+  await writeJsonAtomic(trashFile(), { items: list });
+}
+const withoutTrashMarks = ({ deletedBy, deletedAt, deletedVia, ...ticket }) => ticket;
+
+// Moves a ticket to the trash. A ticket of today no longer counts, so that player may send another one today.
+// `via` is 'web' or 'claude'. → the ticket, or null when the id is unknown.
+// The trash is written before the list: a failure in between leaves the ticket in both (nothing is lost).
+export function trashPhieu(id, actor, via = 'web') {
   return exclusive(async (items) => {
     const i = items.findIndex((x) => x.id === id);
     if (i < 0) return { value: null };
-    const [t] = items.splice(i, 1);
+    const t = items[i];
+    const list = await readTrash();
+    list.push({ ...t, deletedBy: actor, deletedAt: siteNowSeconds(), deletedVia: via });
+    await writeTrash(list);
+    items.splice(i, 1);
     return { save: true, value: t };
+  });
+}
+
+// Trashed tickets, newest deletion first (copies, with the server's name added for display).
+export async function listPhieuTrash() {
+  const list = await readTrash();
+  return list.slice().reverse().map((t) => ({ ...t, serverTen: serverName(t.server) }));
+}
+
+// Puts a trashed ticket back among the tickets in the order they were sent. It is refused when the same id is back
+// already, or when the player has sent another ticket on that day meanwhile (a player gets one ticket a day).
+// → { item } | { notFound: true } | { conflict: sentence }
+export function restorePhieu(id) {
+  return exclusive(async (items) => {
+    const list = await readTrash();
+    const k = list.findIndex((x) => x.id === id);
+    if (k < 0) return { value: { notFound: true } };
+    const t = withoutTrashMarks(list[k]);
+    if (items.some((x) => x.id === t.id)) return { value: { conflict: 'Phiếu này đã có trong danh sách (có thể đã khôi phục rồi).' } };
+    if (items.some((x) => x.email === t.email && x.ngay === t.ngay)) {
+      return { value: { conflict: 'Người chơi này đã gửi phiếu khác trong ngày đó, không khôi phục thêm được (mỗi người một phiếu một ngày).' } };
+    }
+    let at = items.length;
+    while (at > 0 && items[at - 1].luc > t.luc) at--;
+    items.splice(at, 0, t);
+    list.splice(k, 1);
+    // the list is saved first, the trash after: a failure in between leaves the ticket in both (nothing is lost)
+    return { save: true, afterSave: () => writeTrash(list), value: { item: t } };
+  });
+}
+
+// Deletes one trashed ticket for good. → the ticket, or null when the id is not in the trash.
+export function purgePhieu(id) {
+  return exclusive(async () => {
+    const list = await readTrash();
+    const k = list.findIndex((x) => x.id === id);
+    if (k < 0) return { value: null };
+    const [t] = list.splice(k, 1);
+    await writeTrash(list);
+    return { value: withoutTrashMarks(t) };
+  });
+}
+
+// Deletes every trashed ticket for good. → how many.
+export function emptyPhieuTrash() {
+  return exclusive(async () => {
+    const list = await readTrash();
+    if (list.length) await writeTrash([]);
+    return { value: list.length };
   });
 }
 

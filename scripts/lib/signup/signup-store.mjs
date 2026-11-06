@@ -1,6 +1,6 @@
 // signup-store.mjs — early sign-ups left on /dang-ky-som: one phone number per line in data/dang-ky-som/dang-ky.jsonl.
-// The list is only ever appended to, so a crash or power cut can spoil at most the line being written (the reader skips
-// it). It is read once into memory on first use; the count, the duplicate check and the admin list all come from there.
+// The list is appended to, and written whole (atomically) only when a number is trashed or restored, so a crash or power cut
+// can spoil at most the line being written (the reader skips it). It is read once into memory on first use; the count, the duplicate check and the admin list all come from there.
 // The milestones the page shows live in cai-dat.json next to it (written whole, atomically).
 import { appendFile, mkdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -79,22 +79,96 @@ export function addSignup({ sdt, ip, nguon }) {
   return job;
 }
 
-// Deletes one number for good: the list is written again without it (atomically, through the same queue as new
-// sign-ups). The count on /dang-ky-som drops by one and the number may sign up again. → { count } or null when unknown.
-export function deleteSignup(sdt) {
-  const job = queue.then(async () => {
-    const db = await load();
-    if (!db.phones.has(sdt)) return null;
-    const rows = db.rows.filter((r) => r.sdt !== sdt);
-    await mkdir(DATA_DIR, { recursive: true });
-    await writeTextAtomic(listFile(), rows.map((r) => JSON.stringify(r) + '\n').join(''));
-    db.rows = rows;
-    db.phones.delete(sdt);
-    db.needNewline = false;
-    return { count: rows.length };
-  });
+// Writes the whole list again (atomically) and swaps the in-memory copy for it.
+async function replaceRows(db, rows) {
+  await mkdir(DATA_DIR, { recursive: true });
+  await writeTextAtomic(listFile(), rows.map((r) => JSON.stringify(r) + '\n').join(''));
+  db.rows = rows;
+  db.phones = new Set(rows.map((r) => r.sdt));
+  db.needNewline = false;
+}
+
+// ---------- trash ----------
+// Deleted numbers wait in thung-rac.json (the row as it was, plus who deleted it, when and through what). A number there
+// is on no list, in no count and in no CSV, and may sign up again.
+const trashFile = () => join(DATA_DIR, 'thung-rac.json');
+async function readTrash() {
+  const saved = await readJson(trashFile(), { items: [] });
+  return Array.isArray(saved && saved.items) ? saved.items : [];
+}
+async function writeTrash(list) {
+  await mkdir(DATA_DIR, { recursive: true });
+  await writeJsonAtomic(trashFile(), { items: list });
+}
+const rowOf = ({ sdt, luc, ip, nguon }) => ({ sdt, luc: String(luc || ''), ip: String(ip || ''), nguon: String(nguon || '') });
+
+// Same queue as new sign-ups, so the list and the trash never change under each other's feet.
+function inQueue(fn) {
+  const job = queue.then(fn);
   queue = job.catch(() => {});
   return job;
+}
+
+// Moves one number to the trash: the trash is written first, then the list without it (a failure in between leaves the
+// number in both, nothing is lost). The count on /dang-ky-som drops by one. `via` is 'web' or 'claude'.
+// → { count } (numbers left) or null when unknown.
+export function trashSignup(sdt, actor, via = 'web') {
+  return inQueue(async () => {
+    const db = await load();
+    const row = db.rows.find((r) => r.sdt === sdt);
+    if (!row) return null;
+    const list = await readTrash();
+    list.push({ ...row, deletedBy: actor, deletedAt: siteNowSeconds(), deletedVia: via });
+    await writeTrash(list);
+    const rows = db.rows.filter((r) => r.sdt !== sdt);
+    await replaceRows(db, rows);
+    return { count: rows.length };
+  });
+}
+
+// Trashed numbers, newest deletion first.
+export async function listSignupTrash() {
+  return (await readTrash()).slice().reverse();
+}
+
+// Puts a number back in the place its sign-up time gives it. Refused when the number signed up again meanwhile.
+// → { count } | { notFound: true } | { conflict: sentence }
+export function restoreSignup(sdt) {
+  return inQueue(async () => {
+    const db = await load();
+    const list = await readTrash();
+    const k = list.findIndex((r) => r.sdt === sdt);
+    if (k < 0) return { notFound: true };
+    if (db.phones.has(sdt)) return { conflict: 'Số này đã đăng ký lại, đang có trong danh sách.' };
+    const row = rowOf(list[k]);
+    const rows = db.rows.slice();
+    let at = rows.length;
+    while (at > 0 && rows[at - 1].luc > row.luc) at--;
+    rows.splice(at, 0, row);
+    await replaceRows(db, rows); // the list first, the trash after: a failure in between leaves the number in both
+    list.splice(k, 1);
+    await writeTrash(list);
+    return { count: rows.length };
+  });
+}
+
+// Deletes one trashed number for good (→ the row, or null when it is not in the trash) / all of them (→ how many).
+export function purgeSignup(sdt) {
+  return inQueue(async () => {
+    const list = await readTrash();
+    const k = list.findIndex((r) => r.sdt === sdt);
+    if (k < 0) return null;
+    const [row] = list.splice(k, 1);
+    await writeTrash(list);
+    return rowOf(row);
+  });
+}
+export function emptySignupTrash() {
+  return inQueue(async () => {
+    const list = await readTrash();
+    if (list.length) await writeTrash([]);
+    return list.length;
+  });
 }
 
 export async function signupCount() {

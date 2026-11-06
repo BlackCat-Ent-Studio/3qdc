@@ -95,7 +95,7 @@ ${full ? '' : '<p class="pt-help">Bạn có quyền Duyệt phiếu: không th�
         const r = await api('POST', `/phieu-be-ngoan/${b.getAttribute('data-del-phieu')}/xoa`, {});
         if (mine !== K.screen()) return;
         if (!r.ok) { b.disabled = false; disarm(b); if (r.status !== 401) toast(r.data.error || 'Không xoá được phiếu.'); return; }
-        toast('Đã xoá phiếu');
+        toast('Đã chuyển phiếu vào Thùng rác');
         again();
       }));
     };
@@ -163,7 +163,7 @@ ${manage ? `<form class="pt-moc-row" id="s-moc-form"><label class="sh-sr" for="s
         const res = await api('POST', '/dang-ky-som/xoa', { sdt });
         if (mine !== K.screen()) return;
         if (!res.ok) { b.disabled = false; disarm(b); if (res.status !== 401) toast(res.data.error || 'Không xoá được.'); return; }
-        toast(`Đã xoá ${sdt}, còn ${fmtNum(res.data.count)} số`);
+        toast(`Đã chuyển ${sdt} vào Thùng rác, còn ${fmtNum(res.data.count)} số`);
         again();
       }));
       const mocForm = $('#s-moc-form');
@@ -256,11 +256,11 @@ ${items.length ? '' : emptyCell(5, I.music, 'Chưa có bài hát nào', manage ?
       });
       $$('[data-del-song]').forEach((b) => b.addEventListener('click', () => {
         const name = b.getAttribute('data-del-song');
-        K.confirmDlg({ title: `Xoá “${name}” khỏi nhạc nền?`, body: 'Người chơi sẽ không nghe bài này nữa. File bị xoá khỏi máy chủ, muốn dùng lại phải tải lên lại.', ok: 'Xoá bài hát' }, async () => {
+        K.confirmDlg({ title: `Xoá “${name}” khỏi nhạc nền?`, body: 'Người chơi sẽ không nghe bài này nữa. Bài nằm trong Thùng rác, khôi phục lại được.', ok: 'Chuyển vào Thùng rác' }, async () => {
           const res = await api('POST', `/nhac/${encodeURIComponent(name)}/xoa`, {});
           if (mine !== K.screen()) return;
           if (!res.ok) { if (res.status !== 401) err(res.data.error || 'Không xoá được bài này.'); return; }
-          toast(`Đã xoá “${name}”`);
+          toast(`Đã chuyển “${name}” vào Thùng rác`);
           draw(res.data.items, '', '');
         });
       }));

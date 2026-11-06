@@ -1,12 +1,14 @@
 // tin-tuc-api.mjs — articles, pictures and the trash of one game's news. Writers (`viet`) work on articles and pictures;
-// reviewers (`duyet`) also see the trash. The rules of each article change live in news-workflow.mjs.
-import { newsStore, stampAfter, isVisible, TRASH_NAME_RE } from '../../news/news-store.mjs';
+// reviewers (`duyet`) also see the trash and bring articles back; only an owner deletes from it for good. The rules of each article change live in news-workflow.mjs.
+import { newsStore, stampAfter, isVisible } from '../../news/news-store.mjs';
 import { uploadsOf } from '../../news/news-uploads.mjs';
 import { decide, mayDelete, summaryOf } from '../../news/news-workflow.mjs';
 import { currentUser } from '../../news/admin-auth.mjs';
 import { can, newsRoleOf } from '../grants.mjs';
 import { siteNow, siteNowSeconds } from '../../news/news-files.mjs';
 import { send, oops, sendAndClose } from '../api-http.mjs';
+import { moveToTrash } from '../trash.mjs';
+import { trashRoutes, webActor } from '../trash-api.mjs';
 
 const LOCK_MS = 90e3;
 const locks = new Map(); // "<game>:<article id>" → { username, name, until }
@@ -43,39 +45,12 @@ export async function api(ctx, req, res, path, body) {
   const { user, method } = ctx;
   // the article rules (news-workflow.mjs) speak of "manager" and "editor": this account's role for this game's news
   const writer = { ...user, role: newsRoleOf(user, ctx.game.id) };
-  const { change, allPosts, listRevisions, readRevision, listTrash } = newsStore(ctx.game.id);
+  const { change, allPosts, listRevisions, readRevision } = newsStore(ctx.game.id);
   const done = (status, data) => { send(res, status, data); return true; };
   const fail = (status, error) => { oops(res, status, error); return true; };
 
-  // trash: list deleted articles, bring one back as a draft, delete one or all of them for good
-  if (path === '/thung-rac' || path.startsWith('/thung-rac/')) {
-    if (!ctx.can('duyet')) return fail(403, 'Chỉ Quản lý mới xem được thùng rác.');
-    if (method === 'GET' && path === '/thung-rac') return done(200, { items: await listTrash() });
-    const tm = path.match(/^\/thung-rac\/([^/]+)\/khoi-phuc$/);
-    if (method === 'POST' && tm && TRASH_NAME_RE.test(tm[1])) {
-      const r = await change(({ restore }) => restore(tm[1], user.name, stampAfter(null)));
-      if (r.error) return fail(r.status, r.error);
-      console.log(`[news] ${siteNow()} ${user.username} restored article ${r.post.id} from ${tm[1]} (as draft)`);
-      return done(200, { post: r.post, items: await listTrash() });
-    }
-    const pm2 = path.match(/^\/thung-rac\/([^/]+)\/xoa-han$/);
-    if (method === 'POST' && pm2 && TRASH_NAME_RE.test(pm2[1])) {
-      const r = await change(({ purge }) => purge(pm2[1]));
-      if (r.error) return fail(r.status, r.error);
-      console.log(`[news] ${siteNow()} ${user.username} deleted article ${r.id} for good (${pm2[1]})`);
-      return done(200, { title: r.title, items: await listTrash() });
-    }
-    if (method === 'POST' && path === '/thung-rac/don-sach') {
-      const n = await change(async ({ purge }) => {
-        let count = 0;
-        for (const t of await listTrash()) if (!(await purge(t.file)).error) count++;
-        return count;
-      });
-      console.log(`[news] ${siteNow()} ${user.username} emptied the trash (${n} article(s) deleted for good)`);
-      return done(200, { deleted: n, items: await listTrash() });
-    }
-    return false;
-  }
+  // trash: seeing and bringing back needs `duyet`, deleting for good an owner (trash-api.mjs)
+  if (path === '/thung-rac' || path.startsWith('/thung-rac/')) return trashRoutes(ctx, res, 'tin-tuc', path);
 
   // pictures and articles: everyone who writes
   if (!ctx.can('viet')) return fail(403, 'Tài khoản này không có quyền viết bài.');
@@ -146,13 +121,7 @@ export async function api(ctx, req, res, path, body) {
   if ((m = path.match(/^\/bai\/(\d{1,9})\/xoa$/)) && method === 'POST') {
     if (!mayDelete(writer)) return fail(403, 'Chỉ Quản lý mới xoá bài.');
     const id = +m[1];
-    const r = await change(async ({ posts, remove }) => {
-      const cur = posts.find((p) => p.id === id);
-      if (!cur) return { status: 404, error: 'Không tìm thấy bài (có thể đã bị xoá).' };
-      if (body.baseUpdatedAt !== cur.updatedAt) return { status: 409, error: 'Bài vừa được sửa. Tải lại trước khi xoá.' };
-      await remove(cur, user.name);
-      return { ok: true };
-    });
+    const r = await moveToTrash(ctx.game.id, 'tin-tuc', id, { actor: webActor('tin-tuc', user), via: 'web', baseUpdatedAt: body.baseUpdatedAt });
     if (r.error) return fail(r.status, r.error);
     locks.delete(lockKey(ctx, id));
     console.log(`[news] ${siteNow()} ${user.username} deleted article ${id} (moved to trash)`);

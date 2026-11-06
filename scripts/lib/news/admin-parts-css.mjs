@@ -87,4 +87,16 @@ export const PARTS_CSS = `
   .pt-audio{width:100%;height:40px}
   .pt-upl{min-height:44px}
 }
+
+/* trash of a game */
+.tr-seg{max-width:100%;overflow-x:auto}
+.tr-tab{flex:none;white-space:nowrap;height:28px;padding:0 10px;border-radius:var(--radius-sm);font-size:var(--text-sm);color:var(--tx-2);display:inline-flex;align-items:center;gap:6px;text-decoration:none}
+.tr-tab:hover{color:var(--tx)}
+.tr-tab[aria-pressed="true"]{background:var(--surface);color:var(--tx);font-weight:500;box-shadow:0 1px 2px rgba(20,20,18,.08)}
+.tr-tab .n{font-size:var(--text-xs);color:var(--tx-3)}
+.tr-table td{vertical-align:top}
+.tr-who b{display:block;font-weight:600}
+.tr-who small{display:block;font-size:var(--text-xs);color:var(--tx-3);margin-top:2px;overflow-wrap:anywhere}
+.tr-gifts{margin:0;padding-left:1.1em;font-size:var(--text-sm)}
+.tr-phone{font-family:var(--font-mono);font-size:var(--text-md);font-weight:500}
 `;

@@ -7,7 +7,7 @@
 // security boundary — it only keeps the screens honest.
 // No inline event attributes anywhere: the page's Content-Security-Policy would block them.
 
-export function adminApp(adminNews, adminParts, adminAccess, adminAuth) {
+export function adminApp(adminNews, adminParts, adminTrash, adminAccess, adminAuth) {
   const DATA = JSON.parse(document.getElementById('adm-data').textContent);
   const CATS = DATA.cats, LIB = DATA.library, HOST = DATA.host, LOGO = DATA.logo, MARKS = DATA.marks || {}, THEME_KEY = DATA.themeKey;
   const app = document.getElementById('app');
@@ -161,10 +161,10 @@ export function adminApp(adminNews, adminParts, adminAccess, adminAuth) {
     key: svgIcon('<circle cx="8" cy="15" r="4"/><path d="M11 12l8-8M16 7l2 2M14 9l2 2"/>'),
     list: svgIcon('<path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01"/>'),
   };
-  // the part each tab belongs to (the trash is a step inside the news part)
-  const PART_OF = { posts: 'tin-tuc', trash: 'tin-tuc', phieu: 'phieu-be-ngoan', signup: 'dang-ky-som', music: 'nhac' };
+  // the part each tab belongs to (the trash belongs to the game, not to one part)
+  const PART_OF = { posts: 'tin-tuc', trash: 'thung-rac', phieu: 'phieu-be-ngoan', signup: 'dang-ky-som', music: 'nhac' };
   const partName = (g, tab) => ((g.parts.find((p) => p.id === PART_OF[tab]) || {}).name) || tab;
-  // menu entries read as the part (news = "Tin tức"); the trash is shown one step in, only while the news part is open
+  // menu entries read as the part (news = "Tin tức"); the game's trash is the last entry
   const menuLabel = (g, m) => (m[0] === 'posts' ? partName(g, 'posts') : m[2]);
   const TAB_ICON = { posts: I.news, trash: I.trash, phieu: I.ticket, signup: I.userplus, music: I.music };
 
@@ -196,12 +196,9 @@ export function adminApp(adminNews, adminParts, adminAccess, adminAuth) {
   }
 
   function menuLinks(g, tab, icons) {
-    const inNews = PART_OF[tab] === 'tin-tuc';
-    return g.menu.filter((m) => m[0] !== 'trash' || inNews).map((m) => {
+    return g.menu.map((m) => {
       const on = nav.kind === 'game' && nav.part && m[0] === tab;
-      const trash = m[0] === 'trash';
-      const link = navLink(menuLabel(g, m), menuHref(g, m), on, trash || icons ? (trash ? I.trash : TAB_ICON[m[0]]) : '', tabCount(g.id, m[0]));
-      return trash ? `<div class="sh-sub2">${link}</div>` : link;
+      return navLink(menuLabel(g, m), menuHref(g, m), on, icons ? TAB_ICON[m[0]] : '', tabCount(g.id, m[0]));
     }).join('');
   }
 
@@ -277,7 +274,6 @@ ${newsSite ? `<div class="sh-foot"><a href="https://${esc(newsSite.host)}/tin-tu
       if (m) {
         const first = g.menu.find((x) => PART_OF[x[0]] === PART_OF[tab]) || m;
         if (crumbTail) c.push(crumb(partName(g, tab), menuHref(g, first)), here(crumbTail));
-        else if (tab === 'trash') c.push(crumb(partName(g, 'posts'), menuHref(g, first)), here(menuLabel(g, m)));
         else c.push(here(menuLabel(g, m)));
       }
     } else if (nav.kind === 'system') {
@@ -393,7 +389,7 @@ ${newsSite ? `<div class="sh-foot"><a href="https://${esc(newsSite.host)}/tin-tu
     } else {
       right = (me.grants || {})[g.id] === '*' ? '<span>Bạn quản lý cả game này</span>' : `<span>Bạn được làm: ${esc(g.parts.filter((p) => (g.perms[p.id] || []).length).map((p) => p.name).join(', '))}</span>`;
     }
-    const tabs = g.menu.filter((m) => m[0] !== 'trash').map((m) => {
+    const tabs = g.menu.map((m) => {
       const n = tabCount(g.id, m[0]);
       return `<a class="sh-tab" href="${esc(menuHref(g, m))}"${nav.part && PART_OF[m[0]] === PART_OF[tab] ? ' aria-current="page"' : ''}>${esc(menuLabel(g, m))}${n ? `<span class="sh-cnt" aria-label="${n} việc chờ">${n}</span>` : ''}</a>`;
     }).join('');
@@ -694,6 +690,12 @@ ${g.sites.length ? `<div>${I.layers} <span class="ov-mono">${esc(siteHost(g, g.s
     gameHead: gameHeadHtml, paintHead, setCrumb: (t) => { crumbTail = t; }, dialogOpen,
   });
 
+  // ---------- the game's trash (admin-trash-app.mjs) ----------
+  const TRASH = adminTrash({
+    $, $$, esc, api, toast, header, app, I, svgIcon, fmtTime, armDelete, CATS,
+    screen: () => screen, me: () => me, isOwner, game: () => gameOf(curGame), cleanupEditor,
+  });
+
   // ---------- gift tickets, early sign-ups, background music (admin-parts-app.mjs) ----------
   const PARTS = adminParts({
     $, $$, esc, api, toast, can, gp, header, app, I, svgIcon, fmtTime, armDelete, disarm, confirmDlg,
@@ -726,7 +728,7 @@ ${g.sites.length ? `<div>${I.layers} <span class="ov-mono">${esc(siteHost(g, g.s
     { test: (r) => r === '/nhac', mod: 'nhac', perm: 'quan-ly', tab: 'music', draw: () => PARTS.renderMusic() },
     { test: (r) => r === '/dang-ky-som', mod: 'dang-ky-som', perm: 'quan-ly', tab: 'signup', draw: () => PARTS.renderSignups() },
     { test: (r) => r === '/phieu-be-ngoan', mod: 'phieu-be-ngoan', perm: 'duyet', tab: 'phieu', draw: () => PARTS.renderPhieu() },
-    { test: (r) => r === '/thung-rac', mod: 'tin-tuc', perm: 'duyet', tab: 'trash', draw: () => NEWS.renderTrash() },
+    { test: (r) => /^\/thung-rac(\/[a-z-]+)?$/.test(r), trash: true, tab: 'trash', draw: (r) => TRASH.renderTrash(r.slice(11)) },
     { test: (r) => r === '/', mod: 'tin-tuc', perm: 'viet', tab: 'posts', draw: () => NEWS.renderList() },
   ];
 
@@ -764,12 +766,13 @@ ${g.sites.length ? `<div>${I.layers} <span class="ov-mono">${esc(siteHost(g, g.s
     if (!g) { renderDenied(`Tài khoản này không có quyền ở game “${gid}”.`); return shown(''); }
     curGame = gid;
     const hit = SECTION_TABLE.find((t) => t.test(rest));
-    if (hit && g.parts.some((p) => p.id === hit.mod) && can(hit.mod, hit.perm)) {
+    const open = (t) => (t.trash ? (g.trash || []).length > 0 : g.parts.some((p) => p.id === t.mod) && can(t.mod, t.perm));
+    if (hit && open(hit)) {
       nav = { kind: 'game', part: true };
       hit.draw(rest);
-      return shown(hit.tab === 'posts' ? '#/g/' + gid + '/' : '#/g/' + gid + rest);
+      return shown(hit.tab === 'posts' ? '#/g/' + gid + '/' : hit.trash ? '#/g/' + gid + '/thung-rac' : '#/g/' + gid + rest);
     }
-    if (hit && rest !== '/' && g.parts.some((p) => p.id === hit.mod)) { renderDenied(`Tài khoản này không có quyền ở phần này của ${g.name}.`); return shown(''); }
+    if (hit && rest !== '/' && (hit.trash || g.parts.some((p) => p.id === hit.mod))) { renderDenied(`Tài khoản này không có quyền ở phần này của ${g.name}.`); return shown(''); }
     // no section named, or one the game has not switched on: the first section the account may use, else the game's own page
     if (g.menu.length && firstHash(g) !== location.hash) return go(firstHash(g));
     renderEmptyGame(g);

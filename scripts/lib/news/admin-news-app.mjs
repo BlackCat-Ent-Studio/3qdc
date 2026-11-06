@@ -1,4 +1,4 @@
-// admin-news-app.mjs — the browser side of the news part of /quan-tri: article list, trash and the article editor.
+// admin-news-app.mjs — the browser side of the news part of /quan-tri: article list and the article editor.
 // adminNews is serialised into the page next to adminApp (never run on the server) and receives the frame's helpers as K, so
 // both share one set of sign-in, game and screen state. It talks only to /quan-tri/api/*; the server re-checks every
 // permission and cleans every article, so nothing here is a security boundary — it only keeps the screens honest.
@@ -75,7 +75,7 @@ ${waiting ? `<div class="sh-note warn" id="pending-users" style="margin-bottom:v
 <div class="sh-toolbar"><div class="sh-seg" role="group" aria-label="Lọc theo trạng thái">${['all', 'published', 'scheduled', 'pending', 'draft'].map((s) => `<button type="button" aria-pressed="${listView.state === s}" data-st="${s}">${s === 'all' ? 'Tất cả' : STATE[s]}<span class="n sh-num">${n(s)}</span></button>`).join('')}</div>
 <label class="sh-sr" for="fcat">Lọc theo mục</label><select id="fcat" class="sh-select"><option value="all">Mọi mục</option>${CATS.map((c) => `<option value="${c.id}"${listView.cat === c.id ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select>
 ${SITES.length ? `<label class="sh-sr" for="fsite">Lọc theo trang</label><select id="fsite" class="sh-select"><option value="all">Mọi trang</option>${SITES.map((s) => `<option value="${s.id}"${listView.site === s.id ? ' selected' : ''}>${esc(s.name)}</option>`).join('')}</select>` : ''}
-<div class="sh-r">${duyet ? `<a class="sh-btn sh-btn-ghost" href="${gh('/thung-rac')}">${I.trash} Thùng rác${trashN != null ? ` <span class="sh-cnt-n sh-num">${trashN}</span>` : ''}</a>` : ''}<a class="sh-btn sh-btn-primary" href="${gh('/viet-bai')}">${N.plus} Viết bài mới</a></div></div>
+<div class="sh-r">${duyet ? `<a class="sh-btn sh-btn-ghost" href="${gh('/thung-rac/tin-tuc')}">${I.trash} Thùng rác${trashN != null ? ` <span class="sh-cnt-n sh-num">${trashN}</span>` : ''}</a>` : ''}<a class="sh-btn sh-btn-primary" href="${gh('/viet-bai')}">${N.plus} Viết bài mới</a></div></div>
 <div id="listErr">${listErr ? `<div class="sh-note danger" role="alert" style="margin-bottom:var(--s3)">${N.alert}<div>${esc(listErr.msg)}${listErr.reload ? ` <button type="button" class="sh-btn sh-btn-sm" id="list-reload">${N.refresh} Tải lại danh sách</button>` : ''}</div></div>` : ''}</div>
 <div class="sh-card sh-tbl-wrap"><table class="sh-table nw-table"><thead><tr><th>Bài viết</th><th>Mục, trang</th><th>Trạng thái</th><th class="nw-c-author">Người viết</th><th>Sửa lần cuối</th><th class="t-r"><span class="sh-sr">Thao tác</span></th></tr></thead><tbody>
 ${rows.map((p) => {
@@ -123,66 +123,6 @@ ${rows.length ? '' : emptyCell(6, I.news, all.length ? 'Không có bài nào kh�
       }));
     };
     draw();
-  }
-
-  // ---------- trash ----------
-  async function renderTrash() {
-    K.cleanupEditor();
-    const mine = K.screen();
-    const g = K.game();
-    app.innerHTML = `${header('trash')}<main class="wrap"><p class="sh-hint" style="padding:40px 0">Đang tải thùng rác…</p></main>`;
-    const r = await api('GET', '/thung-rac');
-    if (mine !== K.screen() || !K.me()) return;
-    if (!r.ok) { if (r.status !== 401) $('main').innerHTML = `<div class="sh-note danger" role="alert">${N.alert}<div>${esc(r.data.error)}</div></div>`; return; }
-    const draw = (items, notice) => {
-      const n = items.length;
-      $('main').innerHTML = `<div class="sh-page-h"><div><div class="sh-eyebrow">${esc(g.name)}, Tin tức</div><h1>Thùng rác</h1>
-<p>Bài đã xoá nằm ở đây. <b>Khôi phục</b> đưa bài về <b>Nháp</b>, người chơi chưa thấy cho tới khi đăng lại. <b>Xoá vĩnh viễn</b> thì bài mất hẳn, không lấy lại được.</p></div>
-<div class="sh-r"><a class="sh-btn sh-btn-ghost" href="${gh()}">${N.back} Về danh sách bài</a>${n ? `<button type="button" class="sh-btn sh-btn-ghost sh-danger" id="t-empty">${I.trash} Dọn sạch thùng rác (${n})</button>` : ''}</div></div>
-${notice ? `<div class="sh-note danger" id="t-err" role="alert" style="margin-bottom:var(--s4)">${N.alert}<div>${esc(notice)}</div></div>` : ''}
-<div class="sh-card sh-tbl-wrap"><table class="sh-table nw-table"><thead><tr><th>Bài viết</th><th>Mục</th><th>Lúc xoá</th><th class="nw-c-author">Người viết</th><th>Xoá bởi</th><th class="t-r"><span class="sh-sr">Thao tác</span></th></tr></thead><tbody>
-${items.map((t) => `<tr data-file="${esc(t.file)}">
-<td><div class="nw-ptitle">${thumb(t.cover)}<div style="min-width:0"><b>${esc(t.title)}</b><small class="sh-mono">/tin-tuc/${esc(t.slug)}</small><span class="nw-subt">Trước khi xoá: ${esc(STATE[t.status] || t.status)}</span></div></div></td>
-<td><span class="sh-badge outline">${esc(catName(t.category))}</span></td>
-<td class="sh-num sh-muted nowrap">${fmtTime(t.deletedAt)}</td>
-<td class="nw-c-author"><div class="sh-person">${avatar(t.author)}<span>${esc(t.author)}</span></div></td>
-<td class="sh-muted">${esc(t.deletedBy || '—')}</td>
-<td><div class="sh-acts"><button type="button" class="sh-btn sh-btn-sm" data-restore="${esc(t.file)}">${N.undo} Khôi phục</button><button type="button" class="sh-btn sh-btn-ghost sh-btn-sm sh-danger" data-purge="${esc(t.file)}">Xoá vĩnh viễn</button></div></td></tr>`).join('')}
-${n ? '' : emptyCell(6, I.trash, 'Thùng rác trống', 'Bài bị xoá ở danh sách hoặc trang sửa bài sẽ nằm ở đây.')}
-</tbody></table></div>`;
-      const lock = () => $$('[data-purge],[data-restore],#t-empty').forEach((x) => { x.disabled = true; });
-      $$('[data-restore]').forEach((b) => b.addEventListener('click', async () => {
-        lock();
-        const mine2 = K.screen();
-        const res = await api('POST', `/thung-rac/${encodeURIComponent(b.getAttribute('data-restore'))}/khoi-phuc`, {});
-        if (mine2 !== K.screen()) return;
-        if (!res.ok) { if (res.status !== 401) draw(items, res.data.error || 'Không khôi phục được.'); return; }
-        toast(`Đã khôi phục “${res.data.post.title}” về Nháp`);
-        draw(res.data.items, '');
-      }));
-      $$('[data-purge]').forEach((b) => b.addEventListener('click', async () => {
-        if (!armDelete(b, 'Xoá vĩnh viễn')) return;
-        lock();
-        const mine2 = K.screen();
-        const res = await api('POST', `/thung-rac/${encodeURIComponent(b.getAttribute('data-purge'))}/xoa-han`, {});
-        if (mine2 !== K.screen()) return;
-        if (!res.ok) { if (res.status !== 401) draw(items, res.data.error || 'Không xoá được.'); return; }
-        toast(`Đã xoá vĩnh viễn “${res.data.title}”`);
-        draw(res.data.items, '');
-      }));
-      const empty = $('#t-empty');
-      if (empty) empty.addEventListener('click', async () => {
-        if (!armDelete(empty, 'Dọn sạch thùng rác', `Bấm lần nữa để xoá hẳn ${n} bài`)) return;
-        lock();
-        const mine2 = K.screen();
-        const res = await api('POST', '/thung-rac/don-sach', {});
-        if (mine2 !== K.screen()) return;
-        if (!res.ok) { if (res.status !== 401) draw(items, res.data.error || 'Không dọn được thùng rác.'); return; }
-        toast(`Đã xoá vĩnh viễn ${res.data.deleted} bài`);
-        draw(res.data.items, '');
-      });
-    };
-    draw(r.data.items, '');
   }
 
   // ---------- picture upload (cover, pictures in the text) ----------
@@ -622,5 +562,5 @@ ${uploads.length ? `<h4>Ảnh đã tải lên</h4>${thumbs(uploads)}` : ''}<h4>�
     if (!post) title.focus();
   }
 
-  return { renderList, renderTrash, renderEditor };
+  return { renderList, renderEditor };
 }
