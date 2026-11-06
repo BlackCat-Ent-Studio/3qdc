@@ -5,8 +5,8 @@
 //                 preselected. data/he-thong/invites.json; only a SHA-256 of the token is stored.
 //   Claude codes  a bearer code for one account, used by that person's Claude to reach /mcp (phieu-mcp.mjs) over HTTPS
 //                 without a browser. Shown once when made; only its SHA-256 is stored (data/he-thong/mcp-tokens.json).
-//                 A code works only while its account is active and holds a right that has tools (today: `duyet` of
-//                 Phiếu Bé Ngoan in 3qdc; an owner always), so locking the account or taking the right away switches its
+//                 A code works only while its account is active and holds at least one right in a part that is switched on
+//                 (every part has tools; an owner always), so locking the account or taking the last right away switches its
 //                 codes off as well. A code made with scope 'owner' (an owner for himself only) also gets the owner's
 //                 tools (owner-mcp.mjs); a code without scope never does, whoever holds it.
 import { randomBytes, createHash, timingSafeEqual } from 'node:crypto';
@@ -15,15 +15,16 @@ import { mkdir } from 'node:fs/promises';
 import { systemDir } from '../admin/paths.mjs';
 import { readJson, writeJsonAtomic, siteNow } from './news-files.mjs';
 import { changeUsers, readUsers, hashPassword, USERNAME_RE, PASSWORD_MIN } from './admin-auth.mjs';
-import { can, isOwner, cleanGrants, describeGrants } from '../admin/grants.mjs';
+import { isOwner, cleanGrants, describeGrants, gamesOf } from '../admin/grants.mjs';
 import { appendAudit, whoIs } from '../admin/audit-log.mjs';
 
 const INVITE_MS = 7 * 86400e3;
 // invites made before invites carried grants have only a role; the one role they had was the tickets reviewer
 const LEGACY_INVITE_GRANTS = { phieu: { '3qdc': { 'phieu-be-ngoan': ['duyet'] } } };
 const grantsOfInvite = (i) => i.grants || LEGACY_INVITE_GRANTS[i.role] || {};
-// the rights that have tools on /mcp: the tickets (those of 3qdc) for anyone, the owner's tools only with scope 'owner'
-export const hasMcpTools = (u) => !!u && !u.disabled && (isOwner(u) || can(u, '3qdc', 'phieu-be-ngoan', 'duyet'));
+// the rights that have tools on /mcp: any right in a part a game has switched on (the tools of each part are in admin/mcp/);
+// the owner's own tools only with scope 'owner'
+export const hasMcpTools = (u) => !!u && !u.disabled && (isOwner(u) || gamesOf(u).some((g) => Object.keys(g.perms).length > 0));
 const mayUseCode = (u, scope) => (scope === 'owner' ? !!u && !u.disabled && isOwner(u) : hasMcpTools(u));
 export const CODE_SCOPES = ['owner'];
 const OWNER_CODE_MAX = 3;

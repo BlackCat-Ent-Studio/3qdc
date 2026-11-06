@@ -1,13 +1,14 @@
 // tin-tuc-api.mjs — articles, pictures and the trash of one game's news. Writers (`viet`) work on articles and pictures;
 // reviewers (`duyet`) also see the trash and bring articles back; only an owner deletes from it for good. The rules of each article change live in news-workflow.mjs.
-import { newsStore, stampAfter, isVisible } from '../../news/news-store.mjs';
+import { newsStore, isVisible } from '../../news/news-store.mjs';
 import { uploadsOf } from '../../news/news-uploads.mjs';
-import { decide, mayDelete, summaryOf } from '../../news/news-workflow.mjs';
+import { mayDelete, summaryOf } from '../../news/news-workflow.mjs';
 import { currentUser } from '../../news/admin-auth.mjs';
 import { can, newsRoleOf } from '../grants.mjs';
-import { siteNow, siteNowSeconds } from '../../news/news-files.mjs';
+import { siteNow } from '../../news/news-files.mjs';
 import { send, oops, sendAndClose } from '../api-http.mjs';
 import { moveToTrash } from '../trash.mjs';
+import { saveArticle } from '../news-actions.mjs';
 import { trashRoutes, webActor } from '../trash-api.mjs';
 
 const LOCK_MS = 90e3;
@@ -45,7 +46,7 @@ export async function api(ctx, req, res, path, body) {
   const { user, method } = ctx;
   // the article rules (news-workflow.mjs) speak of "manager" and "editor": this account's role for this game's news
   const writer = { ...user, role: newsRoleOf(user, ctx.game.id) };
-  const { change, allPosts, listRevisions, readRevision } = newsStore(ctx.game.id);
+  const { allPosts, listRevisions, readRevision } = newsStore(ctx.game.id);
   const done = (status, data) => { send(res, status, data); return true; };
   const fail = (status, error) => { oops(res, status, error); return true; };
 
@@ -81,24 +82,7 @@ export async function api(ctx, req, res, path, body) {
   // save: create (POST /bai) or change (POST /bai/<id>), with one action from news-workflow.mjs
   if (method === 'POST' && (path === '/bai' || (m = path.match(/^\/bai\/(\d{1,9})$/)))) {
     const id = m ? +m[1] : null;
-    const r = await change(async ({ posts, save, nextId }) => {
-      const cur = id ? posts.find((p) => p.id === id) : null;
-      if (id && !cur) return { status: 404, error: 'Không tìm thấy bài (có thể đã bị xoá).' };
-      if (cur && body.baseUpdatedAt !== cur.updatedAt) {
-        return { status: 409, error: `Bài đã được ${cur.updatedBy || 'người khác'} sửa lúc ${String(cur.updatedAt).slice(11, 16)} ngày ${String(cur.updatedAt).slice(8, 10)}/${String(cur.updatedAt).slice(5, 7)}. Tải lại để xem bản mới rồi sửa tiếp.` };
-      }
-      const now = Date.now();
-      const dctx = { posts, now, nowText: stampAfter(cur && cur.updatedAt), nowPublish: siteNowSeconds(now), newId: cur ? cur.id : await nextId(posts) };
-      const d = decide(writer, cur, body, dctx);
-      if (d.error) return d;
-      // unpin the others first: if that fails, nothing of this save is stored and a retry starts clean
-      for (const otherId of d.unpin) {
-        const o = posts.find((p) => p.id === otherId);
-        if (o) await save({ ...o, pinned: false, updatedBy: user.name, updatedAt: stampAfter(o.updatedAt) }, { action: 'bo-ghim', actor: user.name });
-      }
-      await save(d.post, { action: body.action, actor: user.name });
-      return { post: d.post };
-    });
+    const r = await saveArticle(ctx.game.id, user, id, body);
     if (r.error) return fail(r.status, r.error);
     locks.set(lockKey(ctx, r.post.id), { username: user.username, name: user.name, until: Date.now() + LOCK_MS });
     console.log(`[news] ${siteNow()} ${user.username} ${body.action} article ${r.post.id} → ${r.post.status}`);

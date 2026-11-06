@@ -204,7 +204,7 @@ try {
   // ---------- a normal code: tools follow the rights ----------
   assert.deepEqual(await toolNames(PHIEU_CODE), TICKET_TOOLS);
   const init = json(await rpc(PHIEU_CODE, 'initialize', { protocolVersion: '2025-06-18' })).result;
-  assert.equal(init.serverInfo.name, '3qdc-phieu-be-ngoan');
+  assert.equal(init.serverInfo.name, '3qdc-quan-tri');
   assert.ok(!/xem_quyen|cap_quyen/.test(init.instructions), 'no owner text for an ordinary code');
   const listed = await call(PHIEU_CODE, 'xem_phieu', { ngay: 'tat-ca' });
   assert.ok(say(listed).includes(TICKET) && !say(listed).includes('example.com'));
@@ -217,10 +217,16 @@ try {
   ok('the ticket reviewer code lists exactly 3 tools; owner tools are "no such tool"');
 
   expect(await post('chu', '/nguoi-dung/dongvu', { action: 'quyen', grants: TV3 }), 200, 'take the tickets away');
-  assert.equal((await rpc(PHIEU_CODE, 'tools/list')).status, 401, 'code dead once the right is gone');
+  assert.ok(!(await toolNames(PHIEU_CODE)).some((t) => TICKET_TOOLS.includes(t)), 'the ticket tools are gone with the right');
+  assert.equal((await call(PHIEU_CODE, 'xem_phieu', {})).isError, true);
+  // the accounts page always leaves a member at least one right: empty the rights in the file, as the owner's thu_quyen does
+  const emptied = usersFile();
+  emptied.find((u) => u.username === 'dongvu').grants = {};
+  writeFileSync(join(root, 'he-thong', 'users.json'), JSON.stringify(emptied));
+  assert.equal((await rpc(PHIEU_CODE, 'tools/list')).status, 401, 'code dead once no right is left');
   expect(await post('chu', '/nguoi-dung/dongvu', { action: 'quyen', grants: PHIEU }), 200, 'give the tickets back');
   assert.deepEqual(await toolNames(PHIEU_CODE), TICKET_TOOLS);
-  ok('taking the tickets right away kills the code at once (401); giving it back revives it');
+  ok('taking the tickets right away removes its tools at once, the last right kills the code (401); giving it back revives it');
 
   // ---------- owner codes ----------
   expect(await post('chu', '/ma-claude', { username: 'chu', label: 'x', scope: 'nope' }), 400, 'unknown scope');
@@ -236,13 +242,16 @@ try {
   assert.equal(oc.list.find((c) => c.id === rec.id).scope, 'owner');
   ok('an owner code is made only by an owner for himself, shown once, stored as a hash with its scope');
 
-  assert.deepEqual(await toolNames(oc.code), [...TICKET_TOOLS, ...OWNER_TOOLS].sort());
+  // an owner has every right, so every work tool (their lists are in check-mcp-tools.mjs); the owner's own 5 only with the scope
+  const ownerNames = await toolNames(oc.code);
+  assert.deepEqual(ownerNames.filter((t) => OWNER_TOOLS.includes(t)), [...OWNER_TOOLS].sort());
+  assert.ok(TICKET_TOOLS.every((t) => ownerNames.includes(t)));
   assert.match(json(await rpc(oc.code, 'initialize', {})).result.instructions, /cap_quyen/);
-  assert.deepEqual(await toolNames(OLD_OWNER_CODE), TICKET_TOOLS);
+  assert.deepEqual(await toolNames(OLD_OWNER_CODE), ownerNames.filter((t) => !OWNER_TOOLS.includes(t)));
   assert.equal((await call(OLD_OWNER_CODE, 'cap_quyen', { username: 'rong', game: '3qdc', phan: 'tin-tuc', quyen: ['viet'] })).isError, true);
   assert.deepEqual(userOf('rong').grants, {});
   assert.equal((await rpc(SCOPED_MEMBER_CODE, 'tools/list')).status, 401, 'an owner scope on a member account is dead');
-  ok('owner code: 8 tools; an old owner code without scope sees only the tickets; an owner scope on a member is refused');
+  ok('owner code: the 5 owner tools on top of the work tools; an old owner code without scope has no owner tool; an owner scope on a member is refused');
 
   // reading
   const ds = await call(oc.code, 'ds_game');

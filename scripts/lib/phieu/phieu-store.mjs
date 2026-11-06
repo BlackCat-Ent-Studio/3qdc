@@ -206,10 +206,12 @@ const csvCell = (v) => {
 };
 const csvTime = (iso) => (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(iso) ? `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)} ${iso.slice(11, 16)}` : iso);
 
-export async function phieuCsv(filter, now = Date.now()) {
+// `page` ({ offset, limit }, optional) writes only that part of the rows; `rows` is always the number of tickets in the filter.
+export async function phieuCsv(filter, now = Date.now(), page = {}) {
   const { items } = await listPhieu(filter, now);
   const lines = ['Thời gian,Gmail,Nhân vật trong game,Server,Quà muốn nhận,Ghi chú,Trạng thái,Phản hồi,Người xử lý'];
-  for (const t of items.slice().reverse()) {
+  const oldestFirst = items.slice().reverse();
+  for (const t of page.limit ? oldestFirst.slice(page.offset || 0, (page.offset || 0) + page.limit) : oldestFirst) {
     lines.push([csvTime(t.luc), t.email, t.acc, t.serverTen, t.qua.join('\n'), t.ghiChu, STATES[t.st] || t.st, t.phanHoi, t.xuLyBoi].map(csvCell).join(','));
   }
   return { text: String.fromCharCode(0xfeff) + lines.join('\r\n') + '\r\n', rows: items.length };

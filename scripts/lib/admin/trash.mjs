@@ -9,6 +9,9 @@
 //   see / bring back   the permission in TRASH_PERMS for the part (held in the game)
 //   delete for good    owners only, from the web page only (purgeFromTrash / emptyTrash have no Claude tool)
 //
+// Every successful move / restore / delete-for-good is also written to the record of changes (audit-log.mjs) as
+// "<actor>" (web) or "<actor> (Claude)", so what was thrown away or brought back can still be traced after a purge.
+//
 // Every function resolves { ok: true, ... } or { status, error } (status = the HTTP status a web page answers with).
 //   gameId  the game the part belongs to (tickets, sign-ups and music keep their data for 3qdc only)
 //   part    'tin-tuc' | 'phieu-be-ngoan' | 'dang-ky-som' | 'nhac'
@@ -19,10 +22,20 @@ import { newsStore, stampAfter, TRASH_NAME_RE } from '../news/news-store.mjs';
 import { trashPhieu, listPhieuTrash, restorePhieu, purgePhieu, emptyPhieuTrash } from '../phieu/phieu-store.mjs';
 import { trashSignup, listSignupTrash, restoreSignup, purgeSignup, emptySignupTrash, normalizePhone } from '../signup/signup-store.mjs';
 import { trashSong, listSongTrash, restoreSong, purgeSong, emptySongTrash } from '../home/music-trash.mjs';
+import { appendAudit, maskPhone } from './audit-log.mjs';
 
 // the permission that opens a part's trash (and brings items back); deleting for good is for owners whatever the part
 export const TRASH_PERMS = { 'tin-tuc': 'duyet', 'phieu-be-ngoan': 'quan-ly', 'dang-ky-som': 'quan-ly', nhac: 'quan-ly' };
 export const TRASH_PARTS = Object.keys(TRASH_PERMS);
+
+// the record's line for one step on one item (a phone number is written masked)
+function record(viec, gameId, part, actor, via, label) {
+  if (!actor) return;
+  return appendAudit({
+    ai: via === 'claude' ? `${actor} (Claude)` : actor, qua: via === 'claude' ? 'claude' : 'web', viec: `thung-rac-${viec}`,
+    doiTuong: part === 'dang-ky-som' && viec !== 'don-sach' ? maskPhone(label) : String(label ?? '').slice(0, 120), game: gameId, phan: part,
+  });
+}
 
 const NOT_FOUND = (what) => ({ status: 404, error: `Không tìm thấy ${what} trong thùng rác.` });
 
@@ -156,7 +169,10 @@ export async function moveToTrash(gameId, part, ref, { actor, via = 'web', ...op
   const bad = check(gameId, part);
   if (bad) return bad;
   if (!actor) throw new Error('moveToTrash needs the actor');
-  return PARTS[part].move(gameId, ref, actor, via === 'claude' ? 'claude' : 'web', opts);
+  const how = via === 'claude' ? 'claude' : 'web';
+  const r = await PARTS[part].move(gameId, ref, actor, how, opts);
+  if (r.ok) await record('xoa', gameId, part, actor, how, r.label);
+  return r;
 }
 
 /** Brings one item back (an article comes back as a draft; actorName = display name for the stamp on it, default actor). 404 when it is not in the trash, 409 when something took its place. */
@@ -164,17 +180,25 @@ export async function restoreFromTrash(gameId, part, key, { actor, actorName, vi
   const bad = check(gameId, part);
   if (bad) return bad;
   // an article brought back as a draft is stamped with the person's display name, as every edit of it is
-  return PARTS[part].restore(gameId, key, actorName || actor || '');
+  const r = await PARTS[part].restore(gameId, key, actorName || actor || '');
+  if (r.ok) await record('khoi-phuc', gameId, part, actor, via === 'claude' ? 'claude' : 'web', r.label);
+  return r;
 }
 
-/** Deletes one trashed item for good. Owners only, from the web page only — the caller checks. */
-export async function purgeFromTrash(gameId, part, key) {
+/** Deletes one trashed item for good. Owners only, from the web page only — the caller checks. `actor` (a username) is written to the record. */
+export async function purgeFromTrash(gameId, part, key, { actor } = {}) {
   const bad = check(gameId, part);
-  return bad || PARTS[part].purge(gameId, key);
+  if (bad) return bad;
+  const r = await PARTS[part].purge(gameId, key);
+  if (r.ok) await record('xoa-han', gameId, part, actor, 'web', r.label);
+  return r;
 }
 
 /** Deletes everything in a part's trash for good. Owners only, from the web page only — the caller checks. */
-export async function emptyTrash(gameId, part) {
+export async function emptyTrash(gameId, part, { actor } = {}) {
   const bad = check(gameId, part);
-  return bad || PARTS[part].empty(gameId);
+  if (bad) return bad;
+  const r = await PARTS[part].empty(gameId);
+  if (r.ok) await record('don-sach', gameId, part, actor, 'web', `${r.deleted} mục`);
+  return r;
 }

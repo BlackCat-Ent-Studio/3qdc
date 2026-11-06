@@ -36,7 +36,7 @@ export async function trashRoutes(ctx, res, part, path) {
 
   if (path === base + '/don-sach') {
     if (!isOwner(user)) return onlyOwner();
-    const r = await emptyTrash(gid, part);
+    const r = await emptyTrash(gid, part, { actor: user.username });
     if (r.error) return fail(r);
     console.log(`[news] ${siteNow()} ${user.username} emptied the ${part} trash (${r.deleted} deleted for good)`);
     send(res, 200, { deleted: r.deleted, items: await itemsNow() });
@@ -55,7 +55,7 @@ export async function trashRoutes(ctx, res, part, path) {
     return true;
   }
   if (!isOwner(user)) return onlyOwner();
-  const r = await purgeFromTrash(gid, part, key);
+  const r = await purgeFromTrash(gid, part, key, { actor: user.username });
   if (r.error) return fail(r);
   console.log(`[news] ${siteNow()} ${user.username} deleted from the ${part} trash for good: ${r.label}`);
   send(res, 200, { label: r.label, title: r.label, items: await itemsNow() });

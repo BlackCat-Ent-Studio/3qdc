@@ -234,8 +234,11 @@ try {
   // Claude codes follow the rights
   const mcp = (code) => req('POST', '/mcp', { body: { jsonrpc: '2.0', id: 1, method: 'ping' }, headers: { Authorization: `Bearer ${code}` }, noOrigin: true });
   assert.equal((await mcp(MCP_DUYET)).status, 200);
-  assert.equal((await mcp(MCP_VIET)).status, 401);
-  ok('Claude code: works for an account that reviews tickets, not for one that only writes news');
+  assert.equal((await mcp(MCP_VIET)).status, 200);
+  const mcpTools = async (code) => JSON.parse((await req('POST', '/mcp', { body: { jsonrpc: '2.0', id: 2, method: 'tools/list' }, headers: { Authorization: `Bearer ${code}` }, noOrigin: true })).text).result.tools.map((t) => t.name);
+  assert.ok((await mcpTools(MCP_DUYET)).includes('xem_phieu') && !(await mcpTools(MCP_DUYET)).includes('viet_bai'));
+  assert.ok((await mcpTools(MCP_VIET)).includes('viet_bai') && !(await mcpTools(MCP_VIET)).includes('xem_phieu'));
+  ok('Claude code: every part has tools, an account gets the tools of the rights it holds only');
 
   // ---------- rights change while signed in ----------
   expect(await get('viet3', '/bai'), 200, 'before');
@@ -246,7 +249,7 @@ try {
   expect(await mcp(MCP_VIET), 200, 'its Claude code follows the new right');
   const dropped = await post('chu', '/nguoi-dung/duyet3', { action: 'quyen', grants: G3({ 'tin-tuc': ['viet'] }) });
   expect(dropped, 200, 'owner takes the tickets right away');
-  assert.equal((await mcp(MCP_DUYET)).status, 401, 'the Claude code stops with the right');
+  assert.ok(!(await mcpTools(MCP_DUYET)).includes('xem_phieu') && (await mcpTools(MCP_DUYET)).includes('viet_bai'), 'the ticket tools stop with the right');
   ok('rights taken away or given apply on the very next request (no sign-out), Claude codes included');
 
   // ---------- the accounts page rules ----------

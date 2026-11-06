@@ -21,10 +21,10 @@
   "status": 200,
   "ct": "application/json; charset=utf-8",
   "cache": "no-store",
-  "len": 749,
-  "sha": "98e1cf5b0003ba0fa0d771b9b9b47dc808d2445891f349ec648c3feb2267724a",
+  "len": 1184,
+  "sha": "5e8dcb1cdbba040dae5a59245a8b86c5af83490eb3ac46e3da29dc3eca2d79c9",
   "shape": "{id,jsonrpc,result:{capabilities,instructions,protocolVersion,serverInfo}}",
-  "server": "3qdc-phieu-be-ngoan"
+  "server": "3qdc-quan-tri"
  },
  "tools-list": {
   "status": 200,

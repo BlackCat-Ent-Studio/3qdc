@@ -197,10 +197,13 @@ const csvCell = (v) => {
 };
 const csvTime = (iso) => (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(iso) ? `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)} ${iso.slice(11, 19)}` : iso);
 
-export async function signupsCsv() {
+// `page` ({ offset, limit }, optional) writes only that part of the rows; `rows` is always the number of numbers in the list.
+export async function signupsCsv(page = {}) {
   const { rows } = await load();
   const lines = ['STT,Số điện thoại,Thời gian,IP,Nguồn'];
-  rows.forEach((r, i) => lines.push([i + 1, `"=""${r.sdt}"""`, csvCell(csvTime(r.luc)), csvCell(r.ip), csvCell(r.nguon)].join(',')));
+  const from = page.limit ? page.offset || 0 : 0;
+  const to = page.limit ? from + page.limit : rows.length;
+  rows.forEach((r, i) => i >= from && i < to && lines.push([i + 1, `"=""${r.sdt}"""`, csvCell(csvTime(r.luc)), csvCell(r.ip), csvCell(r.nguon)].join(',')));
   return { text: String.fromCharCode(0xfeff) + lines.join('\r\n') + '\r\n', rows: rows.length };
 }
 

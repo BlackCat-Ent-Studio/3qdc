@@ -13,27 +13,14 @@ import { cleanGrants, isOwner } from './grants.mjs';
 import { GAMES } from './games.mjs';
 import { MODULES } from './modules.mjs';
 import { appendAudit, whoIs } from './audit-log.mjs';
+import { makeWriteLimiter } from './mcp/write-limit.mjs';
 
-const WRITE_MAX = 20, WRITE_MS = 3600e3;
 // Counted per owner (all of his codes together), in memory: a restart of the server starts the count again. That is
 // accepted: making more writes than the limit needs an owner code in the first place.
-const writes = new Map(); // owner username → times (ms) of the write calls of all his codes in the last hour
-
-// counts one write for the owner; → '' when allowed, else the reason
-function overWriteLimit(owner) {
-  const now = Date.now();
-  const recent = (writes.get(owner) || []).filter((t) => now - t < WRITE_MS);
-  if (recent.length >= WRITE_MAX) {
-    writes.set(owner, recent);
-    const wait = Math.ceil((recent[0] + WRITE_MS - now) / 60e3);
-    return `Đã đủ ${WRITE_MAX} lần thay đổi trong 1 giờ cho tài khoản này, tính chung mọi mã (giới hạn an toàn). Thử lại sau khoảng ${wait} phút.`;
-  }
-  recent.push(now);
-  writes.set(owner, recent);
-  if (writes.size > 200) for (const [k, v] of writes) if (!v.some((t) => now - t < WRITE_MS)) writes.delete(k);
-  return '';
-}
-export const resetWriteLimits = () => writes.clear(); // tests only
+const WRITE_MAX = 20;
+const limiter = makeWriteLimiter({ max: WRITE_MAX, what: 'thay đổi' });
+const overWriteLimit = (owner) => limiter.take(owner); // '' when allowed (and counted), else the reason
+export const resetWriteLimits = () => limiter.reset(); // tests only
 
 const GAME_P = { type: 'string', description: 'Mã game, lấy từ ds_game (ví dụ 3qdc).' };
 const USER_P = { type: 'string', description: 'Tên đăng nhập của thành viên (không phải chủ).' };
