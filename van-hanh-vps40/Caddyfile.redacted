@@ -177,3 +177,16 @@ skystory.wanmeivn.com {
 		file_server
 	}
 }
+
+hoanmythegioi.wanmeivn.com {
+	import bao-mat
+	import nhat-ky hoanmythegioi-wanmeivn
+	@anh path /assets/*
+	header @anh Cache-Control "public, max-age=86400"
+	handle {
+		root * /srv/hmtg/site
+		header Cache-Control "no-cache"
+		header X-Robots-Tag "noindex, nofollow"
+		file_server
+	}
+}
