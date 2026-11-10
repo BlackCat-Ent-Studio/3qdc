@@ -26,7 +26,12 @@ export async function handleNews(req, res, cleanPath, u) {
   if (req.method !== 'GET' && req.method !== 'HEAD') return false;
   // only the articles of the game and site this address belongs to (the host decides; main site or 3qdaichien, see SITES)
   const game = gameOfHost(req.headers.host);
-  const sitePosts = async () => (Object.hasOwn(game.modules, 'tin-tuc') ? onSite(await newsStore(game.id).visiblePosts(), siteOfHost(req.headers.host)) : []);
+  // the main/side split (SITES) is 3qdc's: other games have one news site and show every visible article there
+  const sitePosts = async () => {
+    if (!Object.hasOwn(game.modules, 'tin-tuc')) return [];
+    const posts = await newsStore(game.id).visiblePosts();
+    return game.id === '3qdc' ? onSite(posts, siteOfHost(req.headers.host)) : posts;
+  };
 
   if (cleanPath === '/tin-tuc') {
     const want = u.searchParams.get('muc');

@@ -43,7 +43,19 @@ export const GAMES = [
       'phieu-be-ngoan': {},
     },
   },
-  { id: 'skystory', name: 'Thiên Không Kỳ Truyện', logo: '', sites: [], modules: {} },
+  {
+    id: 'skystory',
+    name: 'Thiên Không Kỳ Truyện',
+    logo: '',
+    // trang chủ tĩnh /srv/tkkt/site (Caddy chuyển /api/tin-tuc, /tin-tuc/*, /tin-tuc-anh/* về đây); game chơi web ở web.skystory.wanmeivn.com (VPS .23)
+    sites: [
+      { id: 'chinh', name: 'Trang chủ', hint: 'skystory.wanmeivn.com — trang chủ, tin tức', hosts: ['skystory.wanmeivn.com'], module: 'tin-tuc' },
+      { id: 'game', name: 'Chơi trên web', hint: 'web.skystory.wanmeivn.com (VPS .23)', hosts: ['web.skystory.wanmeivn.com'], module: null },
+    ],
+    modules: {
+      'tin-tuc': { imageLibrary: [], uploadUrl: '/tin-tuc-anh' },
+    },
+  },
 ];
 
 export const gameById = (id) => GAMES.find((g) => g.id === id) || null;
