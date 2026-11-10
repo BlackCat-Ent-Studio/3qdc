@@ -56,6 +56,16 @@ export const GAMES = [
       'tin-tuc': { imageLibrary: [], uploadUrl: '/tin-tuc-anh' },
     },
   },
+  {
+    id: 'hoanmythegioi',
+    name: 'Hoàn Mỹ Thế Giới',
+    logo: '',
+    // trang chủ tĩnh /srv/hmtg/site (bản đầu: dữ liệu sự kiện/xếp hạng còn là mẫu, trang để noindex); chưa bật phần nào
+    sites: [
+      { id: 'chinh', name: 'Trang chủ', hint: 'hoanmythegioi.wanmeivn.com', hosts: ['hoanmythegioi.wanmeivn.com'], module: null },
+    ],
+    modules: {},
+  },
 ];
 
 export const gameById = (id) => GAMES.find((g) => g.id === id) || null;
