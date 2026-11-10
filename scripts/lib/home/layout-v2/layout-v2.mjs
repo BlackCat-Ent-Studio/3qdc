@@ -46,13 +46,20 @@ const GROUND_CLOUDS = '/3qdc-vi/home/nen-may-gam.webp';
 const KV = { width: 1756, height: 896, eventFrameBottom: 785 };
 
 // Vietnamese download buttons (omg3q-style artwork in overrides/home) in display order, filling a 2-column grid row by
-// row. An entry without `href` is shown in place but not clickable; give it a URL to make it a link (opens in a new
-// tab, or in the same tab with `sameTab` for the site's own pages). The original Chinese download links are not used.
+// row. An entry without `href` is shown greyed out and not clickable (`soon` is its tooltip); give it a URL to make it a
+// link (opens in a new tab, or in the same tab with `sameTab` for the site's own pages). `popup: 'apk'` opens the
+// download window listing DL_APK_LINKS instead. The original Chinese download links are not used.
 const DL_ART = [
-  { href: null, src: '/3qdc-vi/home/nut-tai-appstore.png', label: 'Tải trên App Store' },
-  { href: null, src: '/3qdc-vi/home/nut-tai-file-apk.png', label: 'Tải file APK' },
-  { href: null, src: '/3qdc-vi/home/nut-tai-google-play.png', label: 'Tải trên Google Play' },
-  { href: '/dang-ky-som', sameTab: true, src: '/3qdc-vi/home/nut-dang-ky-nhanh.png', label: 'Đăng ký nhanh' },
+  { href: null, src: '/3qdc-vi/home/nut-tai-appstore.png', label: 'Tải trên App Store', soon: 'Sắp ra mắt' },
+  { popup: 'apk', src: '/3qdc-vi/home/nut-tai-file-apk.png', label: 'Tải file APK' },
+  { href: null, src: '/3qdc-vi/home/nut-tai-google-play.png', label: 'Tải trên Google Play', soon: 'Sắp ra mắt' },
+  { href: 'https://web.3qdc.wanmeivn.com/tamquoc.html', src: '/3qdc-vi/home/nut-choi-nhanh.png', label: 'Chơi nhanh trên web' },
+];
+// the download window of the "FILE APK" button: one row per link, each opens in a new tab
+const DL_APK_LINKS = [
+  { label: 'APK (Android)', note: 'Tải từ Google Drive', href: 'https://drive.google.com/drive/folders/1xulUNx-4YjqKj0FQH598BMdXeHBtS6GS?usp=sharing' },
+  { label: 'APK (Android) – Link dự phòng', note: 'Tải từ OneDrive', href: 'https://1drv.ms/u/c/73c3d1c950a9f1d4/IQCJ_e3ou6YfQZe-a12jsi2IAVk6sSgecjM95sfj914FNi4?e=ORzKDA' },
+  { label: 'TestFlight (iOS)', note: 'Cho iPhone, iPad', href: 'https://testflight.apple.com/join/DY7jR2DP' },
 ];
 const DL_TOPUP = '/3qdc-vi/home/nut-nap-the.webp';
 // the site's own download QR (200x200, decorated; links to the download-links article through q.me-qr.com), shown in the
@@ -209,6 +216,27 @@ html.hv2 #hv2-dlpanel{display:flex;align-items:center;gap:clamp(14px,1.3vw,24px)
    so the owner can try each one; a click leads nowhere until its link is filled in */
 #hv2-dlpanel a,#hv2-sidebar a,#home-v2 a{cursor:pointer}
 #hv2-dlpanel a:hover,#hv2-sidebar a:hover{filter:brightness(1.1)}
+/* buttons without a link yet (App Store, Google Play): grey, no hand cursor, no hover */
+#hv2-dlpanel a.hv2-dl-soon,#hv2-sidebar a.hv2-dl-soon{cursor:default}
+#hv2-dlpanel a.hv2-dl-soon:hover,#hv2-sidebar a.hv2-dl-soon:hover{filter:none}
+#hv2-dlpanel a.hv2-dl-soon img,#hv2-sidebar a.hv2-dl-soon img{filter:grayscale(1) brightness(.72)}
+/* download window of the FILE APK button */
+#hv2-apk{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;padding:16px;
+  box-sizing:border-box;background:rgba(5,8,18,.72)}
+#hv2-apk[hidden]{display:none}
+#hv2-apk .hv2-apk-box{position:relative;width:min(440px,100%);box-sizing:border-box;padding:26px 22px 22px;
+  background:linear-gradient(180deg,#1a2238,#0d1222);border:1px solid #c9a45c;border-radius:10px;
+  box-shadow:0 20px 60px rgba(0,0,0,.6);color:#e8e2d0;font-size:15px;line-height:1.35;text-align:left}
+#hv2-apk h3{margin:0 0 16px;padding:0 28px;font-size:20px;font-weight:700;color:#f1d9a0;text-align:center}
+#hv2-apk .hv2-apk-list{display:flex;flex-direction:column;gap:10px}
+#hv2-apk .hv2-apk-list a{display:flex;flex-direction:column;gap:3px;padding:12px 16px;border:1px solid rgba(201,164,92,.45);
+  border-radius:8px;background:rgba(255,255,255,.04);color:#f3ead2;text-decoration:none;cursor:pointer}
+#hv2-apk .hv2-apk-list a:hover,#hv2-apk .hv2-apk-list a:focus-visible{background:rgba(201,164,92,.16);border-color:#e3c27a;outline:none}
+#hv2-apk .hv2-apk-list b{font-size:16px;font-weight:700}
+#hv2-apk .hv2-apk-list span{font-size:13px;color:#b9ad8c}
+#hv2-apk .hv2-apk-x{position:absolute;top:6px;right:8px;width:40px;height:40px;padding:0;border:0;background:none;
+  color:#e8e2d0;font-size:28px;line-height:40px;cursor:pointer}
+#hv2-apk .hv2-apk-x:hover{color:#f1d9a0}
 
 /* right sidebar (cloned QR, Vietnamese download buttons, top-up box): slides in once the key visual (and its download panel)
    is scrolled past; drawn in the cloud frame (SOCIAL_FRAME) like the left social bar, padded clear of the corner clouds */
@@ -384,6 +412,7 @@ const JS = `(function(){
   var KV = ${JSON.stringify(KV)};
   var SHOW_TOPUP = ${SHOW_TOPUP};
   var DL_ART = ${JSON.stringify(DL_ART)};
+  var DL_APK = ${JSON.stringify(DL_APK_LINKS)};
   var renderers = [];
   var mounted = false;
   var sidebarTimer = null;
@@ -437,10 +466,50 @@ const JS = `(function(){
   function dlLinks(){
     return DL_ART.map(function(art){
       var attrs = { 'aria-label': art.label };
-      if (art.href) { attrs.href = art.href; if (!art.sameTab) { attrs.target = '_blank'; attrs.rel = 'noopener'; } }
-      else { attrs['class'] = 'hv2-dl-soon'; attrs.role = 'link'; attrs['aria-disabled'] = 'true'; }
-      return el('a', attrs, [el('img', { src: art.src, alt: art.label })]);
+      if (art.popup) { attrs.role = 'button'; attrs.tabindex = '0'; attrs['aria-haspopup'] = 'dialog'; }
+      else if (art.href) { attrs.href = art.href; if (!art.sameTab) { attrs.target = '_blank'; attrs.rel = 'noopener'; } }
+      else {
+        attrs['class'] = 'hv2-dl-soon'; attrs.role = 'link'; attrs['aria-disabled'] = 'true';
+        if (art.soon) { attrs.title = art.soon; attrs['aria-label'] = art.label + ' (' + art.soon + ')'; }
+      }
+      var a = el('a', attrs, [el('img', { src: art.src, alt: art.label })]);
+      if (art.popup) {
+        a.addEventListener('click', function(e){ e.preventDefault(); openApk(a); });
+        a.addEventListener('keydown', function(e){ if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openApk(a); } });
+      }
+      return a;
     });
+  }
+  // download window of the FILE APK button (built on first use, one for the panel and the sidebar): closes with the
+  // x button, Escape or a click outside the box, and gives the focus back to the button that opened it
+  var apkFrom = null;
+  function apkDialog(){
+    var d = document.getElementById('hv2-apk');
+    if (d) return d;
+    var list = el('div', { 'class': 'hv2-apk-list' });
+    DL_APK.forEach(function(x){
+      list.appendChild(el('a', { href: x.href, target: '_blank', rel: 'noopener' }, [el('b', { text: x.label }), el('span', { text: x.note })]));
+    });
+    var close = el('button', { type: 'button', 'class': 'hv2-apk-x', 'aria-label': 'Đóng', text: '×' });
+    var box = el('div', { 'class': 'hv2-apk-box', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'hv2-apk-t' },
+      [close, el('h3', { id: 'hv2-apk-t', text: 'Tải game 3Q Đại Chiến' }), list]);
+    d = el('div', { id: 'hv2-apk', 'data-home-v2': '', hidden: '' }, [box]);
+    d.addEventListener('click', function(e){ if (e.target === d) closeApk(); });
+    close.addEventListener('click', closeApk);
+    document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !d.hidden) closeApk(); });
+    document.body.appendChild(d);
+    return d;
+  }
+  function openApk(from){
+    apkFrom = from;
+    var d = apkDialog();
+    d.hidden = false;
+    d.querySelector('.hv2-apk-list a').focus();
+  }
+  function closeApk(){
+    var d = document.getElementById('hv2-apk');
+    if (d) d.hidden = true;
+    if (apkFrom) apkFrom.focus();
   }
   // the QR keeps the app's element (sizes come from the panel / sidebar CSS) with the site's own QR picture
   function qrClone(img){
