@@ -115,6 +115,10 @@ hotro.wanmeivn.com {
 		root * /srv/hotro/blackmoon
 		file_server
 	}
+	handle_path /sacduc/* {
+		root * /srv/hotro/sacduc
+		file_server
+	}
 	handle /assets/* {
 		root * /srv/hotro/site
 		header Cache-Control "public, max-age=31536000, immutable"
@@ -123,6 +127,53 @@ hotro.wanmeivn.com {
 	handle {
 		root * /srv/hotro/site
 		header Cache-Control "no-cache"
+		file_server
+	}
+}
+
+shopluuniem.wanmeivn.com {
+	import bao-mat
+	import nhat-ky shopluuniem
+	handle_path /img/* {
+		root * /srv/shop-luu-niem/media
+		header Cache-Control "public, max-age=604800"
+		file_server
+	}
+	reverse_proxy 127.0.0.1:3010
+}
+
+xuongnoi.wanmeivn.com {
+	root * /srv/xuong-noi/current
+	encode zstd gzip
+	file_server
+}
+import /etc/caddy/kartrider.caddy
+
+# Trang chủ Thiên Không Kỳ Truyện (skystory) — trang tĩnh /srv/tkkt/site; game chơi trên web ở web.skystory.wanmeivn.com (VPS .23)
+skystory.wanmeivn.com {
+	import bao-mat
+	import nhat-ky skystory-wanmeivn
+	@anh path /assets/*
+	header @anh Cache-Control "public, max-age=86400"
+	# tin tức: danh sách + ảnh bài lấy từ máy chủ tin 3qdc-unified (nhận game theo Host)
+	@tin-may-chu path /api/tin-tuc /tin-tuc-anh/*
+	handle @tin-may-chu {
+		reverse_proxy 127.0.0.1:3399
+	}
+	# thân bài: trang tin gọi /tin-tuc/<slug>?noi-dung=1 kèm header X-Tkkt: bai
+	@bai {
+		path /tin-tuc/*
+		header X-Tkkt bai
+	}
+	handle @bai {
+		reverse_proxy 127.0.0.1:3399
+	}
+	handle {
+		root * /srv/tkkt/site
+		header Cache-Control "no-cache"
+		# người xem mở /tin-tuc hoặc /tin-tuc/<slug>: trang tin tĩnh, JS tự hiện danh sách / bài
+		@trang-tin path /tin-tuc /tin-tuc/ /tin-tuc/*
+		rewrite @trang-tin /tin-tuc.html
 		file_server
 	}
 }
