@@ -268,5 +268,87 @@ ${items.length ? '' : emptyCell(5, I.music, 'Chưa có bài hát nào', manage ?
     draw(r.data.items, '', '');
   }
 
-  return { renderPhieu, renderSignups, renderMusic };
+  // ---------- leaderboards of the home page ----------
+  // A member's Claude sends the whole set; this page shows what the home page shows now and the sets it replaced, and brings an
+  // older one back. Every piece of text in a set comes from outside, so it only ever reaches the page through esc().
+  const BXH_LOP = {
+    blademaster: 'Kiếm Khách', wizard: 'Pháp Sư', psychic: 'Vu Sư', venomancer: 'Tiên Thú', barbarian: 'Thần Thú',
+    assassin: 'Thích Khách', archer: 'Vũ Mang', cleric: 'Vũ Linh', seeker: 'Kiếm Linh', mystic: 'Mị Linh',
+  };
+  const BXH_HEAD = 10;
+  const bxhVal = (v) => (typeof v === 'number' ? fmtNum(v) : esc(v));
+  const bxhWho = (boi, qua) => esc(boi || '—') + (qua === 'claude' ? ' (Claude)' : qua === 'web' ? ' (web)' : '');
+  const bxhCount = (bang) => ({ b: bang.length, d: bang.reduce((n, x) => n + x.dong.length, 0) });
+  const bxhTable = (b, limit) => `<div class="sh-tbl-wrap pt-bxh-wrap"><table class="sh-table pt-bxh-tbl"><thead><tr><th class="t-r">Hạng</th><th>Tên</th><th>Lớp</th>${b.cot.map((c) => `<th class="t-r">${esc(c)}</th>`).join('')}</tr></thead><tbody>
+${(limit ? b.dong.slice(0, limit) : b.dong).map((r, i) => `<tr><td class="sh-num t-r">${i + 1}</td><td class="pt-bxh-name">${esc(r.ten)}</td><td>${r.lop && BXH_LOP[r.lop] ? esc(BXH_LOP[r.lop]) : '<span class="sh-faint">—</span>'}</td>${r.gt.map((v) => `<td class="sh-num t-r">${bxhVal(v)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+
+  async function renderBxh() {
+    K.cleanupEditor();
+    const mine = K.screen();
+    const g = K.game();
+    app.innerHTML = header('bxh') + loading('Đang tải bảng xếp hạng…');
+    const r = await api('GET', '/bang-xep-hang');
+    if (mine !== K.screen() || !K.me()) return;
+    if (!r.ok) { if (r.status !== 401) $('main').innerHTML = failBox(r.data.error); return; }
+
+    const draw = (d, notice) => {
+      const cur = d.hienTai;
+      const boards = cur && cur.bang.length ? cur.bang : [];
+      const c = bxhCount(boards);
+      $('main').innerHTML = `${K.gameHead(g, 'bxh')}
+<div class="sh-toolbar pt-toolbar"><p class="pt-intro">Bảng xếp hạng ở trang chủ <b>${esc(g.name)}</b> do <b>Claude của người được cấp quyền</b> gửi lên qua MCP (hướng dẫn: <code>skills/bang-xep-hang-hmtg</code>). Mỗi lần gửi thay cả bộ và hiện công khai ngay; bộ cũ nằm ở Lịch sử bên dưới để đưa lại.</p></div>
+<div id="bxh-note">${notice ? `<div class="sh-note" role="status" style="margin-bottom:var(--s4)">${P.info}<div>${esc(notice)}</div></div>` : ''}</div>
+<section class="sh-card" aria-labelledby="bxhH"><div class="pt-usage"><h2 id="bxhH" class="pt-bxh-h">Đang hiện trên trang chủ</h2>
+${boards.length ? `<span role="status">Cập nhật lúc <b class="sh-num">${esc(fmtTime(cur.capNhat))}</b> bởi <b>${bxhWho(cur.boi, cur.qua)}</b>${cur.mayChu ? `, máy chủ <b>${esc(cur.mayChu)}</b>` : ''} · ${c.b} bảng, ${fmtNum(c.d)} dòng</span>` : ''}</div>
+${boards.length ? boards.map((b, i) => `<div class="pt-bxh-board"><div class="pt-bxh-bh"><h3>${esc(b.ten)}</h3><span class="sh-badge outline">${fmtNum(b.dong.length)} dòng</span><span class="sh-faint pt-bxh-cols">Cột: ${b.cot.map(esc).join(' · ')}</span></div>
+<div id="bxh-t-${i}">${bxhTable(b, BXH_HEAD)}</div>
+${b.dong.length > BXH_HEAD ? `<button type="button" class="sh-btn sh-btn-ghost sh-btn-sm pt-bxh-more" data-bxh-more="${i}" aria-expanded="false">Xem đủ ${fmtNum(b.dong.length)} dòng</button>` : ''}</div>`).join('')
+    : `<div class="pt-bxh-empty">${P.info}<p>Chưa có bảng xếp hạng. Trang chủ đang hiện “Bảng xếp hạng sẽ cập nhật khi mở máy chủ”. Claude của người được cấp quyền sẽ gửi lên qua MCP (xem <code>skills/bang-xep-hang-hmtg</code>).</p></div>`}
+</section>
+<section class="sh-card" aria-labelledby="bxhL" style="margin-top:var(--s4)"><div class="pt-usage"><h2 id="bxhL" class="pt-bxh-h">Lịch sử</h2><span>${d.lichSu.length ? `${d.lichSu.length} bản gần nhất đã bị thay (giữ tối đa 50)` : 'Chưa có bản nào bị thay'}</span></div>
+${d.lichSu.length ? `<div class="sh-tbl-wrap"><table class="sh-table pt-bxh-hist"><thead><tr><th>Bị thay</th><th>Bản đã thay</th><th class="t-r"><span class="sh-sr">Thao tác</span></th></tr></thead><tbody>
+${d.lichSu.map((h) => `<tr><td><span class="sh-num">${esc(fmtTime(h.thayLuc))}</span><small class="pt-bxh-sub">bởi ${esc(h.thayBoi || '—')}</small></td><td>${bxhWho(h.boi, h.qua)}<small class="pt-bxh-sub">gửi ${esc(fmtTime(h.capNhat))} · ${h.soBang} bảng, ${fmtNum(h.soDong)} dòng</small></td>
+<td><div class="sh-acts pt-bxh-acts"><button type="button" class="sh-btn sh-btn-ghost sh-btn-sm" data-bxh-view="${esc(h.key)}">Xem</button><button type="button" class="sh-btn sh-btn-sm" data-bxh-back="${esc(h.key)}">${P.undo} Khôi phục</button></div></td></tr>`).join('')}</tbody></table></div>` : ''}
+</section>`;
+      K.paintHead();
+
+      $$('[data-bxh-more]').forEach((b) => b.addEventListener('click', () => {
+        const i = +b.getAttribute('data-bxh-more');
+        const open = b.getAttribute('aria-expanded') !== 'true';
+        $('#bxh-t-' + i).innerHTML = bxhTable(boards[i], open ? 0 : BXH_HEAD);
+        b.setAttribute('aria-expanded', String(open));
+        b.textContent = open ? `Chỉ xem ${BXH_HEAD} dòng đầu` : `Xem đủ ${fmtNum(boards[i].dong.length)} dòng`;
+      }));
+      $$('[data-bxh-view]').forEach((b) => b.addEventListener('click', () => bxhView(b.getAttribute('data-bxh-view'))));
+      $$('[data-bxh-back]').forEach((b) => b.addEventListener('click', () => {
+        const key = b.getAttribute('data-bxh-back');
+        K.confirmDlg({ title: 'Đưa bản này lên trang chủ?', body: 'Bản hiện tại sẽ vào lịch sử.', ok: 'Khôi phục', danger: false }, async () => {
+          const res = await api('POST', `/bang-xep-hang/khoi-phuc/${encodeURIComponent(key)}`, {});
+          if (mine !== K.screen()) return;
+          if (!res.ok) { if (res.status !== 401) draw(d, res.data.error || 'Không khôi phục được bản này.'); return; }
+          toast('Đã đưa bản cũ lên trang chủ');
+          draw(res.data, '');
+        });
+      }));
+    };
+
+    // one set of the history, read in a window: pick a board, see all its rows
+    async function bxhView(key) {
+      const res = await api('GET', `/bang-xep-hang/lich-su/${encodeURIComponent(key)}`);
+      if (mine !== K.screen()) return;
+      if (!res.ok) { if (res.status !== 401) toast(res.data.error || 'Không mở được bản này.'); return; }
+      const d = res.data;
+      const list = d.bang;
+      K.openOverlay(`<div class="sh-dlg pt-bxh-dlg" role="dialog" aria-modal="true" aria-labelledby="bxh-dt"><div class="sh-dlg-b"><h2 id="bxh-dt">Bản gửi lúc ${esc(fmtTime(d.capNhat))}</h2><p>Do ${bxhWho(d.boi, d.qua)}${d.mayChu ? `, máy chủ ${esc(d.mayChu)}` : ''}; bị thay lúc ${esc(fmtTime(d.thayLuc))}.</p>
+${list.length ? `<label class="sh-sr" for="bxh-sel">Chọn bảng</label><select id="bxh-sel" class="sh-select pt-bxh-sel">${list.map((b, i) => `<option value="${i}">${esc(b.ten)} (${fmtNum(b.dong.length)} dòng)</option>`).join('')}</select>` : '<p>Bản này không có bảng nào.</p>'}</div>
+<div class="pt-bxh-dbody" id="bxh-dbody">${list.length ? bxhTable(list[0], 0) : ''}</div>
+<div class="sh-dlg-f"><button type="button" class="sh-btn" data-act="ovClose" data-autofocus>Đóng</button></div></div>`);
+      const sel = $('#bxh-sel');
+      if (sel) sel.addEventListener('change', () => { $('#bxh-dbody').innerHTML = bxhTable(list[+sel.value], 0); $('#bxh-dbody').scrollTop = 0; });
+    }
+
+    draw(r.data, '');
+  }
+
+  return { renderPhieu, renderSignups, renderMusic, renderBxh };
 }

@@ -88,6 +88,37 @@ export const PARTS_CSS = `
   .pt-upl{min-height:44px}
 }
 
+/* leaderboards */
+.pt-bxh-h{margin:0;font-size:var(--text-md);font-weight:600}
+.pt-bxh-board{padding:var(--s4) var(--s5);border-bottom:1px solid var(--border)}
+.pt-bxh-board:last-child{border-bottom:0}
+.pt-bxh-bh{display:flex;align-items:center;gap:var(--s3);flex-wrap:wrap;margin-bottom:var(--s3)}
+.pt-bxh-bh h3{margin:0;font-size:var(--text-md);font-weight:600;overflow-wrap:anywhere}
+.pt-bxh-cols{font-size:var(--text-xs)}
+.pt-bxh-wrap{max-width:100%;overflow-x:auto}
+.pt-bxh-tbl td:first-child,.pt-bxh-tbl th:first-child{min-width:0;width:64px}
+.pt-bxh-tbl td{vertical-align:middle}
+.pt-bxh-hist td:first-child{min-width:0}
+.pt-bxh-hist td{vertical-align:middle}
+.pt-bxh-acts{flex-wrap:wrap}
+.pt-bxh-name{overflow-wrap:anywhere;min-width:10ch}
+.pt-bxh-more{margin-top:var(--s2)}
+.pt-bxh-empty{display:flex;gap:var(--s3);padding:var(--s5);color:var(--tx-2)}
+.pt-bxh-empty p{margin:0}
+.pt-bxh-sub{display:block;font-size:var(--text-xs);color:var(--tx-3)}
+.pt-bxh-dlg{width:min(720px,calc(100vw - 32px));max-height:calc(100vh - 32px);display:flex;flex-direction:column}
+.pt-bxh-dlg .sh-dlg-b{flex:none}
+.pt-bxh-dbody{overflow:auto;flex:1 1 auto;min-height:0;padding:0 var(--s5) var(--s3)}
+.pt-bxh-sel{margin-top:var(--s3);max-width:100%}
+@media (max-width:760px){
+  .pt-bxh-tbl td,.pt-bxh-tbl th{padding:8px 8px;font-size:var(--text-sm)}
+  .pt-bxh-tbl td:first-child,.pt-bxh-tbl th:first-child{width:36px}
+  .pt-bxh-board{padding:var(--s3)}
+  .pt-bxh-hist td,.pt-bxh-hist th{padding-left:10px;padding-right:10px}
+  .pt-bxh-acts{flex-direction:column;align-items:stretch}
+  .pt-bxh-dbody{padding:0 var(--s3) var(--s3)}
+}
+
 /* trash of a game */
 .tr-seg{max-width:100%;overflow-x:auto}
 .tr-tab{flex:none;white-space:nowrap;height:28px;padding:0 10px;border-radius:var(--radius-sm);font-size:var(--text-sm);color:var(--tx-2);display:inline-flex;align-items:center;gap:6px;text-decoration:none}

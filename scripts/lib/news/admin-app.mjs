@@ -124,7 +124,7 @@ export function adminApp(adminNews, adminParts, adminTrash, adminAccess, adminAu
   const isSingle = () => !isOwner() && GAMES.length === 1;
 
   // The API addresses below belong to a part and are reached through the open game: /g/<game>/…
-  const PART_PATHS = ['/anh', '/bai', '/thung-rac', '/phieu-be-ngoan', '/dang-ky-som', '/nhac'];
+  const PART_PATHS = ['/anh', '/bai', '/thung-rac', '/phieu-be-ngoan', '/dang-ky-som', '/nhac', '/bang-xep-hang'];
   const gp = (p) => (PART_PATHS.some((x) => p === x || p.startsWith(x + '/') || p.startsWith(x + '?')) ? '/g/' + curGame + p : p);
 
   // Loads /toi: who is signed in and which games they can open. Resolves the answer (the caller checks .ok).
@@ -156,17 +156,18 @@ export function adminApp(adminNews, adminParts, adminTrash, adminAccess, adminAu
     ticket: svgIcon('<path d="M4 8a2 2 0 002-2h12a2 2 0 002 2v2a2 2 0 000 4v2a2 2 0 00-2 2H6a2 2 0 00-2-2v-2a2 2 0 000-4z"/><path d="M14 6v12"/>'),
     userplus: svgIcon('<circle cx="10" cy="8" r="3.5"/><path d="M3.5 19a6.5 6.5 0 0113 0M19 8v6M16 11h6"/>'),
     music: svgIcon('<path d="M9 18V6l11-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/>'),
+    rank: svgIcon('<path d="M8 21v-8H4v8M14 21V4h-4v17M20 21v-12h-4v12M3 21h18"/>'),
     x: svgIcon('<path d="M6 6l12 12M18 6L6 18"/>'),
     link: svgIcon('<path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1"/>'),
     key: svgIcon('<circle cx="8" cy="15" r="4"/><path d="M11 12l8-8M16 7l2 2M14 9l2 2"/>'),
     list: svgIcon('<path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01"/>'),
   };
   // the part each tab belongs to (the trash belongs to the game, not to one part)
-  const PART_OF = { posts: 'tin-tuc', trash: 'thung-rac', phieu: 'phieu-be-ngoan', signup: 'dang-ky-som', music: 'nhac' };
+  const PART_OF = { posts: 'tin-tuc', trash: 'thung-rac', phieu: 'phieu-be-ngoan', signup: 'dang-ky-som', music: 'nhac', bxh: 'bang-xep-hang' };
   const partName = (g, tab) => ((g.parts.find((p) => p.id === PART_OF[tab]) || {}).name) || tab;
   // menu entries read as the part (news = "Tin tức"); the game's trash is the last entry
   const menuLabel = (g, m) => (m[0] === 'posts' ? partName(g, 'posts') : m[2]);
-  const TAB_ICON = { posts: I.news, trash: I.trash, phieu: I.ticket, signup: I.userplus, music: I.music };
+  const TAB_ICON = { posts: I.news, trash: I.trash, phieu: I.ticket, signup: I.userplus, music: I.music, bxh: I.rank };
 
   // A game's mark: a picture, or a few letters on the game's colour (sizes in px)
   function tile(g, size) {
@@ -700,7 +701,7 @@ ${g.sites.length ? `<div>${I.layers} <span class="ov-mono">${esc(siteHost(g, g.s
 
   // ---------- gift tickets, early sign-ups, background music (admin-parts-app.mjs) ----------
   const PARTS = adminParts({
-    $, $$, esc, api, toast, can, gp, header, app, I, svgIcon, fmtTime, armDelete, disarm, confirmDlg,
+    $, $$, esc, api, toast, can, gp, header, app, I, svgIcon, fmtTime, armDelete, disarm, confirmDlg, openOverlay,
     screen: () => screen, me: () => me, game: () => gameOf(curGame), cleanupEditor,
     loginAgain: (msg) => { me = null; renderLogin(msg); }, gameHead: gameHeadHtml, paintHead,
   });
@@ -728,6 +729,7 @@ ${g.sites.length ? `<div>${I.layers} <span class="ov-mono">${esc(siteHost(g, g.s
     { test: (r) => r === '/viet-bai', mod: 'tin-tuc', perm: 'viet', tab: 'posts', draw: (r) => NEWS.renderEditor(null) },
     { test: (r) => /^\/sua\/\d+$/.test(r), mod: 'tin-tuc', perm: 'viet', tab: 'posts', draw: (r) => NEWS.renderEditor(+r.slice(5)) },
     { test: (r) => r === '/nhac', mod: 'nhac', perm: 'quan-ly', tab: 'music', draw: () => PARTS.renderMusic() },
+    { test: (r) => r === '/bang-xep-hang', mod: 'bang-xep-hang', perm: 'cap-nhat', tab: 'bxh', draw: () => PARTS.renderBxh() },
     { test: (r) => r === '/dang-ky-som', mod: 'dang-ky-som', perm: 'quan-ly', tab: 'signup', draw: () => PARTS.renderSignups() },
     { test: (r) => r === '/phieu-be-ngoan', mod: 'phieu-be-ngoan', perm: 'duyet', tab: 'phieu', draw: () => PARTS.renderPhieu() },
     { test: (r) => /^\/thung-rac(\/[a-z-]+)?$/.test(r), trash: true, tab: 'trash', draw: (r) => TRASH.renderTrash(r.slice(11)) },
