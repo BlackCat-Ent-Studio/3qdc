@@ -135,6 +135,7 @@ const TICKET_QL = [...TICKET_DUYET, 'dua_ve_cho', 'xoa_phieu', 'xuat_csv_phieu']
 const SIGNUP = ['ds_dang_ky', 'sua_moc', 'thong_ke_dang_ky', 'xoa_dang_ky', 'xuat_csv_dang_ky'];
 const MUSIC = ['ds_nhac', 'tai_nhac_tu_link', 'xoa_nhac'];
 const OWNER = ['cap_quyen', 'ds_game', 'tao_link_moi', 'thu_quyen', 'xem_quyen'];
+const BXH = ['cap_nhat_bxh', 'xem_bxh']; // leaderboards of hoanmythegioi: an owner has them, a 3qdc game manager does not
 const sorted = (...lists) => [...new Set(lists.flat())].sort();
 const WORK_ALL = sorted(NEWS_DUYET, TRASH, TICKET_QL, SIGNUP, MUSIC);
 
@@ -192,8 +193,8 @@ try {
   assert.deepEqual(await toolNames(CODES.nh), sorted(MUSIC, TRASH));
   assert.deepEqual(await toolNames(CODES.nhieu), sorted(NEWS_DUYET, TICKET_QL, TRASH));
   assert.deepEqual(await toolNames(CODES.quanly), WORK_ALL);
-  assert.deepEqual(await toolNames(CODES.ownerPlain), WORK_ALL, 'an owner code without scope has every work tool and no owner tool');
-  assert.deepEqual(await toolNames(CODES.ownerScoped), sorted(WORK_ALL, OWNER), 'an owner code with scope has every tool plus the 5 owner tools');
+  assert.deepEqual(await toolNames(CODES.ownerPlain), sorted(WORK_ALL, BXH), 'an owner code without scope has every work tool and no owner tool');
+  assert.deepEqual(await toolNames(CODES.ownerScoped), sorted(WORK_ALL, BXH, OWNER), 'an owner code with scope has every tool plus the 5 owner tools');
   ok('tool sets: writer, reviewer, ticket reviewer, ticket manager, sign-ups, music, mixed, game manager, owner (plain and scoped)');
 
   const statuses = [];

@@ -228,7 +228,7 @@ try {
   const me = JSON.parse((await get('viet3', '/toi')).text);
   assert.deepEqual([me.user.role, me.user.grants, me.games.map((g) => g.id), me.games[0].menu.map((m) => m[0])], ['member', G3({ 'tin-tuc': ['viet'] }), ['3qdc'], ['posts']]);
   assert.deepEqual(JSON.parse((await get('rong', '/toi')).text).games, []);
-  assert.deepEqual(JSON.parse((await get('chu', '/toi')).text).games.map((g) => g.id), ['3qdc', 'skystory']);
+  assert.deepEqual(JSON.parse((await get('chu', '/toi')).text).games.map((g) => g.id), ['3qdc', 'skystory', 'hoanmythegioi']);
   ok('/toi: the account, its grants and only the games and menu it may open');
 
   // Claude codes follow the rights
@@ -280,7 +280,7 @@ try {
   assert.match(lock.stderr, /at least one active owner/);
   assert.notEqual(cli('disable', 'chu2').status, 0);
   const made2 = cli('add', 'moi', 'Người Mới', '{"3qdc":{"tin-tuc":["viet"],"nhac":["quan-ly"]}}');
-  assert.notEqual(cli('add', 'moi1', 'Người Mới', '{"skystory":{"tin-tuc":["viet"]}}').status, 0); // skystory has no news part in the real book
+  assert.notEqual(cli('add', 'moi1', 'Người Mới', '{"skystory":{"nhac":["quan-ly"]}}').status, 0); // skystory has no music part in the real book
   assert.equal(made2.status, 0, made2.stderr);
   assert.notEqual(cli('add', 'moi2', 'Người Mới', '{"khong-co":"*"}').status, 0);
   assert.notEqual(cli('add', 'moi3', 'Người Mới', 'manager2').status, 0);

@@ -48,7 +48,7 @@ ok('3qdc: news sites and hosts as before', () => {
   assert.equal(siteOfHost('127.0.0.1:13399'), 'chinh');
   assert.equal(IMAGE_LIBRARY.length, 7);
 });
-ok('3qdc lists the pages without an admin part; skystory and hoanmythegioi have only the news part', () => {
+ok('3qdc lists the pages without an admin part; skystory has only the news part, hoanmythegioi news and leaderboards', () => {
   const g = GAMES.find((x) => x.id === '3qdc');
   const plain = g.sites.filter((s) => !s.module).map((s) => s.path || s.hosts[0]);
   assert.deepEqual(plain, ["phieubengoan.3qdc.wanmeivn.com", "/wiki/", "/hoi-dap/", "/duyet/", "/privacy"]);
@@ -56,7 +56,7 @@ ok('3qdc lists the pages without an admin part; skystory and hoanmythegioi have 
   assert.equal(sky.name, 'Thiên Không Kỳ Truyện');
   assert.deepEqual(Object.keys(sky.modules), ['tin-tuc']);
   const hm = GAMES.find((x) => x.id === 'hoanmythegioi');
-  assert.deepEqual(Object.keys(hm.modules), ['tin-tuc']);
+  assert.deepEqual(Object.keys(hm.modules), ['tin-tuc', 'bang-xep-hang']);
   assert.deepEqual(hm.modules['tin-tuc'].cats, ['su-kien']);
 });
 ok('menus by account', () => {
@@ -70,6 +70,9 @@ ok('menus by account', () => {
   // a game is listed for whoever has rights in it, with the menu of its parts; others do not see it
   assert.deepEqual(tabs({ role: 'member', grants: { skystory: '*' } }), [['skystory', 'posts,trash']]);
   assert.deepEqual(tabs({ role: 'member', grants: { '3qdc': { 'tin-tuc': ['viet'] } } }).map((x) => x[0]), ['3qdc']);
+  // the leaderboards belong to hoanmythegioi only: one right there opens that game and nothing of 3qdc
+  assert.deepEqual(tabs({ role: 'member', grants: { hoanmythegioi: { 'bang-xep-hang': ['cap-nhat'] } } }), [['hoanmythegioi', 'bxh']]);
+  assert.deepEqual(tabs({ role: 'member', grants: { hoanmythegioi: { 'tin-tuc': ['viet'] } } }), [['hoanmythegioi', 'posts']]);
 });
 
 // ---- online part ----
