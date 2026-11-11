@@ -6,7 +6,7 @@
 //   tools   admin/mcp/index.mjs: tools for every part the account has a right in (news, tickets, early sign-ups, music, trash),
 //           listed and checked again on every request; the owner's rights tools (owner-mcp.mjs) only for a code made with
 //           scope 'owner'. Deleting is only ever "into the trash".
-//   limits  64 KB per request; 120 requests a minute per code; 30 refused codes per address per 15 minutes.
+//   limits  256 KB per request; 120 requests a minute per code; 30 refused codes per address per 15 minutes.
 import { ALLOWED_ORIGINS } from '../news/news-config.mjs';
 import { clientIp } from '../news/admin-auth.mjs';
 import { siteNow } from '../news/news-files.mjs';
@@ -14,7 +14,7 @@ import { userOfCode } from '../news/admin-access.mjs';
 import { toolsFor, callTool, instructionsFor } from '../admin/mcp/index.mjs';
 
 export const MCP_PATH = '/mcp';
-const BODY_MAX = 64 * 1024;
+const BODY_MAX = 256 * 1024; // room for 10 leaderboards of 200 rows
 const VERSIONS = ['2025-06-18', '2025-03-26', '2024-11-05'];
 
 // ---------- limits ----------
