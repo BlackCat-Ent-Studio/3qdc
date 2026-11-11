@@ -14,6 +14,7 @@ import * as tinTuc from './modules/tin-tuc-api.mjs';
 import * as phieu from './modules/phieu-api.mjs';
 import * as dangKySom from './modules/dang-ky-som-api.mjs';
 import * as nhac from './modules/nhac-api.mjs';
+import * as bangXepHang from './modules/bang-xep-hang-api.mjs';
 import { TRASH_PERMS } from './trash.mjs';
 
 const part = (id, name, def, impl) => ({ id, name, ...def, dataDir: (gameId) => moduleDir(gameId, id), api: impl.api, upload: impl.upload || null });
@@ -51,6 +52,14 @@ export const MODULES = {
     trash: TRASH_PERMS.nhac,
     paths: ['/nhac'],
   }, nhac),
+  'bang-xep-hang': part('bang-xep-hang', 'Bảng xếp hạng', {
+    perms: { 'cap-nhat': 'Xem, cập nhật bảng xếp hạng, khôi phục bản cũ' },
+    implies: {},
+    short: { 'cap-nhat': 'Cập nhật' },
+    menu: [['bxh', '#/bang-xep-hang', 'Bảng xếp hạng', 'cap-nhat']],
+    trash: null, // replaced sets go to the part's own history, not to the shared trash
+    paths: ['/bang-xep-hang'],
+  }, bangXepHang),
 };
 
 // the part that owns an API address (below the game prefix), or null

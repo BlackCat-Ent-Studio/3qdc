@@ -10,7 +10,7 @@ import { GAME_ID_RE } from './games.mjs';
 
 export const DATA_ROOT = process.env.DATA_ROOT || join(process.cwd(), 'data');
 
-const PART_DIRS = new Set(['tin-tuc', 'phieu-be-ngoan', 'dang-ky-som', 'nhac']);
+const PART_DIRS = new Set(['tin-tuc', 'phieu-be-ngoan', 'dang-ky-som', 'nhac', 'bang-xep-hang']);
 
 // accounts, invites and Claude codes (shared by all games)
 export const systemDir = () => join(DATA_ROOT, 'he-thong');

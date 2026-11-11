@@ -43,6 +43,7 @@ import { NEUTER_HTML as WIKI_NEUTER } from './scripts/lib/wiki/neuter-links.mjs'
 import { NAV_SYNC_HTML } from './scripts/lib/nav-sync.mjs';
 // the site's own news pages
 import { handleNews } from './scripts/lib/news/news-routes.mjs';
+import { handleBxhPublic } from './scripts/lib/bang-xep-hang/bxh-routes.mjs';
 import { handleSignup } from './scripts/lib/signup/signup-routes.mjs';
 import { handlePhieu } from './scripts/lib/phieu/phieu-routes.mjs';
 // /mcp: the gift-ticket tools for a "Duyệt phiếu" person's own Claude (bearer code, see scripts/lib/phieu/phieu-mcp.mjs)
@@ -286,6 +287,8 @@ export function startServer(port = 8080) {
         res.writeHead(302, { Location: '/', 'Cache-Control': 'no-store' });
         return res.end();
       }
+      // the leaderboards of a game that has them (/api/bang-xep-hang)
+      if (await handleBxhPublic(req, res, cleanPath)) return;
       // the site's own news pages (/tin-tuc, /tin-tuc/<slug>, /api/tin-tuc)
       if (await handleNews(req, res, cleanPath, u)) return;
       // the early sign-up page (/dang-ky-som, /api/dang-ky-som)
