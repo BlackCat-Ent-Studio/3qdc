@@ -183,6 +183,11 @@ hoanmythegioi.wanmeivn.com {
 	import nhat-ky hoanmythegioi-wanmeivn
 	@anh path /assets/*
 	header @anh Cache-Control "public, max-age=86400"
+	# bảng sự kiện: danh sách + ảnh bài lấy từ máy chủ tin 3qdc-unified (nhận game theo Host)
+	@tin-may-chu path /api/tin-tuc /tin-tuc-anh/*
+	handle @tin-may-chu {
+		reverse_proxy 127.0.0.1:3399
+	}
 	handle {
 		root * /srv/hmtg/site
 		header Cache-Control "no-cache"
