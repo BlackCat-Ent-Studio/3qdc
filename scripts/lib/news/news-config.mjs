@@ -24,6 +24,19 @@ export const LOGO = '/3qdc-vi/home/logo-3qdc.webp';
 
 export const catName = (id) => (CATS.find((c) => c.id === id) || {}).name || '';
 export const isCat = (id) => CATS.some((c) => c.id === id);
+// the sections one game's articles use: its 'tin-tuc' setting `cats` (games.mjs), else all of CATS
+export function catsOf(gameId) {
+  const g = gameById(gameId);
+  const ids = g && g.modules['tin-tuc'] && g.modules['tin-tuc'].cats;
+  return Array.isArray(ids) ? CATS.filter((c) => ids.includes(c.id)) : CATS;
+}
+
+// An article of the section "Sự kiện" may carry its dates and two short labels, shown on a game's event board:
+// { start, end } days (YYYY-MM-DD, site time; either may be empty), kind (e.g. "Bang chiến"), time (e.g. "20:00 thứ Bảy").
+export const EVENT_CAT = 'su-kien';
+export const EVENT_DAY_RE = /^\d{4}-\d{2}-\d{2}$/;
+export const EVENT_KIND_MAX = 30;
+export const EVENT_TIME_MAX = 60;
 
 // Which site an article appears on, for the game-test period: the main site (3qdc: home page block, /tin-tuc, article
 // pages) or the one-page site 3qdaichien.wanmeivn.com (its Caddy block passes /api/tin-tuc and /tin-tuc/* here with its

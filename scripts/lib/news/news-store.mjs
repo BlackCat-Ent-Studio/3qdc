@@ -10,7 +10,7 @@ import { readdir, readFile, mkdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { gameById } from '../admin/games.mjs';
 import { moduleDir } from '../admin/paths.mjs';
-import { SLUG_RE, SLUG_MAX, isCat, isSite } from './news-config.mjs';
+import { SLUG_RE, SLUG_MAX, isCat, isSite, EVENT_DAY_RE, EVENT_KIND_MAX, EVENT_TIME_MAX } from './news-config.mjs';
 import { writeJsonAtomic, siteNow } from './news-files.mjs';
 
 const STATUSES = new Set(['draft', 'pending', 'published']);
@@ -25,7 +25,17 @@ export function isValid(p) {
     && isCat(p.category) && STATUSES.has(p.status)
     && (p.site == null || isSite(p.site))
     && typeof p.content === 'string'
-    && (p.publishAt == null || (typeof p.publishAt === 'string' && PUBLISH_AT_RE.test(p.publishAt)));
+    && (p.publishAt == null || (typeof p.publishAt === 'string' && PUBLISH_AT_RE.test(p.publishAt)))
+    && (p.event == null || isEventInfo(p.event));
+}
+
+// the event block of an article (see news-config EVENT_*): every field a string, days empty or YYYY-MM-DD, end not before start
+export function isEventInfo(e) {
+  if (!e || typeof e !== 'object' || Array.isArray(e)) return false;
+  const day = (v) => v === '' || (typeof v === 'string' && EVENT_DAY_RE.test(v));
+  return day(e.start) && day(e.end) && !(e.start && e.end && e.end < e.start)
+    && typeof e.kind === 'string' && e.kind.length <= EVENT_KIND_MAX
+    && typeof e.time === 'string' && e.time.length <= EVENT_TIME_MAX;
 }
 
 // which of two articles sharing one address keeps it: a published one first, then the older (smaller id)

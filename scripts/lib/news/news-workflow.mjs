@@ -4,7 +4,7 @@
 //  role     | may
 //  editor   | create and edit drafts · send a draft for review · take a pending article back to draft
 //  manager  | everything on every article: save, publish now, schedule, send back with a note, unpublish, pin, delete
-import { SLUG_RE, SLUG_MAX, isCat, IMAGE_PATH_RE, TITLE_MAX, SUMMARY_MAX, CONTENT_MAX, SPLIT_SITES, isSite, siteOf } from './news-config.mjs';
+import { SLUG_RE, SLUG_MAX, isCat, IMAGE_PATH_RE, TITLE_MAX, SUMMARY_MAX, CONTENT_MAX, SPLIT_SITES, isSite, siteOf, EVENT_CAT, EVENT_DAY_RE, EVENT_KIND_MAX, EVENT_TIME_MAX } from './news-config.mjs';
 import { cleanContent, textOf } from './news-sanitize.mjs';
 import { PUBLISH_AT_RE, isValid } from './news-store.mjs';
 
@@ -18,8 +18,34 @@ const fail = (status, error) => ({ status, error });
 // Text fields: no control characters, surrounding spaces trimmed.
 const plain = (v) => Array.from(String(v ?? ''), (c) => (c.charCodeAt(0) < 32 || c.charCodeAt(0) === 127 ? ' ' : c)).join('').trim();
 
+// A real calendar day "YYYY-MM-DD" (not 31 February), or '' for none; null when it is neither.
+function eventDay(v) {
+  const s = String(v ?? '').trim();
+  if (!s) return '';
+  if (!EVENT_DAY_RE.test(s)) return null;
+  const d = new Date(s + 'T00:00:00Z');
+  return Number.isFinite(d.getTime()) && d.toISOString().slice(0, 10) === s ? s : null;
+}
+
+// The event block an article of the section "Sự kiện" carries (input.event: { start, end, kind, time }), or undefined
+// when it has none (any other section, or nothing filled in). Returns { event } or { status, error }.
+function readEvent(input) {
+  if (input.category !== EVENT_CAT || input.event == null) return { event: undefined };
+  const e = input.event;
+  if (typeof e !== 'object' || Array.isArray(e)) return fail(400, 'Thông tin sự kiện không hợp lệ.');
+  const start = eventDay(e.start), end = eventDay(e.end);
+  if (start === null) return fail(400, 'Ngày bắt đầu sự kiện không hợp lệ.');
+  if (end === null) return fail(400, 'Ngày kết thúc sự kiện không hợp lệ.');
+  if (start && end && end < start) return fail(400, 'Ngày kết thúc sự kiện phải từ ngày bắt đầu trở đi.');
+  const kind = plain(e.kind), time = plain(e.time);
+  if (kind.length > EVENT_KIND_MAX) return fail(400, `Loại sự kiện dài quá ${EVENT_KIND_MAX} ký tự.`);
+  if (time.length > EVENT_TIME_MAX) return fail(400, `Giờ diễn ra dài quá ${EVENT_TIME_MAX} ký tự.`);
+  return { event: start || end || kind || time ? { start, end, kind, time } : undefined };
+}
+
 // Checks and normalises what the editor sent. Returns { fields } or { status, error }.
-export function readFields(input, { posts, id }) {
+// cats: the section ids this game's articles may use (default: every section).
+export function readFields(input, { posts, id, cats }) {
   const title = plain(input.title);
   if (!title) return fail(400, 'Bài cần có tiêu đề.');
   if (title.length > TITLE_MAX) return fail(400, `Tiêu đề dài quá ${TITLE_MAX} ký tự.`);
@@ -31,13 +57,16 @@ export function readFields(input, { posts, id }) {
   if (clash) return fail(400, `Đường dẫn “${slug}” đã dùng cho bài “${clash.title}”. Hãy đổi đường dẫn.`);
   const summary = plain(input.summary);
   if (summary.length > SUMMARY_MAX) return fail(400, `Tóm tắt dài quá ${SUMMARY_MAX} ký tự.`);
-  if (!isCat(input.category)) return fail(400, 'Chọn mục cho bài.');
+  if (!isCat(input.category) || (cats && !cats.includes(input.category))) return fail(400, 'Chọn mục cho bài.');
   if (SPLIT_SITES && !isSite(input.site)) return fail(400, 'Chọn trang đăng bài: Trang chính hoặc Trang phụ.');
   const cover = String(input.cover ?? '');
   if (cover && !IMAGE_PATH_RE.test(cover)) return fail(400, 'Ảnh bìa không hợp lệ.');
   const content = cleanContent(input.content);
   if (content.length > CONTENT_MAX) return fail(413, 'Nội dung quá dài.');
-  const fields = { title, slug, summary, category: input.category, cover, content };
+  const ev = readEvent(input);
+  if (ev.error) return ev;
+  // event is always set (undefined drops it when the article leaves the section or the block is emptied)
+  const fields = { title, slug, summary, category: input.category, cover, content, event: ev.event };
   // with the split switched off an article keeps whatever site it had
   if (SPLIT_SITES) fields.site = input.site;
   return { fields };
@@ -96,7 +125,7 @@ export function decide(user, cur, input, ctx) {
     return { post: { ...cur, status: 'draft', publishAt: null, reviewNote: '', updatedBy: user.name, updatedAt: ctx.nowText }, unpin: [] };
   }
 
-  const read = readFields(input, { posts: ctx.posts, id: cur ? cur.id : ctx.newId });
+  const read = readFields(input, { posts: ctx.posts, id: cur ? cur.id : ctx.newId, cats: ctx.cats });
   if (read.error) return read;
   const base = cur || { id: ctx.newId, author: user.name, authorUser: user.username, createdAt: ctx.nowText, status: 'draft', publishAt: null, pinned: false, reviewNote: '' };
   const post = { ...base, ...read.fields, updatedBy: user.name, updatedAt: ctx.nowText };
@@ -151,6 +180,6 @@ export function summaryOf(p) {
   return {
     id: p.id, slug: p.slug, title: p.title, category: p.category, site: siteOf(p), cover: p.cover || '', status: p.status,
     publishAt: p.publishAt || null, pinned: !!p.pinned, author: p.author || '', updatedBy: p.updatedBy || '',
-    updatedAt: p.updatedAt || '', reviewNote: p.reviewNote || '',
+    updatedAt: p.updatedAt || '', reviewNote: p.reviewNote || '', event: p.event || null,
   };
 }

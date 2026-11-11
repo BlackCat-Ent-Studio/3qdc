@@ -5,6 +5,7 @@
 //              news split of 3qdc); a site without one is only listed so the overview can show it — no admin part.
 //              Either `hosts` (a whole host name) or `path` (a folder of the main host).
 // game.modules the parts switched on for this game, each with its own settings ({} = nothing to set).
+//              'tin-tuc' may list `cats`: the sections this game's articles use (default: all of news-config CATS).
 // Game ids: lowercase letters, digits and dashes, 2-24 characters, never digits only (so an id can never be mistaken for a
 // year such as 2026 in an address).
 export const GAME_ID_RE = /^(?![0-9]+$)[a-z0-9][a-z0-9-]{1,23}$/;
@@ -60,11 +61,14 @@ export const GAMES = [
     id: 'hoanmythegioi',
     name: 'Hoàn Mỹ Thế Giới',
     logo: '',
-    // trang chủ tĩnh /srv/hmtg/site (bản đầu: dữ liệu sự kiện/xếp hạng còn là mẫu, trang để noindex); chưa bật phần nào
+    // trang chủ tĩnh /srv/hmtg/site; khối Sự kiện đọc /api/tin-tuc?muc=su-kien (Caddy chuyển /api/tin-tuc, /tin-tuc-anh/* về
+    // đây). Không có trang tin: sự kiện mở đọc ngay trên trang chủ.
     sites: [
-      { id: 'chinh', name: 'Trang chủ', hint: 'hoanmythegioi.wanmeivn.com', hosts: ['hoanmythegioi.wanmeivn.com'], module: null },
+      { id: 'chinh', name: 'Trang chủ', hint: 'hoanmythegioi.wanmeivn.com — bảng Sự kiện', hosts: ['hoanmythegioi.wanmeivn.com'], module: 'tin-tuc' },
     ],
-    modules: {},
+    modules: {
+      'tin-tuc': { imageLibrary: [], uploadUrl: '/tin-tuc-anh', cats: ['su-kien'] },
+    },
   },
 ];
 

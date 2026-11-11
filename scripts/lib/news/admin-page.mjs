@@ -2,7 +2,8 @@
 // an article (any state, signed-in accounts only) and the JSON API (admin-api.mjs).
 // These pages are never indexed, never framed, and run only scripts carrying this response's nonce.
 import { randomBytes } from 'node:crypto';
-import { CATS, IMAGE_LIBRARY, LOGO, SITE_ORIGIN, SPLIT_SITES, SITES, onSite, siteOf } from './news-config.mjs';
+import { CATS, IMAGE_LIBRARY, LOGO, SITE_ORIGIN, SPLIT_SITES, SITES, onSite, siteOf, catsOf } from './news-config.mjs';
+import { GAMES } from '../admin/games.mjs';
 import { NEWS_CSS, esc } from './news-theme.mjs';
 import { SHELL_CSS } from './admin-shell-css.mjs';
 import { UI_CSS } from './admin-ui-css.mjs';
@@ -172,7 +173,9 @@ const ADMIN_THEME_KEY = '3qdc-admin-theme';
 const THEME_HEAD = `try{document.documentElement.setAttribute('data-theme',localStorage.getItem('${ADMIN_THEME_KEY}')==='dark'?'dark':'light')}catch(e){document.documentElement.setAttribute('data-theme','light')}`;
 
 function appPage(nonce) {
-  const data = { cats: CATS, sites: SPLIT_SITES ? SITES : [], library: IMAGE_LIBRARY, host: SITE_ORIGIN.replace(/^https?:\/\//, ''), logo: LOGO, marks: GAME_MARKS, themeKey: ADMIN_THEME_KEY };
+  // gameCats: only games that use fewer sections than all of CATS ({ <game>: [ids] })
+  const gameCats = Object.fromEntries(GAMES.filter((g) => g.modules['tin-tuc'] && catsOf(g.id) !== CATS).map((g) => [g.id, catsOf(g.id).map((c) => c.id)]));
+  const data = { cats: CATS, gameCats, sites: SPLIT_SITES ? SITES : [], library: IMAGE_LIBRARY, host: SITE_ORIGIN.replace(/^https?:\/\//, ''), logo: LOGO, marks: GAME_MARKS, themeKey: ADMIN_THEME_KEY };
   return `<!doctype html><html lang="vi"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">

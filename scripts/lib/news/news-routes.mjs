@@ -50,15 +50,21 @@ export async function handleNews(req, res, cleanPath, u) {
     return true;
   }
 
-  // newest visible articles for the home page block: ?muc=<tab>&limit=<1..50, default 4>
+  // newest visible articles for the home page block: ?muc=<tab>&limit=<1..50, default 4>; each with its event block
+  // (or null). ?noi-dung=1 also sends each article's text (already cleaned when saved), for a game whose home page shows
+  // whole articles itself (the event board of hoanmythegioi).
   if (cleanPath === '/api/tin-tuc') {
     const muc = u.searchParams.get('muc');
     const n = parseInt(u.searchParams.get('limit') || '4', 10);
     const limit = Number.isFinite(n) ? Math.min(50, Math.max(1, n)) : 4;
+    const withText = u.searchParams.get('noi-dung') === '1';
     const items = (await sitePosts())
       .filter((p) => !isCat(muc) || p.category === muc)
       .slice(0, limit)
-      .map((p) => ({ slug: p.slug, title: p.title, category: p.category, summary: p.summary || '', cover: p.cover || '', publishAt: p.publishAt, pinned: !!p.pinned }));
+      .map((p) => ({
+        slug: p.slug, title: p.title, category: p.category, summary: p.summary || '', cover: p.cover || '', publishAt: p.publishAt, pinned: !!p.pinned,
+        event: p.event || null, ...(withText ? { content: p.content } : {}),
+      }));
     sendJson(req, res, 200, items);
     return true;
   }

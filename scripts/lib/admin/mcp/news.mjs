@@ -41,7 +41,9 @@ async function findPost(gameId, id) {
 }
 
 // the fields of a stored article the editor sends back unchanged
-const fieldsOf = (p) => ({ title: p.title, slug: p.slug, summary: p.summary || '', category: p.category, site: siteOf(p), cover: p.cover || '', content: p.content, pinned: !!p.pinned });
+const fieldsOf = (p) => ({ title: p.title, slug: p.slug, summary: p.summary || '', category: p.category, site: siteOf(p), cover: p.cover || '', content: p.content, pinned: !!p.pinned, event: p.event || null });
+// the event block as text for xem_bai
+const eventLine = (e) => (e ? `Sự kiện: ${e.start || '?'} → ${e.end || '?'}${e.kind ? ` · loại: ${e.kind}` : ''}${e.time ? ` · giờ: ${e.time}` : ''}` : '');
 
 // One save with one action, from the article as stored plus what the call changes.
 async function act(ctx, args, action, extra = {}, viec = '') {
@@ -93,7 +95,7 @@ export const NEWS_TOOLS = [
         ? `${p.content.slice(0, CONTENT_SHOW)}\n[... đã cắt, bài dài ${p.content.length} ký tự. Đừng ghi lại nội dung bằng viet_bai: sẽ mất phần bị cắt.]` : p.content;
       const head = [
         line(p), `Đường dẫn: ${p.slug}`, `Tóm tắt: ${p.summary || '(trống)'}`, `Ảnh bìa: ${p.cover || '(chưa có)'}`,
-        p.publishAt ? `Giờ đăng: ${p.publishAt}` : '', p.reviewNote ? `Ghi chú trả lại: ${p.reviewNote}` : '', `cap_nhat_luc: ${p.updatedAt}`,
+        eventLine(p.event), p.publishAt ? `Giờ đăng: ${p.publishAt}` : '', p.reviewNote ? `Ghi chú trả lại: ${p.reviewNote}` : '', `cap_nhat_luc: ${p.updatedAt}`,
       ].filter(Boolean).join('\n');
       return text(`${head}\n--- Nội dung (HTML) ---\n${body}`, { structuredContent: { ...summaryOf(p), visible: isVisible(p), capNhatLuc: p.updatedAt } });
     },
@@ -112,13 +114,17 @@ export const NEWS_TOOLS = [
         trang: { type: 'string', enum: SITES.map((s) => s.id), description: `Trang đăng bài: ${SITES.map((s) => `${s.id} (${s.name})`).join(', ')}. Mặc định chinh.` },
         anh_bia: { type: 'string', description: 'Đường dẫn ảnh bìa (từ ds_anh hoặc tai_anh_tu_link). Cần có trước khi gửi duyệt/đăng.' },
         noi_dung: { type: 'string', description: 'Nội dung HTML của bài.' },
+        su_kien_bat_dau: { type: 'string', description: 'Chỉ mục su-kien: ngày bắt đầu YYYY-MM-DD (giờ Việt Nam). Chuỗi rỗng để xoá.' },
+        su_kien_ket_thuc: { type: 'string', description: 'Chỉ mục su-kien: ngày kết thúc YYYY-MM-DD, không trước ngày bắt đầu. Chuỗi rỗng để xoá.' },
+        su_kien_loai: { type: 'string', description: 'Chỉ mục su-kien: nhãn loại ngắn, tối đa 30 ký tự (vd "Bang chiến").' },
+        su_kien_gio: { type: 'string', description: 'Chỉ mục su-kien: giờ diễn ra bằng chữ, tối đa 60 ký tự (vd "20:00 thứ Bảy hằng tuần").' },
         cap_nhat_luc: BASE_P,
       },
       annotations: WRITE,
     },
     async run(ctx, args) {
       const strArg = (k) => (args[k] === undefined ? undefined : typeof args[k] === 'string' ? args[k] : null);
-      for (const k of ['tieu_de', 'duong_dan', 'tom_tat', 'muc', 'trang', 'anh_bia', 'noi_dung']) if (strArg(k) === null) return fail(`${k} phải là chữ.`);
+      for (const k of ['tieu_de', 'duong_dan', 'tom_tat', 'muc', 'trang', 'anh_bia', 'noi_dung', 'su_kien_bat_dau', 'su_kien_ket_thuc', 'su_kien_loai', 'su_kien_gio']) if (strArg(k) === null) return fail(`${k} phải là chữ.`);
       let cur = null;
       if (args.id !== undefined) {
         const f = await findPost(ctx.gameId, args.id);
@@ -137,6 +143,10 @@ export const NEWS_TOOLS = [
       const input = {
         title, slug, summary: args.tom_tat ?? base.summary ?? '', category: args.muc ?? base.category, site: args.trang ?? base.site ?? 'chinh',
         cover: args.anh_bia ?? base.cover ?? '', content: args.noi_dung ?? base.content ?? '', pinned: !!base.pinned,
+        event: {
+          start: args.su_kien_bat_dau ?? (base.event && base.event.start) ?? '', end: args.su_kien_ket_thuc ?? (base.event && base.event.end) ?? '',
+          kind: args.su_kien_loai ?? (base.event && base.event.kind) ?? '', time: args.su_kien_gio ?? (base.event && base.event.time) ?? '',
+        },
         action: 'luu', baseUpdatedAt: str(args.cap_nhat_luc) || (cur && cur.updatedAt),
       };
       const limited = refuseWrite(ctx);

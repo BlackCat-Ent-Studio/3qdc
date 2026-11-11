@@ -2,6 +2,9 @@
 // column, right-hand settings column). Follows the approved mock-up; shared pieces (buttons, cards, notes…) come from
 // admin-ui-css.mjs. Class names carry the prefix nw-.
 export const NEWS_ADMIN_CSS = `
+.nw-evrow{margin-bottom:var(--s3)}
+.nw-evrow .nw-lbl small{font-weight:400;opacity:.7}
+.nw-evrow .sh-input{width:100%}
 /* article list and trash */
 .nw-ptitle{display:flex;align-items:center;gap:var(--s3);min-width:0}
 .nw-ptitle b{display:block;font-weight:500;line-height:1.35;color:var(--tx)}

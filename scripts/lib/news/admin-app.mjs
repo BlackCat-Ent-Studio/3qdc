@@ -685,6 +685,8 @@ ${g.sites.length ? `<div>${I.layers} <span class="ov-mono">${esc(siteHost(g, g.s
     $, $$, esc, api, toast, can, gh, header, app, I, svgIcon, initials, fmtTime, slugify, siteNowLocal, armDelete, disarm, gp,
     CATS, LIB, HOST, SITES, STATE, ACTION_WORDS, stateOf, siteOfPost, addrPrefix,
     screen: () => screen, me: () => me, isOwner, game: () => gameOf(curGame), gameId: () => curGame,
+    // the sections the open game's articles use (games.mjs 'tin-tuc' cats), else every section
+    gameCats: () => ((DATA.gameCats || {})[curGame] ? CATS.filter((c) => DATA.gameCats[curGame].includes(c.id)) : CATS),
     cleanupEditor, setDirty: (f) => { dirty = f; }, setLeaving: (f) => { leaving = f; }, markHash: () => { lastHash = location.hash; },
     loginAgain: (msg) => { me = null; renderLogin(msg); }, setPreState: (f) => { preSetter = f; },
     gameHead: gameHeadHtml, paintHead, setCrumb: (t) => { crumbTail = t; }, dialogOpen,

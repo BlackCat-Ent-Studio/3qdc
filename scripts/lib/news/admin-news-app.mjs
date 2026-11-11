@@ -8,6 +8,12 @@ export function adminNews(K) {
   const { $, $$, esc, api, toast, can, gh, header, app, I, initials, fmtTime, slugify, siteNowLocal, armDelete, disarm, CATS, LIB, HOST, SITES, STATE, ACTION_WORDS, stateOf, siteOfPost, addrPrefix } = K;
   const avatar = (name) => `<span class="sh-av" title="${esc(name)}" aria-hidden="true">${esc(initials(name))}</span>`;
   const catName = (id) => (CATS.find((c) => c.id === id) || {}).name || '';
+  // sections of the open game (a game may use only some of them, e.g. only "Sự kiện")
+  const cats = () => K.gameCats();
+  // the main/side site choice and the artwork library belong to 3qdc; other games have one site and upload their own covers
+  const only3q = () => K.gameId() === '3qdc';
+  const lib = () => (only3q() ? LIB : []);
+  const EVENT_CAT = 'su-kien';
   const ic = K.svgIcon;
   const N = {
     plus: ic('<path d="M12 5v14M5 12h14"/>'),
@@ -73,7 +79,7 @@ export function adminNews(K) {
 ${waiting ? `<div class="sh-note warn" id="pending-users" style="margin-bottom:var(--s4)">${I.users}<div><b>${waiting}</b> tài khoản đăng ký đang chờ duyệt. <a href="#/nguoi-dung">Xem và duyệt</a></div></div>` : ''}
 <p class="sh-hint">${hint}</p>
 <div class="sh-toolbar"><div class="sh-seg" role="group" aria-label="Lọc theo trạng thái">${['all', 'published', 'scheduled', 'pending', 'draft'].map((s) => `<button type="button" aria-pressed="${listView.state === s}" data-st="${s}">${s === 'all' ? 'Tất cả' : STATE[s]}<span class="n sh-num">${n(s)}</span></button>`).join('')}</div>
-<label class="sh-sr" for="fcat">Lọc theo mục</label><select id="fcat" class="sh-select"><option value="all">Mọi mục</option>${CATS.map((c) => `<option value="${c.id}"${listView.cat === c.id ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select>
+<label class="sh-sr" for="fcat">Lọc theo mục</label><select id="fcat" class="sh-select"><option value="all">Mọi mục</option>${cats().map((c) => `<option value="${c.id}"${listView.cat === c.id ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select>
 ${SITES.length ? `<label class="sh-sr" for="fsite">Lọc theo trang</label><select id="fsite" class="sh-select"><option value="all">Mọi trang</option>${SITES.map((s) => `<option value="${s.id}"${listView.site === s.id ? ' selected' : ''}>${esc(s.name)}</option>`).join('')}</select>` : ''}
 <div class="sh-r">${duyet ? `<a class="sh-btn sh-btn-ghost" href="${gh('/thung-rac/tin-tuc')}">${I.trash} Thùng rác${trashN != null ? ` <span class="sh-cnt-n sh-num">${trashN}</span>` : ''}</a>` : ''}<a class="sh-btn sh-btn-primary" href="${gh('/viet-bai')}">${N.plus} Viết bài mới</a></div></div>
 <div id="listErr">${listErr ? `<div class="sh-note danger" role="alert" style="margin-bottom:var(--s3)">${N.alert}<div>${esc(listErr.msg)}${listErr.reload ? ` <button type="button" class="sh-btn sh-btn-sm" id="list-reload">${N.refresh} Tải lại danh sách</button>` : ''}</div></div>` : ''}</div>
@@ -165,7 +171,7 @@ ${rows.length ? '' : emptyCell(6, I.news, all.length ? 'Không có bài nào kh�
   function drawEditor(post, lockedBy, versions) {
     K.cleanupEditor();
     const manager = can('tin-tuc', 'duyet');
-    const p = post ? Object.assign({}, post) : { id: 0, slug: '', title: '', category: CATS[0].id, cover: '', pinned: false, status: 'draft', publishAt: null, summary: '', content: '', reviewNote: '' };
+    const p = post ? Object.assign({}, post) : { id: 0, slug: '', title: '', category: cats()[0].id, cover: '', pinned: false, status: 'draft', publishAt: null, summary: '', content: '', reviewNote: '' };
     const st = post ? stateOf(post) : 'draft';
     const live = !!post && st === 'published';
     const editable = manager || !post || post.status === 'draft';
@@ -200,10 +206,19 @@ ${rows.length ? '' : emptyCell(6, I.news, all.length ? 'Không có bài nào kh�
 <label class="sh-sr" for="e-note">Ghi chú cho người viết</label><textarea id="e-note" class="sh-input" rows="3" maxlength="300" placeholder="Cần sửa gì? Ví dụ: thiếu ảnh bìa, sai ngày sự kiện…"></textarea>
 <div class="nw-err" id="e-noteerr" hidden>Ghi chú cho người viết biết cần sửa gì.</div>
 <div style="margin-top:var(--s3)"><button type="button" class="sh-btn" id="e-return" data-ed="return">${N.undo} Trả lại</button></div></div></section>` : '';
-    const siteBox = SITES.length ? `<section class="sh-card"><div class="sh-card-h"><h2>Đăng lên</h2></div><div class="sh-card-b">
+    const siteBox = SITES.length && only3q() ? `<section class="sh-card"><div class="sh-card-h"><h2>Đăng lên</h2></div><div class="sh-card-b">
 <div class="nw-opts" role="radiogroup" aria-label="Đăng lên trang">${SITES.map((s) => `<label class="nw-opt"><input type="radio" name="e-site" value="${s.id}"${site0 === s.id ? ' checked' : ''}${editable ? '' : ' disabled'}><span><b>${esc(s.name)}</b><small class="sh-mono">${esc(s.hint)}</small></span></label>`).join('')}</div>
 ${site0 ? '' : '<p class="nw-help" id="e-sitehint">Chọn một trang, bài chỉ hiện ở trang đó.</p>'}</div></section>` : '';
-    const catBox = `<section class="sh-card"><div class="sh-card-h"><h2>Mục</h2></div><div class="sh-card-b"><div class="nw-choice" role="radiogroup" aria-label="Mục">${CATS.map((c) => `<label><input type="radio" name="e-cat" value="${c.id}"${p.category === c.id ? ' checked' : ''}${editable ? '' : ' disabled'}>${esc(c.name)}</label>`).join('')}</div></div></section>`;
+    const catBox = `<section class="sh-card"><div class="sh-card-h"><h2>Mục</h2></div><div class="sh-card-b"><div class="nw-choice" role="radiogroup" aria-label="Mục">${cats().map((c) => `<label><input type="radio" name="e-cat" value="${c.id}"${p.category === c.id ? ' checked' : ''}${editable ? '' : ' disabled'}>${esc(c.name)}</label>`).join('')}</div></div></section>`;
+    // the event block (section "Sự kiện" only): dates and two short labels, shown on a game's event board
+    const ev = p.event || { start: '', end: '', kind: '', time: '' };
+    const dis = editable ? '' : ' disabled';
+    const eventBox = `<section class="sh-card" id="e-evbox"${p.category === EVENT_CAT ? '' : ' hidden'}><div class="sh-card-h"><h2>Sự kiện</h2></div><div class="sh-card-b">
+<div class="nw-evrow"><label class="nw-lbl" for="e-evstart">Ngày bắt đầu</label><input type="date" id="e-evstart" class="sh-input" value="${esc(ev.start)}"${dis}></div>
+<div class="nw-evrow"><label class="nw-lbl" for="e-evend">Ngày kết thúc</label><input type="date" id="e-evend" class="sh-input" value="${esc(ev.end)}"${dis}></div>
+<div class="nw-evrow"><label class="nw-lbl" for="e-evkind">Loại <small>(không bắt buộc)</small></label><input id="e-evkind" class="sh-input" maxlength="30" placeholder="Bang chiến, Boss thế giới, Lễ hội…" value="${esc(ev.kind)}"${dis}></div>
+<div class="nw-evrow"><label class="nw-lbl" for="e-evtime">Giờ diễn ra <small>(không bắt buộc)</small></label><input id="e-evtime" class="sh-input" maxlength="60" placeholder="20:00 thứ Bảy hằng tuần" value="${esc(ev.time)}"${dis}></div>
+<p class="nw-help">Trang chủ tự ghi Sắp diễn ra / Đang diễn ra / Đã kết thúc theo hai ngày này (giờ Việt Nam).</p></div></section>`;
     const historyBox = post && versions.length
       ? `<section class="sh-card"><div class="sh-card-h"><h2>Lịch sử</h2><span class="sh-r sh-faint" style="font-size:var(--text-xs)">${versions.length} bản gần nhất</span></div><div class="sh-card-b" style="padding-block:var(--s1)"><ul class="nw-hist">${versions.map((h, i) => `<li>${avatar(h.actor)}<span class="nw-h-t">${esc(h.actor)} ${esc(ACTION_WORDS[h.action] || h.action)}<small>${fmtTime(h.savedAt)}${i === 0 ? ', bản hiện tại' : ''}</small></span>${i === 0 || !editable ? '' : `<button type="button" class="sh-btn sh-btn-ghost sh-btn-xs" data-rev="${esc(h.rev)}" title="Đưa bản này vào khung soạn, bấm Lưu mới giữ">${N.history} Nạp</button>`}</li>`).join('')}</ul></div></section>` : '';
     const dangerBox = manager && post
@@ -243,7 +258,7 @@ ${site0 ? '' : '<p class="nw-help" id="e-sitehint">Chọn một trang, bài ch�
 </section>
 <aside class="nw-rail" aria-label="Thiết lập bài">
 <section class="sh-card"><div class="sh-card-h"><h2>Đăng bài</h2></div><div class="sh-card-b">${publishBox}</div></section>
-${returnBox}${siteBox}${catBox}
+${returnBox}${siteBox}${catBox}${eventBox}
 <section class="sh-card"><div class="sh-card-h"><h2>Ảnh bìa</h2></div><div class="sh-card-b" id="e-coverbox"></div></section>
 <section class="sh-card"><div class="sh-card-h"><h2>Khi chia sẻ lên Facebook</h2></div><div class="sh-card-b"><div class="nw-fb" id="e-fb"></div></div></section>
 ${historyBox}${dangerBox}
@@ -255,10 +270,11 @@ ${historyBox}${dangerBox}
     [title, slug, sum].forEach((el) => { el.disabled = !editable; });
     const mode = () => { const r = $('input[name="e-mode"]:checked'); return r ? r.value : 'draft'; };
     const cat = () => $('input[name="e-cat"]:checked').value;
-    const siteVal = () => { const r = $('input[name="e-site"]:checked'); return r ? r.value : null; };
+    const siteVal = () => { const r = $('input[name="e-site"]:checked'); return r ? r.value : only3q() ? null : 'chinh'; };
+    const evVal = () => (cat() === EVENT_CAT ? { start: $('#e-evstart').value, end: $('#e-evend').value, kind: $('#e-evkind').value.trim(), time: $('#e-evtime').value.trim() } : null);
     const collect = () => ({
       title: title.value.trim(), slug: slug.value || slugify(title.value), summary: sum.value.trim(), content: body.innerHTML,
-      category: cat(), site: siteVal(), cover: p.cover || '', pinned: !!($('#e-pin') && $('#e-pin').checked),
+      category: cat(), site: siteVal(), cover: p.cover || '', pinned: !!($('#e-pin') && $('#e-pin').checked), event: evVal(),
     });
     let saved = JSON.stringify(collect());
     const isDirty = () => editable && JSON.stringify(collect()) !== saved;
@@ -314,7 +330,7 @@ ${historyBox}${dangerBox}
     // cover
     const drawCover = () => {
       $('#e-coverbox').innerHTML = `${p.cover ? `<img class="nw-cover-big" id="e-cover" src="${esc(p.cover)}" alt="Ảnh bìa đang chọn">` : '<div class="nw-cover-empty">Chưa có ảnh bìa. Cần có trước khi gửi duyệt hoặc đăng.</div>'}
-${editable ? `<div class="nw-pics" role="group" aria-label="Ảnh có sẵn">${LIB.map((src) => `<button type="button" class="nw-pic${p.cover === src ? ' on' : ''}" data-cover="${esc(src)}" aria-label="Chọn ảnh ${esc(src.split('/').pop())}" aria-pressed="${p.cover === src}"><img src="${esc(src)}" alt="" loading="lazy"></button>`).join('')}</div>
+${editable ? `<div class="nw-pics" role="group" aria-label="Ảnh có sẵn">${lib().map((src) => `<button type="button" class="nw-pic${p.cover === src ? ' on' : ''}" data-cover="${esc(src)}" aria-label="Chọn ảnh ${esc(src.split('/').pop())}" aria-pressed="${p.cover === src}"><img src="${esc(src)}" alt="" loading="lazy"></button>`).join('')}</div>
 <label class="sh-btn sh-btn-sm nw-upl">${N.upload} Tải ảnh bìa từ máy<input type="file" id="e-file" accept="image/jpeg,image/png,image/webp"></label>
 <p class="nw-help" style="margin-top:var(--s2)!important">JPG, PNG, WEBP. Tối đa 5 MB, nên dùng 1200×675.</p>` : ''}`;
       $$('[data-cover]').forEach((x) => x.addEventListener('click', () => setCover(x.getAttribute('data-cover'))));
@@ -345,7 +361,8 @@ ${editable ? `<div class="nw-pics" role="group" aria-label="Ảnh có sẵn">${L
       const h = $('#e-sitehint'); if (h) h.remove();
       changed();
     }));
-    $$('input[name="e-cat"]').forEach((r) => r.addEventListener('change', changed));
+    $$('input[name="e-cat"]').forEach((r) => r.addEventListener('change', () => { $('#e-evbox').hidden = cat() !== EVENT_CAT; changed(); }));
+    ['#e-evstart', '#e-evend', '#e-evkind', '#e-evtime'].forEach((s) => { $(s).addEventListener('input', changed); $(s).addEventListener('change', changed); });
     if ($('#e-pin')) $('#e-pin').addEventListener('change', changed);
 
     // formatting: execCommand on the remembered selection
@@ -415,7 +432,7 @@ ${editable ? `<div class="nw-pics" role="group" aria-label="Ảnh có sẵn">${L
 <div class="nw-pop-row"><span class="sh-muted" style="font-size:var(--text-sm);flex:1">${inCell ? 'Con trỏ đang ở <b>ô bảng</b>: ảnh chèn gọn trong ô (hợp cho icon vật phẩm).' : 'Bấm ảnh để chèn vào chỗ con trỏ.'}</span>
 <label class="sh-btn sh-btn-sm nw-upl">${N.upload} Tải ảnh từ máy<input type="file" id="e-pic-file" accept="image/jpeg,image/png,image/webp"></label><button type="button" class="sh-btn sh-btn-ghost sh-btn-sm sh-btn-icon" data-ed="popX" aria-label="Đóng">${N.x}</button></div>
 ${note ? `<p>${esc(note)}</p>` : ''}
-${uploads.length ? `<h4>Ảnh đã tải lên</h4>${thumbs(uploads)}` : ''}<h4>Ảnh trang chủ</h4>${thumbs(LIB)}</div>`;
+${uploads.length ? `<h4>Ảnh đã tải lên</h4>${thumbs(uploads)}` : ''}${lib().length ? `<h4>Ảnh trang chủ</h4>${thumbs(lib())}` : ""}</div>`;
         $$('[data-put]', pop).forEach((x) => { noSteal(x); x.addEventListener('click', () => putPicture(x.getAttribute('data-put'))); });
         $('#e-pic-file').addEventListener('change', async (e) => {
           const mine = K.screen();

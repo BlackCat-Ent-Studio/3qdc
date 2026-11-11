@@ -53,7 +53,7 @@ ok('rights: "*" also covers a part that is switched on later', () => {
 });
 ok('rights: a part the game has not switched on, an unknown game / part / permission are all refused (even for the owner)', () => {
   const o = { role: 'owner' };
-  assert.equal(can(o, 'skystory', 'tin-tuc', 'viet'), false); // real book: skystory has nothing on
+  assert.equal(can(o, 'skystory', 'nhac', 'quan-ly'), false); // real book: skystory has only the news part
   assert.equal(can(o, 'khong-co', 'tin-tuc', 'viet', REG), false);
   assert.equal(can(o, '3qdc', 'khong-co', 'viet', REG), false);
   assert.equal(can(o, '3qdc', 'tin-tuc', 'bay', REG), false);
@@ -100,8 +100,8 @@ ok('cleanGrants: refuses what is not in the books, with a clear message', () => 
   err({ '3qdc': { 'tin-tuc': 'viet' } }, /danh sách/);
   err('x', /đối tượng/);
   err([], /đối tượng/);
-  // a part the game has not switched on (real book: skystory has none)
-  assert.match(cleanGrants({ skystory: { 'tin-tuc': ['viet'] } }).error, /chưa bật phần "tin-tuc"/);
+  // a part the game has not switched on (real book: skystory has only the news part)
+  assert.match(cleanGrants({ skystory: { nhac: ['quan-ly'] } }).error, /chưa bật phần "nhac"/);
 });
 ok('cleanGrants lenient: drops the unknown, keeps the rest, lists what it dropped', () => {
   const r = cleanGrants({ 'khong-co': '*', '3qdc': { 'tin-tuc': ['viet', 'bay'], 'khong-co': ['x'] } }, { lenient: true, reg: REG });

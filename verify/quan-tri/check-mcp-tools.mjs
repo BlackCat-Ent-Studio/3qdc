@@ -198,7 +198,8 @@ try {
 
   const statuses = [];
   for (const c of [CODES.sky, CODES.khoa]) statuses.push((await rpc(c, 'tools/list')).status);
-  assert.deepEqual(statuses, [401, 401], 'no right in any switched-on part, or a locked account → the code is dead');
+  // skystory has the news part switched on (10/11): a right there makes the code work; a locked account's code is dead
+  assert.deepEqual(statuses, [200, 401], 'a skystory right works now that skystory has its news part; a locked account → the code is dead');
   const gameProp = (await listTools(CODES.viet)).find((t) => t.name === 'viet_bai').inputSchema.properties.game;
   assert.deepEqual(gameProp.enum, ['3qdc']);
   assert.ok(!(await listTools(CODES.viet)).find((t) => t.name === 'viet_bai').inputSchema.required);

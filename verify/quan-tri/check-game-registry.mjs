@@ -48,13 +48,16 @@ ok('3qdc: news sites and hosts as before', () => {
   assert.equal(siteOfHost('127.0.0.1:13399'), 'chinh');
   assert.equal(IMAGE_LIBRARY.length, 7);
 });
-ok('3qdc lists the pages without an admin part; skystory has nothing on', () => {
+ok('3qdc lists the pages without an admin part; skystory and hoanmythegioi have only the news part', () => {
   const g = GAMES.find((x) => x.id === '3qdc');
   const plain = g.sites.filter((s) => !s.module).map((s) => s.path || s.hosts[0]);
   assert.deepEqual(plain, ["phieubengoan.3qdc.wanmeivn.com", "/wiki/", "/hoi-dap/", "/duyet/", "/privacy"]);
   const sky = GAMES.find((x) => x.id === 'skystory');
   assert.equal(sky.name, 'Thiên Không Kỳ Truyện');
-  assert.deepEqual(Object.keys(sky.modules), []);
+  assert.deepEqual(Object.keys(sky.modules), ['tin-tuc']);
+  const hm = GAMES.find((x) => x.id === 'hoanmythegioi');
+  assert.deepEqual(Object.keys(hm.modules), ['tin-tuc']);
+  assert.deepEqual(hm.modules['tin-tuc'].cats, ['su-kien']);
 });
 ok('menus by account', () => {
   const tabs = (user) => gamesOf(user).map((g) => [g.id, g.menu.map((m) => m[0]).join(',')]);
@@ -64,8 +67,8 @@ ok('menus by account', () => {
   assert.deepEqual(tabs({ role: 'member', grants: { '3qdc': { 'tin-tuc': ['viet'] } } }), [['3qdc', 'posts']]);
   assert.deepEqual(tabs({ role: 'member', grants: { '3qdc': { 'phieu-be-ngoan': ['duyet'] } } }), [['3qdc', 'phieu']]);
   assert.deepEqual(tabs({ role: 'pending', grants: { '3qdc': '*' } }), []);
-  // a game with nothing switched on is listed for whoever has rights in it, with an empty menu; others do not see it
-  assert.deepEqual(tabs({ role: 'member', grants: { skystory: '*' } }), [['skystory', '']]);
+  // a game is listed for whoever has rights in it, with the menu of its parts; others do not see it
+  assert.deepEqual(tabs({ role: 'member', grants: { skystory: '*' } }), [['skystory', 'posts,trash']]);
   assert.deepEqual(tabs({ role: 'member', grants: { '3qdc': { 'tin-tuc': ['viet'] } } }).map((x) => x[0]), ['3qdc']);
 });
 
@@ -86,14 +89,14 @@ if (portAt > 0) {
     const viaGame = await get('/g/3qdc/bai');
     assert.equal(old.status, 200);
     assert.deepEqual(viaGame, old); n++; console.log('ok   GET /g/3qdc/bai = GET /bai');
-    for (const [p, want] of [['/g/skystory/bai', 404], ['/g/khong-co/bai', 404], ['/g/2026/bai', 404], ['/g/3qdc/khong-co', 404], ['/g/3qdc/toi', 404]]) {
+    for (const [p, want] of [['/g/skystory/khong-co', 404], ['/g/khong-co/bai', 404], ['/g/2026/bai', 404], ['/g/3qdc/khong-co', 404], ['/g/3qdc/toi', 404]]) {
       const r = await get(p);
       assert.equal(r.status, want, p); n++; console.log(`ok   GET ${p} -> ${want}`);
     }
     const me = JSON.parse((await get('/toi')).text);
-    assert.deepEqual(me.games.map((g) => g.id), ['3qdc', 'skystory']); n++; console.log('ok   /toi lists 3qdc and, with no part switched on, skystory (empty menu)');
-    const [g3, sk] = me.games;
-    assert.deepEqual(sk.menu, []); assert.deepEqual(sk.parts, []); assert.deepEqual(sk.sites, []);
+    assert.deepEqual(me.games.map((g) => g.id), ['3qdc', 'skystory', 'hoanmythegioi']); n++; console.log('ok   /toi lists 3qdc, skystory and hoanmythegioi');
+    const [g3, sk, hm] = me.games;
+    assert.deepEqual(sk.parts.map((p) => p.id), ['tin-tuc']); assert.deepEqual(hm.parts.map((p) => p.id), ['tin-tuc']);
     assert.deepEqual(g3.parts.map((p) => p.id).sort(), ['dang-ky-som', 'nhac', 'phieu-be-ngoan', 'tin-tuc']);
     assert.ok(g3.sites.some((s) => s.id === 'chinh' && s.host === '3qdc.wanmeivn.com' && s.module === 'tin-tuc') && g3.sites.some((s) => s.id === 'wiki' && s.path === '/wiki/'));
     assert.ok(g3.parts.every((p) => p.perms && Object.keys(p.perms).length)); n++; console.log('ok   /toi carries the parts switched on (with permission labels) and the sites of each game');
