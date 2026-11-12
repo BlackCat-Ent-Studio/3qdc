@@ -218,7 +218,7 @@ ${manage ? `<div class="sh-r"><label class="sh-btn sh-btn-primary pt-upl">${P.up
 <div class="sh-tbl-wrap"><table class="sh-table pt-table"><thead><tr><th>Bài hát</th><th>Ca sĩ</th><th>Dung lượng</th><th>Nghe thử</th><th class="t-r"><span class="sh-sr">Thao tác</span></th></tr></thead><tbody>
 ${items.map((s) => `<tr data-name="${esc(s.name)}"${fresh === s.name ? ' class="pt-up"' : ''}><td><div class="pt-song"><span class="pt-song-ic">${I.music}</span><div><b>${esc(s.title)}</b><small>${esc(s.name)}</small></div></div></td>
 <td>${s.artist ? esc(s.artist) : '<span class="sh-faint">Không ghi</span>'}</td><td class="sh-num sh-muted nowrap">${mb(s.bytes || 0)}</td>
-<td><audio class="pt-audio" controls preload="none" src="${esc(s.file)}" aria-label="Nghe thử ${esc(s.title)}"></audio></td>
+<td><audio class="pt-audio" controls preload="none" src="${esc(s.nghe ? '/quan-tri/api' + gp(s.nghe) : s.file)}" aria-label="Nghe thử ${esc(s.title)}"></audio></td>
 <td><div class="sh-acts">${manage ? `<button type="button" class="sh-btn sh-btn-ghost sh-btn-sm sh-danger" data-del-song="${esc(s.name)}">${I.trash} Xoá</button>` : ''}</div></td></tr>`).join('')}
 ${items.length ? '' : emptyCell(5, I.music, 'Chưa có bài hát nào', manage ? 'Bấm Thêm bài hát để tải lên.' : 'Chưa ai tải bài hát lên.')}
 </tbody></table></div>

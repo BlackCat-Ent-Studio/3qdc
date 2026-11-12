@@ -68,9 +68,9 @@ export function moduleOfPath(sub) {
   return null;
 }
 
-// Tickets, early sign-ups and the music keep their data for 3qdc only (their stores take no game id): another game
-// switching one of them on would read or write 3qdc's data, so the server refuses to start.
-const ONLY_3QDC = ['phieu-be-ngoan', 'dang-ky-som', 'nhac'];
+// Tickets and early sign-ups keep their data for 3qdc only (their stores take no game id): another game switching one of
+// them on would read or write 3qdc's data, so the server refuses to start. The music store takes a game id.
+const ONLY_3QDC = ['phieu-be-ngoan', 'dang-ky-som'];
 const HOST_RE = /^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$/;
 
 // Refuses a wrong book of games when the server starts (the server does not come up and the log says why).

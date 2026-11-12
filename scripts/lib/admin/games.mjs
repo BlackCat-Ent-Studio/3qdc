@@ -38,7 +38,7 @@ export const GAMES = [
         ],
         uploadUrl: '/tin-tuc-anh',
       },
-      // background music: the files stay in overrides/home/nhac (the home page reads that folder directly)
+      // background music: 3qdc's files stay in overrides/home/nhac (the home page reads that folder directly)
       'nhac': {},
       'dang-ky-som': {},
       'phieu-be-ngoan': {},
@@ -55,6 +55,8 @@ export const GAMES = [
     ],
     modules: {
       'tin-tuc': { imageLibrary: [], uploadUrl: '/tin-tuc-anh' },
+      // the songs are in data/games/skystory/nhac/bai; the home page reads them at /api/nhac (Caddy sends it here)
+      'nhac': {},
     },
   },
   {
@@ -70,6 +72,7 @@ export const GAMES = [
     modules: {
       'tin-tuc': { imageLibrary: [], uploadUrl: '/tin-tuc-anh', cats: ['su-kien'] },
       'bang-xep-hang': {},
+      'nhac': {}, // no default songs: the owner adds them
     },
   },
 ];

@@ -2,9 +2,9 @@
 //   data/he-thong/                        what belongs to no game: accounts, invites, Claude codes
 //   data/games/<game>/<part>/             one folder per game and part (tin-tuc, phieu-be-ngoan, dang-ky-som)
 // DATA_ROOT moves the whole tree (the draft servers set it). The older per-part variables (NEWS_DATA_DIR and the like) are
-// gone: data-layout.mjs refuses to start a server that still sets one. The songs of the background music are not data of
+// gone: data-layout.mjs refuses to start a server that still sets one. The songs of 3qdc's background music are not data of
 // this tree: they stay in overrides/home/nhac, which the home page reads directly; only the songs in its trash live
-// here (data/games/<game>/nhac/thung-rac/).
+// here (data/games/3qdc/nhac/thung-rac/). Any other game keeps its songs in data/games/<game>/nhac/bai/.
 import { join } from 'node:path';
 import { GAME_ID_RE } from './games.mjs';
 

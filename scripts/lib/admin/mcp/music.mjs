@@ -1,4 +1,4 @@
-// music.mjs — Claude's tools for the background music of the home page (nhac, a part of 3qdc only), for `quan-ly`. A song is
+// music.mjs — Claude's tools for the background music of a game's home page (nhac), for `quan-ly`. A song is
 // added from a link (https to a public server; the sound itself is never sent through the chat), with the web's limits:
 // one song at most 15 MB, the whole folder 300 MB, and the file must really be what it says. Deleting moves the song to the trash.
 import { listSongs, saveSong, SONG_MAX, FOLDER_MAX } from '../../home/music-store.mjs';
@@ -27,8 +27,8 @@ export const MUSIC_TOOLS = [
       description: 'Liệt kê bài nhạc nền trang chủ theo thứ tự phát: tên file (dùng cho xoa_nhac), tên bài, ca sĩ, dung lượng, và tổng dung lượng đã dùng.',
       properties: {}, annotations: annot({ readOnlyHint: true }),
     },
-    async run() {
-      const songs = await listSongs();
+    async run(ctx) {
+      const songs = await listSongs(ctx.gameId);
       const used = songs.reduce((n, s) => n + s.bytes, 0);
       const lines = songs.map((s) => `• ${s.name} — ${s.title}${s.artist ? ` / ${s.artist}` : ''} (${mb(s.bytes)} MB)`);
       return text(`${songs.length} bài, dùng ${mb(used)} / ${mb(FOLDER_MAX)} MB (mỗi bài tối đa ${mb(SONG_MAX)} MB).\n${lines.join('\n') || '(chưa có bài nào)'}`,
@@ -55,7 +55,7 @@ export const MUSIC_TOOLS = [
         const type = pickType(got, SONG_TYPES, SONG_EXT);
         if (!type) return fail('Link không phải file nhạc MP3, M4A, OGG hoặc WAV.');
         got.body.headers['content-type'] = type;
-        const r = await saveSong(got.body, str(args.ten) || nameFromLink(got.url));
+        const r = await saveSong(got.body, str(args.ten) || nameFromLink(got.url), ctx.gameId);
         if (r.error) return fail(r.error);
         await audit(ctx, 'nhac-tai-len', r.name, { phan: PART, chiTiet: `${r.bytes} byte, từ ${got.url.hostname}` });
         return text(`Đã thêm bài "${r.name}" (${mb(r.bytes)} MB) vào nhạc nền; trang chủ phát ngay.`, { structuredContent: { ten: r.name, bytes: r.bytes } });
