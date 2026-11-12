@@ -263,7 +263,7 @@ try {
   const ins = (await call(CODES.bx, 'xem_bxh'));
   assert.match(say(ins), /Chưa có bảng xếp hạng/);
   const hello = json(await rpc(CODES.bx, 'initialize', { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 't', version: '1' } })).result.instructions;
-  assert.match(hello, /Bảng xếp hạng Hoàn Mỹ Thế Giới: chỉ gửi số đọc từ dữ liệu game/);
+  assert.match(hello, /Bảng xếp hạng Tiên Ma Vô Giới: chỉ gửi số đọc từ dữ liệu game/);
   ok('xem_bxh says there is nothing yet; the server instructions carry the rule for the leaderboards');
 
   // ----- sending, the public address -----

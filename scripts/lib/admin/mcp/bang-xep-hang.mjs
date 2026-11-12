@@ -1,4 +1,4 @@
-// bang-xep-hang.mjs — Claude's tools for the leaderboards of Hoàn Mỹ Thế Giới (part bang-xep-hang), for `cap-nhat`.
+// bang-xep-hang.mjs — Claude's tools for the leaderboards of Tiên Ma Vô Giới (part bang-xep-hang), for `cap-nhat`.
 // The person's Claude reads the game's database itself and sends the whole set; it is checked and cleaned like on the web
 // (bang-xep-hang/bxh-store.mjs) and shows on the home page at once. The set it replaces stays in the history, from which the
 // owner brings it back on the editor page.
@@ -55,7 +55,7 @@ export const BXH_TOOLS = [
     name: 'xem_bxh', games: ONLY, takesGame: true,
     def: {
       title: 'Xem bảng xếp hạng đang hiện trên trang chủ',
-      description: 'Cho biết bộ bảng xếp hạng đang hiện công khai trên trang chủ Hoàn Mỹ Thế Giới: số bảng, số dòng mỗi bảng, ai cập nhật lúc nào; structuredContent là đúng bộ đó theo dạng cap_nhat_bxh nhận. lich_su=true thêm 10 bản gần nhất đã bị thay.',
+      description: 'Cho biết bộ bảng xếp hạng đang hiện công khai trên trang chủ Tiên Ma Vô Giới: số bảng, số dòng mỗi bảng, ai cập nhật lúc nào; structuredContent là đúng bộ đó theo dạng cap_nhat_bxh nhận. lich_su=true thêm 10 bản gần nhất đã bị thay.',
       properties: { lich_su: { type: 'boolean', description: 'Thêm 10 bản gần nhất trong lịch sử (key, lúc thay, người gửi).' } },
       annotations: annot({ readOnlyHint: true }),
     },
@@ -79,7 +79,7 @@ export const BXH_TOOLS = [
     name: 'cap_nhat_bxh', games: ONLY, takesGame: true, write: true,
     def: {
       title: 'Cập nhật bảng xếp hạng trang chủ',
-      description: `Thay TOÀN BỘ bảng xếp hạng trên trang chủ Hoàn Mỹ Thế Giới bằng bộ gửi lên; hiện công khai ngay. Chỉ gửi số đọc từ dữ liệu game, không bịa hay ước lượng. Tối đa ${LIMITS.bang} bảng, ${LIMITS.dong} dòng mỗi bảng, ${LIMITS.cot} cột; tên ≤ ${LIMITS.tenDong} ký tự; dòng xếp sẵn đúng thứ hạng. Không gửi email, ID tài khoản, IP. Bộ cũ được giữ ở lịch sử (50 bản) để chủ khôi phục trên trang quản trị. Tối đa 12 lần mỗi giờ. Dữ liệu sai thì bị từ chối kèm lý do, bảng cũ vẫn giữ nguyên.`,
+      description: `Thay TOÀN BỘ bảng xếp hạng trên trang chủ Tiên Ma Vô Giới bằng bộ gửi lên; hiện công khai ngay. Chỉ gửi số đọc từ dữ liệu game, không bịa hay ước lượng. Tối đa ${LIMITS.bang} bảng, ${LIMITS.dong} dòng mỗi bảng, ${LIMITS.cot} cột; tên ≤ ${LIMITS.tenDong} ký tự; dòng xếp sẵn đúng thứ hạng. Không gửi email, ID tài khoản, IP. Bộ cũ được giữ ở lịch sử (50 bản) để chủ khôi phục trên trang quản trị. Tối đa 12 lần mỗi giờ. Dữ liệu sai thì bị từ chối kèm lý do, bảng cũ vẫn giữ nguyên.`,
       properties: {
         may_chu: { type: 'string', maxLength: LIMITS.mayChu, description: 'Tên máy chủ game, tuỳ chọn (hiện cạnh dòng “cập nhật lúc”).' },
         bang: BANG_SCHEMA,

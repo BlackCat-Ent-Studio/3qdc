@@ -59,13 +59,13 @@ export const GAMES = [
   },
   {
     id: 'hoanmythegioi',
-    name: 'Hoàn Mỹ Thế Giới',
+    name: 'Tiên Ma Vô Giới',
     logo: '',
     // trang chủ tĩnh /srv/hmtg/site; khối Sự kiện đọc /api/tin-tuc?muc=su-kien (Caddy chuyển /api/tin-tuc, /tin-tuc-anh/* về
     // đây). Không có trang tin: sự kiện mở đọc ngay trên trang chủ. Bảng xếp hạng: Claude của một thành viên gửi lên qua MCP,
     // trang chủ đọc /api/bang-xep-hang (cũng Caddy chuyển về đây).
     sites: [
-      { id: 'chinh', name: 'Trang chủ', hint: 'hoanmythegioi.wanmeivn.com — bảng Sự kiện, Bảng xếp hạng', hosts: ['hoanmythegioi.wanmeivn.com'], module: 'tin-tuc' },
+      { id: 'chinh', name: 'Trang chủ', hint: 'Trang chủ Tiên Ma Vô Giới — bảng Sự kiện, Bảng xếp hạng', hosts: ['hoanmythegioi.wanmeivn.com'], module: 'tin-tuc' },
     ],
     modules: {
       'tin-tuc': { imageLibrary: [], uploadUrl: '/tin-tuc-anh', cats: ['su-kien'] },
