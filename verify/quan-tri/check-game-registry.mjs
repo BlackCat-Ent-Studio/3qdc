@@ -21,8 +21,9 @@ ok('ids: letters first or mixed, never digits only', () => {
 ok('duplicate game id', () => throwsWith(/duplicate game id "game-a"/, [game(), game()]));
 ok('bad game id', () => throwsWith(/invalid game id/, [game({ id: '2026' })]));
 ok('unknown module', () => throwsWith(/unknown module "bay-gio"/, [game({ modules: { 'bay-gio': {} } })]));
-ok('tickets, early sign-ups and music are for 3qdc only: another game cannot switch them on', () => {
-  for (const mid of ['phieu-be-ngoan', 'dang-ky-som', 'nhac']) {
+ok('tickets and early sign-ups are for 3qdc only: another game cannot switch them on; music is per game', () => {
+  checkGames([game({ modules: { nhac: {} } })], MODULES);
+  for (const mid of ['phieu-be-ngoan', 'dang-ky-som']) {
     throwsWith(new RegExp(`module "${mid}" is only for 3qdc`), [game({ modules: { [mid]: {} } })]);
     checkGames([game({ id: '3qdc', modules: { [mid]: {} } })], MODULES);
   }
@@ -48,15 +49,15 @@ ok('3qdc: news sites and hosts as before', () => {
   assert.equal(siteOfHost('127.0.0.1:13399'), 'chinh');
   assert.equal(IMAGE_LIBRARY.length, 7);
 });
-ok('3qdc lists the pages without an admin part; skystory has only the news part, hoanmythegioi news and leaderboards', () => {
+ok('3qdc lists the pages without an admin part; skystory has news and music, hoanmythegioi news, leaderboards and music', () => {
   const g = GAMES.find((x) => x.id === '3qdc');
   const plain = g.sites.filter((s) => !s.module).map((s) => s.path || s.hosts[0]);
   assert.deepEqual(plain, ["phieubengoan.3qdc.wanmeivn.com", "/wiki/", "/hoi-dap/", "/duyet/", "/privacy"]);
   const sky = GAMES.find((x) => x.id === 'skystory');
   assert.equal(sky.name, 'Thiên Không Kỳ Truyện');
-  assert.deepEqual(Object.keys(sky.modules), ['tin-tuc']);
+  assert.deepEqual(Object.keys(sky.modules), ['tin-tuc', 'nhac']);
   const hm = GAMES.find((x) => x.id === 'hoanmythegioi');
-  assert.deepEqual(Object.keys(hm.modules), ['tin-tuc', 'bang-xep-hang']);
+  assert.deepEqual(Object.keys(hm.modules), ['tin-tuc', 'bang-xep-hang', 'nhac']);
   assert.deepEqual(hm.modules['tin-tuc'].cats, ['su-kien']);
 });
 ok('menus by account', () => {
@@ -68,7 +69,7 @@ ok('menus by account', () => {
   assert.deepEqual(tabs({ role: 'member', grants: { '3qdc': { 'phieu-be-ngoan': ['duyet'] } } }), [['3qdc', 'phieu']]);
   assert.deepEqual(tabs({ role: 'pending', grants: { '3qdc': '*' } }), []);
   // a game is listed for whoever has rights in it, with the menu of its parts; others do not see it
-  assert.deepEqual(tabs({ role: 'member', grants: { skystory: '*' } }), [['skystory', 'posts,trash']]);
+  assert.deepEqual(tabs({ role: 'member', grants: { skystory: '*' } }), [['skystory', 'posts,music,trash']]);
   assert.deepEqual(tabs({ role: 'member', grants: { '3qdc': { 'tin-tuc': ['viet'] } } }).map((x) => x[0]), ['3qdc']);
   // the leaderboards belong to hoanmythegioi only: one right there opens that game and nothing of 3qdc
   assert.deepEqual(tabs({ role: 'member', grants: { hoanmythegioi: { 'bang-xep-hang': ['cap-nhat'] } } }), [['hoanmythegioi', 'bxh']]);

@@ -164,7 +164,7 @@ try {
     expect(await req('GET', G + path), 401, `signed out ${path}`);
     expect(await get('chu', path), 200, `owner GET ${path}`);
   }
-  expect(await req('GET', `${api}/g/skystory/nhac/thung-rac`, as('chu')), 404, 'a game that has not switched the part on');
+  expect(await req('GET', `${api}/g/skystory/phieu-be-ngoan/thung-rac`, as('chu')), 404, 'a game that has not switched the part on');
   ok('each part opens only for its own permission; nobody else, nobody signed out, no other game');
 
   // ---------- news ----------

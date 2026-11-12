@@ -114,7 +114,7 @@ try {
   await bad({ khong: '*' }, 'unknown game');
   await bad({ '3qdc': { 'tin-tuc': ['bay'] } }, 'unknown permission');
   await bad({ '3qdc': { 'khong-co': ['viet'] } }, 'unknown part');
-  await bad({ skystory: { 'tin-tuc': ['viet'] } }, 'a part the game has not switched on');
+  await bad({ skystory: { 'phieu-be-ngoan': ['duyet'] } }, 'a part the game has not switched on');
   await bad({ '3qdc': { 'tin-tuc': ['viet'] }, owner: '*' }, 'nothing about owner');
   expect(await post('viet3', '/loi-moi', { grants: TV3 }), 403, 'a member cannot make links');
   ok('a link needs real grants; members cannot make one');
@@ -298,7 +298,7 @@ try {
   await refuse({ username: 'viet3', game: '3qdc', phan: 'khong-co', quyen: ['viet'] }, /không có trong sổ/, 'unknown part');
   await refuse({ username: 'viet3', game: '3qdc', phan: 'tin-tuc', quyen: ['bay'] }, /không có trong/, 'unknown permission');
   await refuse({ username: 'viet3', game: '3qdc', phan: 'tin-tuc', quyen: ['owner'] }, /không có trong/, 'owner as a permission');
-  await refuse({ username: 'viet3', game: 'skystory', phan: 'tin-tuc', quyen: ['viet'] }, /chưa bật/, 'part not switched on');
+  await refuse({ username: 'viet3', game: 'skystory', phan: 'phieu-be-ngoan', quyen: ['duyet'] }, /chưa bật/, 'part not switched on');
   await refuse({ username: 'viet3', game: '3qdc', quyen: ['viet'] }, /phan/, 'list without a part');
   await refuse({ username: 'viet3', game: '3qdc', phan: 'tin-tuc', quyen: 'quan-ly-game' }, /bỏ trống phan/, 'whole game with a part');
   await refuse({ username: 'viet3', game: '3qdc', phan: 'tin-tuc', quyen: [] }, null, 'empty list');

@@ -140,7 +140,7 @@ try {
   expect(await get('chu', '/g/3qdc/bai'), 200, 'owner in 3qdc');
   expect(await get('chu', '/g/skystory/phieu-be-ngoan'), 404, 'a part skystory has not switched on (owner)');
   expect(await get('sky', '/g/skystory/phieu-be-ngoan'), 404, 'a part skystory has not switched on (member of the game)');
-  expect(await get('sky', '/g/skystory/nhac'), 404, 'music not switched on');
+  expect(await get('sky', '/g/skystory/nhac'), 403, 'music is on in skystory but this member has no music right');
   for (const who of ['chu', 'viet3', 'sky']) expect(await get(who, '/g/khong-co/bai'), 404, `${who} unknown game`);
   ok('owner reaches both games; a part the game has not switched on is 404; an unknown game is 404');
 
@@ -258,7 +258,7 @@ try {
   await bad('chu', 'chu2', { action: 'quyen', grants: G3('*') }, 400, 'an owner is not changed by grants');
   await bad('chu', 'viet3', { action: 'quyen', grants: { 'khong-co': '*' } }, 400, 'unknown game');
   await bad('chu', 'viet3', { action: 'quyen', grants: { '3qdc': { 'tin-tuc': ['bay'] } } }, 400, 'unknown right');
-  await bad('chu', 'viet3', { action: 'quyen', grants: { skystory: { nhac: ['quan-ly'] } } }, 400, 'a part the game has not switched on');
+  await bad('chu', 'viet3', { action: 'quyen', grants: { skystory: { 'phieu-be-ngoan': ['duyet'] } } }, 400, 'a part the game has not switched on');
   await bad('chu', 'viet3', { action: 'quyen', grants: {} }, 400, 'no rights at all');
   await bad('chu', 'viet3', { action: 'quyen', role: 'owner' }, 400, 'no call makes an owner (role is ignored, grants missing)');
   await bad('chu', 'viet3', { action: 'vai-tro', role: 'manager' }, 400, 'the old role action is gone');
@@ -280,7 +280,7 @@ try {
   assert.match(lock.stderr, /at least one active owner/);
   assert.notEqual(cli('disable', 'chu2').status, 0);
   const made2 = cli('add', 'moi', 'Người Mới', '{"3qdc":{"tin-tuc":["viet"],"nhac":["quan-ly"]}}');
-  assert.notEqual(cli('add', 'moi1', 'Người Mới', '{"skystory":{"nhac":["quan-ly"]}}').status, 0); // skystory has no music part in the real book
+  assert.notEqual(cli('add', 'moi1', 'Người Mới', '{"skystory":{"phieu-be-ngoan":["duyet"]}}').status, 0); // skystory has no tickets part in the real book
   assert.equal(made2.status, 0, made2.stderr);
   assert.notEqual(cli('add', 'moi2', 'Người Mới', '{"khong-co":"*"}').status, 0);
   assert.notEqual(cli('add', 'moi3', 'Người Mới', 'manager2').status, 0);
