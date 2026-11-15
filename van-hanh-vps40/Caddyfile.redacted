@@ -178,25 +178,22 @@ skystory.wanmeivn.com {
 	}
 }
 
-hoanmythegioi.wanmeivn.com {
+
+# Tiên Ma Vô Giới: trang chủ tĩnh đặt ở máy .21 (/opt/tienmavogioi/trang-chu).
+# Khối này chỉ trả 5 đường API cho nginx .21 (Host tienmavogioi.com); chứng chỉ nội bộ, .21 tin root CA Caddy.
+tienmavogioi.com, www.tienmavogioi.com {
+	tls internal
 	import bao-mat
-	import nhat-ky hoanmythegioi-wanmeivn
-	# ten cu chi la duong noi an: chi may .21 (proxy tienmavogioi.com), chinh .40 va localhost duoc vao; con lai 403
-	@ngoai-tmvg not remote_ip 160.191.3.21 160.191.3.40 127.0.0.1
-	handle @ngoai-tmvg {
+	import nhat-ky tienmavogioi
+	@ngoai not remote_ip 160.191.3.21 160.191.3.40 127.0.0.1
+	handle @ngoai {
 		respond 403
 	}
-	@anh path /assets/*
-	header @anh Cache-Control "public, max-age=86400"
-	# bảng sự kiện: danh sách + ảnh bài lấy từ máy chủ tin 3qdc-unified (nhận game theo Host)
-	@tin-may-chu path /api/tin-tuc /api/bang-xep-hang /api/nhac /nhac/* /tin-tuc-anh/*
-	handle @tin-may-chu {
+	@api path /api/tin-tuc /api/bang-xep-hang /api/nhac /nhac/* /tin-tuc-anh/*
+	handle @api {
 		reverse_proxy 127.0.0.1:3399
 	}
 	handle {
-		root * /srv/hmtg/site
-		header Cache-Control "no-cache"
-		header X-Robots-Tag "noindex, nofollow"
-		file_server
+		respond 404
 	}
 }
