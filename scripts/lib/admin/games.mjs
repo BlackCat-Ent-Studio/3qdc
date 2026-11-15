@@ -63,11 +63,11 @@ export const GAMES = [
     id: 'hoanmythegioi',
     name: 'Tiên Ma Vô Giới',
     logo: '',
-    // trang chủ tĩnh /srv/hmtg/site; khối Sự kiện đọc /api/tin-tuc?muc=su-kien (Caddy chuyển /api/tin-tuc, /tin-tuc-anh/* về
+    // trang chủ tĩnh đặt ở máy .21 (/opt/tienmavogioi/trang-chu; nginx .21 chuyển các đường API về đây theo IP .40, Host tienmavogioi.com); khối Sự kiện đọc /api/tin-tuc?muc=su-kien (Caddy chuyển /api/tin-tuc, /tin-tuc-anh/* về
     // đây). Không có trang tin: sự kiện mở đọc ngay trên trang chủ. Bảng xếp hạng: Claude của một thành viên gửi lên qua MCP,
     // trang chủ đọc /api/bang-xep-hang (cũng Caddy chuyển về đây).
     sites: [
-      { id: 'chinh', name: 'Trang chủ', hint: 'Trang chủ Tiên Ma Vô Giới — bảng Sự kiện, Bảng xếp hạng', hosts: ['hoanmythegioi.wanmeivn.com'], module: 'tin-tuc' },
+      { id: 'chinh', name: 'Trang chủ', hint: 'tienmavogioi.com (trang tĩnh đặt ở máy .21) — bảng Sự kiện, Bảng xếp hạng', hosts: ['tienmavogioi.com', 'www.tienmavogioi.com', 'hoanmythegioi.wanmeivn.com'], module: 'tin-tuc' },
     ],
     modules: {
       'tin-tuc': { imageLibrary: [], uploadUrl: '/tin-tuc-anh', cats: ['su-kien'] },

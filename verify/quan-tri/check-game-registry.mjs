@@ -60,6 +60,12 @@ ok('3qdc lists the pages without an admin part; skystory has news and music, hoa
   assert.deepEqual(Object.keys(hm.modules), ['tin-tuc', 'bang-xep-hang', 'nhac']);
   assert.deepEqual(hm.modules['tin-tuc'].cats, ['su-kien']);
 });
+ok('tienmavogioi.com (and www, any case or port) opens Tiên Ma Vô Giới; an unknown host stays 3qdc', () => {
+  for (const h of ['tienmavogioi.com', 'www.tienmavogioi.com', 'TIENMAVOGIOI.COM:443']) assert.equal(gameOfHost(h).id, 'hoanmythegioi', h);
+  assert.equal(gameOfHost('la.example.com').id, '3qdc');
+  // the admin status pings the first host of the home site
+  assert.equal(GAMES.find((x) => x.id === 'hoanmythegioi').sites[0].hosts[0], 'tienmavogioi.com');
+});
 ok('menus by account', () => {
   const tabs = (user) => gamesOf(user).map((g) => [g.id, g.menu.map((m) => m[0]).join(',')]);
   const all = new Set(['posts', 'trash', 'phieu', 'signup', 'music']);
