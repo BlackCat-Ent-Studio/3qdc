@@ -6,3 +6,4 @@ Bản chép từ máy làm việc (`D:\workspace\3qdc`) để lưu cùng code. B
 - `HANDOFF.md` — nhật ký bàn giao đầy đủ (mục 0 bối cảnh, mục 3 bài học & bẫy, bảng dòng 1–87).
 - `docs/journals/` — kinh nghiệm, lỗi thật và cách sửa theo từng đợt.
 - Code web trang tạm: repo riêng `BlackCat-Ent-Studio/3qdaichien`.
+- `tien-ma-vo-gioi/` — handoff riêng web Tiên Ma Vô Giới (trước: Hoàn Mỹ Thế Giới, id `hoanmythegioi`) + các bước deploy trang tĩnh (`deploy-v3c.md`).
