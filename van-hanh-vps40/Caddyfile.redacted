@@ -181,6 +181,11 @@ skystory.wanmeivn.com {
 hoanmythegioi.wanmeivn.com {
 	import bao-mat
 	import nhat-ky hoanmythegioi-wanmeivn
+	# ten cu chi la duong noi an: chi may .21 (proxy tienmavogioi.com), chinh .40 va localhost duoc vao; con lai 403
+	@ngoai-tmvg not remote_ip 160.191.3.21 160.191.3.40 127.0.0.1
+	handle @ngoai-tmvg {
+		respond 403
+	}
 	@anh path /assets/*
 	header @anh Cache-Control "public, max-age=86400"
 	# bảng sự kiện: danh sách + ảnh bài lấy từ máy chủ tin 3qdc-unified (nhận game theo Host)
